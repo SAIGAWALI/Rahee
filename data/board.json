@@ -1,0 +1,6545 @@
+{
+ "version": 1,
+ "name": "RAHEE",
+ "subtitle": "A Traveller's Journey Across India",
+ "credits": {
+  "design": "Jyothi Krishnan & CCL, IIT Gandhinagar",
+  "art": "Parvathy Subramanian",
+  "note": "Board artwork is representative, for educational purposes. © CCL, IITGN"
+ },
+ "plate": {
+  "image": "assets/board-plate.png",
+  "width": 1980,
+  "height": 2426,
+  "source": {
+   "pdf": "RaheeA-Fincurve.pdf",
+   "regionPt": [
+    20,
+    515,
+    1010,
+    1728
+   ],
+   "scale": 2
+  }
+ },
+ "suits": [
+  {
+   "id": "spades",
+   "symbol": "♠",
+   "memory": "Bazaar",
+   "blurb": "shopping at a bazaar",
+   "colour": "#2f3640"
+  },
+  {
+   "id": "hearts",
+   "symbol": "♥",
+   "memory": "Food",
+   "blurb": "eating something new",
+   "colour": "#c0392b"
+  },
+  {
+   "id": "clubs",
+   "symbol": "♣",
+   "memory": "Language",
+   "blurb": "hearing a language",
+   "colour": "#2f3640"
+  },
+  {
+   "id": "diamonds",
+   "symbol": "♦",
+   "memory": "Festival",
+   "blurb": "celebrating a festival",
+   "colour": "#c0392b"
+  }
+ ],
+ "economy": {
+  "startingBudget": 25000,
+  "costPerStep": 200,
+  "flightSurcharge": 4000,
+  "shipSurcharge": 1000,
+  "touristVisit": 2000,
+  "sharedTouristVisit": 1000,
+  "roadTripSharePerStep": 100
+ },
+ "cards": {
+  "values": {
+   "2": 2,
+   "3": 3,
+   "4": 4,
+   "5": 5,
+   "6": 6,
+   "10": 10,
+   "A": 1,
+   "J": 10,
+   "Q": 5,
+   "K": 5
+  },
+  "deals": [
+   {
+    "players": [
+     2,
+     3,
+     4
+    ],
+    "ranks": [
+     "A",
+     "2",
+     "3",
+     "4",
+     "5",
+     "6",
+     "10"
+    ],
+    "guaranteed": [
+     "10"
+    ],
+    "dealt": 6
+   },
+   {
+    "players": [
+     5
+    ],
+    "ranks": [
+     "A",
+     "2",
+     "3",
+     "4",
+     "5",
+     "6",
+     "10",
+     "J",
+     "Q",
+     "K"
+    ],
+    "guaranteed": [
+     "J",
+     "10"
+    ],
+    "dealt": 6
+   },
+   {
+    "players": [
+     6
+    ],
+    "ranks": [
+     "A",
+     "2",
+     "3",
+     "4",
+     "5",
+     "6",
+     "10",
+     "J",
+     "Q",
+     "K"
+    ],
+    "guaranteed": [
+     "J",
+     "10"
+    ],
+    "dealt": 5
+   }
+  ]
+ },
+ "scoring": {
+  "touristPlace": 10,
+  "destination": 5,
+  "allDestinationsBonus": 10,
+  "destinationsForBonus": 5,
+  "sameSuitSet": 15,
+  "fourSuitSet": 20,
+  "overBudgetBlock": 500,
+  "overBudgetPenalty": 5
+ },
+ "cities": [
+  {
+   "id": "new-delhi",
+   "name": "New Delhi",
+   "state": "DL",
+   "x": 663,
+   "y": 687,
+   "tourist": 1,
+   "attraction": "Qutb Minar",
+   "airport": true
+  },
+  {
+   "id": "rishikesh",
+   "name": "Rishikesh",
+   "state": "UK",
+   "x": 755,
+   "y": 572,
+   "tourist": 2,
+   "attraction": "Ganga rafting"
+  },
+  {
+   "id": "leh",
+   "name": "Leh",
+   "state": "LA",
+   "x": 716,
+   "y": 298,
+   "tourist": 3,
+   "attraction": "Thiksey Monastery"
+  },
+  {
+   "id": "srinagar",
+   "name": "Srinagar",
+   "state": "JK",
+   "x": 554,
+   "y": 268,
+   "tourist": 4,
+   "attraction": "Hazrat Bal"
+  },
+  {
+   "id": "amritsar",
+   "name": "Amritsar",
+   "state": "PB",
+   "x": 529,
+   "y": 485,
+   "tourist": 5,
+   "attraction": "Golden Temple"
+  },
+  {
+   "id": "jaisalmer",
+   "name": "Jaisalmer",
+   "state": "RJ",
+   "x": 254,
+   "y": 782,
+   "tourist": 6,
+   "attraction": "Junnagarh Fort"
+  },
+  {
+   "id": "jodhpur",
+   "name": "Jodhpur",
+   "state": "RJ",
+   "x": 386,
+   "y": 830,
+   "tourist": 7,
+   "attraction": "Ghoomar"
+  },
+  {
+   "id": "jaipur",
+   "name": "Jaipur",
+   "state": "RJ",
+   "x": 572,
+   "y": 819,
+   "tourist": 8,
+   "attraction": "Hawa Mahal"
+  },
+  {
+   "id": "agra",
+   "name": "Agra",
+   "state": "UP",
+   "x": 714,
+   "y": 805,
+   "tourist": 9,
+   "attraction": "Taj Mahal"
+  },
+  {
+   "id": "lucknow",
+   "name": "Lucknow",
+   "state": "UP",
+   "x": 901,
+   "y": 816,
+   "tourist": 10,
+   "attraction": "Kathak",
+   "airport": true
+  },
+  {
+   "id": "gwalior",
+   "name": "Gwalior",
+   "state": "MP",
+   "x": 704,
+   "y": 875,
+   "tourist": 11,
+   "attraction": "Gwalior Fort"
+  },
+  {
+   "id": "sawai-madhopur",
+   "name": "Sawai Madhopur",
+   "state": "RJ",
+   "x": 552,
+   "y": 931,
+   "tourist": 12,
+   "attraction": "Ranthambore tiger reserve"
+  },
+  {
+   "id": "gandhinagar",
+   "name": "Gandhinagar",
+   "state": "GJ",
+   "x": 356,
+   "y": 1038,
+   "tourist": 13,
+   "attraction": "Adalaj Stepwell",
+   "airport": true
+  },
+  {
+   "id": "bhuj",
+   "name": "Bhuj",
+   "state": "GJ",
+   "x": 120,
+   "y": 1042,
+   "tourist": 14,
+   "attraction": "Rann of Kutch"
+  },
+  {
+   "id": "veraval",
+   "name": "Veraval",
+   "state": "GJ",
+   "x": 201,
+   "y": 1172,
+   "tourist": 15,
+   "attraction": "Gir National Park"
+  },
+  {
+   "id": "vadodara",
+   "name": "Vadodara",
+   "state": "GJ",
+   "x": 351,
+   "y": 1182,
+   "tourist": 16,
+   "attraction": "Garba"
+  },
+  {
+   "id": "daman",
+   "name": "Daman",
+   "state": "DD",
+   "x": 353,
+   "y": 1257,
+   "tourist": 17,
+   "attraction": "Atash Behram, Iranshah"
+  },
+  {
+   "id": "mumbai",
+   "name": "Mumbai",
+   "state": "MH",
+   "x": 338,
+   "y": 1373,
+   "tourist": 18,
+   "attraction": "Gateway of India",
+   "airport": true
+  },
+  {
+   "id": "aurangabad",
+   "name": "Aurangabad",
+   "state": "MH",
+   "x": 508,
+   "y": 1313,
+   "tourist": 19,
+   "attraction": "Ajanta Caves"
+  },
+  {
+   "id": "nagpur",
+   "name": "Nagpur",
+   "state": "MH",
+   "x": 735,
+   "y": 1240,
+   "tourist": 20,
+   "attraction": "Dikshabhoomi"
+  },
+  {
+   "id": "bhopal",
+   "name": "Bhopal",
+   "state": "MP",
+   "x": 676,
+   "y": 1068,
+   "tourist": 21,
+   "attraction": "Bhimbetka Caves"
+  },
+  {
+   "id": "jabalpur",
+   "name": "Jabalpur",
+   "state": "MP",
+   "x": 839,
+   "y": 1053,
+   "tourist": 22,
+   "attraction": "Nidan Falls"
+  },
+  {
+   "id": "varanasi",
+   "name": "Varanasi",
+   "state": "UP",
+   "x": 1040,
+   "y": 951,
+   "tourist": 23,
+   "attraction": "Ghats of Varanasi"
+  },
+  {
+   "id": "ranchi",
+   "name": "Ranchi",
+   "state": "JH",
+   "x": 1181,
+   "y": 1080,
+   "tourist": 24,
+   "attraction": "Sal Forest"
+  },
+  {
+   "id": "giridih",
+   "name": "Giridih",
+   "state": "JH",
+   "x": 1249,
+   "y": 1026,
+   "tourist": 25,
+   "attraction": "Sammed Shikarji"
+  },
+  {
+   "id": "patna",
+   "name": "Patna",
+   "state": "BR",
+   "x": 1176,
+   "y": 939,
+   "tourist": 26,
+   "attraction": "Bodh Gaya"
+  },
+  {
+   "id": "madhubani",
+   "name": "Madhubani",
+   "state": "BR",
+   "x": 1313,
+   "y": 899,
+   "tourist": 27,
+   "attraction": "Madhubani Art"
+  },
+  {
+   "id": "gangtok",
+   "name": "Gangtok",
+   "state": "SK",
+   "x": 1391,
+   "y": 784,
+   "tourist": 28,
+   "attraction": "Khangchendzonga"
+  },
+  {
+   "id": "guwahati",
+   "name": "Guwahati",
+   "state": "AS",
+   "x": 1622,
+   "y": 850,
+   "tourist": 29,
+   "attraction": "Sattriya",
+   "airport": true
+  },
+  {
+   "id": "shillong",
+   "name": "Shillong",
+   "state": "ML",
+   "x": 1636,
+   "y": 901,
+   "tourist": 30,
+   "attraction": "Root Bridges"
+  },
+  {
+   "id": "ziro",
+   "name": "Ziro",
+   "state": "AR",
+   "x": 1723,
+   "y": 721,
+   "tourist": 31,
+   "attraction": "Dree Festival"
+  },
+  {
+   "id": "charaideo",
+   "name": "Charaideo",
+   "state": "AS",
+   "x": 1808,
+   "y": 788,
+   "tourist": 32,
+   "attraction": "Moidams"
+  },
+  {
+   "id": "agartala",
+   "name": "Agartala",
+   "state": "TR",
+   "x": 1614,
+   "y": 1036,
+   "tourist": 33,
+   "attraction": "Chaturdash Devta Temple"
+  },
+  {
+   "id": "kolkata",
+   "name": "Kolkata",
+   "state": "WB",
+   "x": 1394,
+   "y": 1138,
+   "tourist": 34,
+   "attraction": "Sundarbans",
+   "airport": true
+  },
+  {
+   "id": "bhubaneshwar",
+   "name": "Bhubaneshwar",
+   "state": "OD",
+   "x": 1278,
+   "y": 1272,
+   "tourist": 35,
+   "attraction": "Turtle Nesting"
+  },
+  {
+   "id": "sambalpur",
+   "name": "Sambalpur",
+   "state": "OD",
+   "x": 1109,
+   "y": 1235,
+   "tourist": 36,
+   "attraction": "Odissi"
+  },
+  {
+   "id": "bastar",
+   "name": "Bastar",
+   "state": "CG",
+   "x": 908,
+   "y": 1362,
+   "tourist": 37,
+   "attraction": "Gond Art"
+  },
+  {
+   "id": "hyderabad",
+   "name": "Hyderabad",
+   "state": "TG",
+   "x": 733,
+   "y": 1471,
+   "tourist": 38,
+   "attraction": "Char Minar",
+   "airport": true
+  },
+  {
+   "id": "amaravati",
+   "name": "Amaravati",
+   "state": "AP",
+   "x": 897,
+   "y": 1555,
+   "tourist": 39,
+   "attraction": "Tapetta Gulla"
+  },
+  {
+   "id": "chennai",
+   "name": "Chennai",
+   "state": "TN",
+   "x": 826,
+   "y": 1819,
+   "tourist": 40,
+   "attraction": "Carnatic Music",
+   "airport": true
+  },
+  {
+   "id": "nagapattinam",
+   "name": "Nagapattinam",
+   "state": "TN",
+   "x": 771,
+   "y": 2007,
+   "tourist": 41,
+   "attraction": "Velankanni Church"
+  },
+  {
+   "id": "thanjavur",
+   "name": "Thanjavur",
+   "state": "TN",
+   "x": 727,
+   "y": 1999,
+   "tourist": 42,
+   "attraction": "Brihadisvara Temple"
+  },
+  {
+   "id": "kanniyakumari",
+   "name": "Kanniyakumari",
+   "state": "TN",
+   "x": 613,
+   "y": 2164,
+   "tourist": 43,
+   "attraction": "Land's End"
+  },
+  {
+   "id": "kochi",
+   "name": "Kochi",
+   "state": "KL",
+   "x": 529,
+   "y": 2068,
+   "tourist": 44,
+   "attraction": "Kathakali",
+   "airport": true
+  },
+  {
+   "id": "wayanad",
+   "name": "Wayanad",
+   "state": "KL",
+   "x": 490,
+   "y": 1920,
+   "tourist": 45,
+   "attraction": "Elephants Reserve"
+  },
+  {
+   "id": "madikeri",
+   "name": "Madikeri",
+   "state": "KA",
+   "x": 554,
+   "y": 1883,
+   "tourist": 46,
+   "attraction": "Kumara Parvata"
+  },
+  {
+   "id": "udupi",
+   "name": "Udupi",
+   "state": "KA",
+   "x": 437,
+   "y": 1799,
+   "tourist": 47,
+   "attraction": "Yakshagana"
+  },
+  {
+   "id": "hampi",
+   "name": "Hampi",
+   "state": "KA",
+   "x": 516,
+   "y": 1636,
+   "tourist": 48,
+   "attraction": "Stone Chariot"
+  },
+  {
+   "id": "kavaratti",
+   "name": "Kavaratti",
+   "state": "LA",
+   "x": 234,
+   "y": 1946,
+   "tourist": 49,
+   "attraction": "Snorkelling"
+  },
+  {
+   "id": "sri-vijayapuram",
+   "name": "Sri Vijayapuram",
+   "state": "AN",
+   "x": 1737,
+   "y": 1911,
+   "tourist": 50,
+   "attraction": "Coral Island"
+  },
+  {
+   "id": "great-nicobar",
+   "name": "Great Nicobar",
+   "state": "AN",
+   "x": 1860,
+   "y": 2314,
+   "tourist": 51,
+   "attraction": "Dugong"
+  },
+  {
+   "id": "kargil",
+   "name": "Kargil",
+   "state": "LA",
+   "x": 644,
+   "y": 247
+  },
+  {
+   "id": "jammu",
+   "name": "Jammu",
+   "state": "JK",
+   "x": 547,
+   "y": 376
+  },
+  {
+   "id": "dharamshala",
+   "name": "Dharamshala",
+   "state": "HP",
+   "x": 629,
+   "y": 431
+  },
+  {
+   "id": "khirganga",
+   "name": "Khirganga",
+   "state": "HP",
+   "x": 744,
+   "y": 445
+  },
+  {
+   "id": "shimla",
+   "name": "Shimla",
+   "state": "HP",
+   "x": 673,
+   "y": 503
+  },
+  {
+   "id": "chandigarh",
+   "name": "Chandigarh",
+   "state": "CH",
+   "x": 648,
+   "y": 530
+  },
+  {
+   "id": "gangotri",
+   "name": "Gangotri",
+   "state": "UK",
+   "x": 827,
+   "y": 562
+  },
+  {
+   "id": "hisar",
+   "name": "Hisar",
+   "state": "HR",
+   "x": 566,
+   "y": 628
+  },
+  {
+   "id": "badrinath",
+   "name": "Badrinath",
+   "state": "UK",
+   "x": 831,
+   "y": 660
+  },
+  {
+   "id": "dibang-valley",
+   "name": "Dibang Valley",
+   "state": "AR",
+   "x": 1848,
+   "y": 689
+  },
+  {
+   "id": "bikaner",
+   "name": "Bikaner",
+   "state": "RJ",
+   "x": 417,
+   "y": 698
+  },
+  {
+   "id": "itanagar",
+   "name": "Itanagar",
+   "state": "AR",
+   "x": 1701,
+   "y": 777
+  },
+  {
+   "id": "gorakhpur",
+   "name": "Gorakhpur",
+   "state": "UP",
+   "x": 1060,
+   "y": 832
+  },
+  {
+   "id": "siliguri",
+   "name": "Siliguri",
+   "state": "WB",
+   "x": 1407,
+   "y": 834
+  },
+  {
+   "id": "kohima",
+   "name": "Kohima",
+   "state": "NL",
+   "x": 1789,
+   "y": 878
+  },
+  {
+   "id": "prayagraj",
+   "name": "Prayagraj",
+   "state": "UP",
+   "x": 944,
+   "y": 926
+  },
+  {
+   "id": "imphal",
+   "name": "Imphal",
+   "state": "MN",
+   "x": 1750,
+   "y": 944
+  },
+  {
+   "id": "udaipur",
+   "name": "Udaipur",
+   "state": "RJ",
+   "x": 380,
+   "y": 947
+  },
+  {
+   "id": "behrampore",
+   "name": "Behrampore",
+   "state": "WB",
+   "x": 1369,
+   "y": 955
+  },
+  {
+   "id": "silchar",
+   "name": "Silchar",
+   "state": "AS",
+   "x": 1682,
+   "y": 966
+  },
+  {
+   "id": "aizwal",
+   "name": "Aizwal",
+   "state": "MZ",
+   "x": 1691,
+   "y": 1053
+  },
+  {
+   "id": "asansol",
+   "name": "Asansol",
+   "state": "WB",
+   "x": 1293,
+   "y": 1060
+  },
+  {
+   "id": "indore",
+   "name": "Indore",
+   "state": "MP",
+   "x": 543,
+   "y": 1068
+  },
+  {
+   "id": "jamshedpur",
+   "name": "Jamshedpur",
+   "state": "JH",
+   "x": 1248,
+   "y": 1125
+  },
+  {
+   "id": "porbandar",
+   "name": "Porbandar",
+   "state": "GJ",
+   "x": 127,
+   "y": 1147
+  },
+  {
+   "id": "bilaspur",
+   "name": "Bilaspur",
+   "state": "CG",
+   "x": 977,
+   "y": 1151
+  },
+  {
+   "id": "pench",
+   "name": "Pench",
+   "state": "MP",
+   "x": 787,
+   "y": 1168
+  },
+  {
+   "id": "rourkela",
+   "name": "Rourkela",
+   "state": "OD",
+   "x": 1143,
+   "y": 1168
+  },
+  {
+   "id": "raipur",
+   "name": "Raipur",
+   "state": "CG",
+   "x": 936,
+   "y": 1246
+  },
+  {
+   "id": "akola",
+   "name": "Akola",
+   "state": "MH",
+   "x": 618,
+   "y": 1275
+  },
+  {
+   "id": "nizamabad",
+   "name": "Nizamabad",
+   "state": "TG",
+   "x": 695,
+   "y": 1401
+  },
+  {
+   "id": "srikakulam",
+   "name": "Srikakulam",
+   "state": "AP",
+   "x": 1079,
+   "y": 1433
+  },
+  {
+   "id": "warangal",
+   "name": "Warangal",
+   "state": "TG",
+   "x": 823,
+   "y": 1452
+  },
+  {
+   "id": "visakhapatnam",
+   "name": "Visakhapatnam",
+   "state": "AP",
+   "x": 1034,
+   "y": 1499
+  },
+  {
+   "id": "gulbarga",
+   "name": "Gulbarga",
+   "state": "KA",
+   "x": 604,
+   "y": 1500
+  },
+  {
+   "id": "ratnagiri",
+   "name": "Ratnagiri",
+   "state": "MH",
+   "x": 358,
+   "y": 1529
+  },
+  {
+   "id": "pune",
+   "name": "Pune",
+   "state": "MH",
+   "x": 418,
+   "y": 1395
+  },
+  {
+   "id": "ongole",
+   "name": "Ongole",
+   "state": "AP",
+   "x": 822,
+   "y": 1617
+  },
+  {
+   "id": "kurnool",
+   "name": "Kurnool",
+   "state": "AP",
+   "x": 679,
+   "y": 1627
+  },
+  {
+   "id": "panaji",
+   "name": "Panaji",
+   "state": "GA",
+   "x": 384,
+   "y": 1633
+  },
+  {
+   "id": "kadapa",
+   "name": "Kadapa",
+   "state": "AP",
+   "x": 728,
+   "y": 1721
+  },
+  {
+   "id": "chitradurga",
+   "name": "Chitradurga",
+   "state": "KA",
+   "x": 574,
+   "y": 1723
+  },
+  {
+   "id": "digligur",
+   "name": "Digligur",
+   "state": "AN",
+   "x": 1736,
+   "y": 1797
+  },
+  {
+   "id": "bengaluru",
+   "name": "Bengaluru",
+   "state": "KA",
+   "x": 630,
+   "y": 1811,
+   "airport": true
+  },
+  {
+   "id": "salem",
+   "name": "Salem",
+   "state": "TN",
+   "x": 663,
+   "y": 1903
+  },
+  {
+   "id": "agatti",
+   "name": "Agatti",
+   "state": "LA",
+   "x": 210,
+   "y": 1912,
+   "airport": true
+  },
+  {
+   "id": "puducherry",
+   "name": "Puducherry",
+   "state": "PY",
+   "x": 780,
+   "y": 1921
+  },
+  {
+   "id": "coimbatore",
+   "name": "Coimbatore",
+   "state": "TN",
+   "x": 572,
+   "y": 1942
+  },
+  {
+   "id": "madurai",
+   "name": "Madurai",
+   "state": "TN",
+   "x": 653,
+   "y": 2068
+  },
+  {
+   "id": "thiruvananthapuram",
+   "name": "Thiruvananthapuram",
+   "state": "KL",
+   "x": 564,
+   "y": 2125
+  }
+ ],
+ "routes": [
+  {
+   "from": "agartala",
+   "to": "aizwal",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1614,
+     1036
+    ],
+    [
+     1643,
+     1027
+    ],
+    [
+     1668,
+     1046
+    ],
+    [
+     1691,
+     1053
+    ]
+   ]
+  },
+  {
+   "from": "agartala",
+   "to": "silchar",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1614,
+     1036
+    ],
+    [
+     1653,
+     999
+    ],
+    [
+     1662,
+     982
+    ],
+    [
+     1682,
+     966
+    ]
+   ]
+  },
+  {
+   "from": "agra",
+   "to": "gwalior",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     714,
+     805
+    ],
+    [
+     717,
+     831
+    ],
+    [
+     704,
+     875
+    ]
+   ]
+  },
+  {
+   "from": "agra",
+   "to": "jaipur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     714,
+     805
+    ],
+    [
+     634,
+     817
+    ],
+    [
+     572,
+     819
+    ]
+   ]
+  },
+  {
+   "from": "agra",
+   "to": "new-delhi",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     714,
+     805
+    ],
+    [
+     706,
+     785
+    ],
+    [
+     674,
+     735
+    ],
+    [
+     663,
+     687
+    ]
+   ]
+  },
+  {
+   "from": "aizwal",
+   "to": "imphal",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1691,
+     1053
+    ],
+    [
+     1699,
+     1020
+    ],
+    [
+     1708,
+     1012
+    ],
+    [
+     1713,
+     997
+    ],
+    [
+     1733,
+     962
+    ],
+    [
+     1750,
+     944
+    ]
+   ]
+  },
+  {
+   "from": "aizwal",
+   "to": "silchar",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1691,
+     1053
+    ],
+    [
+     1691,
+     1007
+    ],
+    [
+     1682,
+     966
+    ]
+   ]
+  },
+  {
+   "from": "akola",
+   "to": "aurangabad",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     618,
+     1275
+    ],
+    [
+     590,
+     1283
+    ],
+    [
+     546,
+     1310
+    ],
+    [
+     508,
+     1313
+    ]
+   ]
+  },
+  {
+   "from": "akola",
+   "to": "nagpur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     618,
+     1275
+    ],
+    [
+     671,
+     1268
+    ],
+    [
+     709,
+     1255
+    ],
+    [
+     735,
+     1240
+    ]
+   ]
+  },
+  {
+   "from": "amaravati",
+   "to": "bastar",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     897,
+     1555
+    ],
+    [
+     895,
+     1534
+    ],
+    [
+     901,
+     1486
+    ],
+    [
+     898,
+     1474
+    ],
+    [
+     903,
+     1459
+    ],
+    [
+     910,
+     1392
+    ],
+    [
+     908,
+     1362
+    ]
+   ]
+  },
+  {
+   "from": "amaravati",
+   "to": "hyderabad",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     897,
+     1555
+    ],
+    [
+     883,
+     1537
+    ],
+    [
+     852,
+     1517
+    ],
+    [
+     844,
+     1517
+    ],
+    [
+     816,
+     1501
+    ],
+    [
+     776,
+     1485
+    ],
+    [
+     756,
+     1483
+    ],
+    [
+     733,
+     1471
+    ]
+   ]
+  },
+  {
+   "from": "amaravati",
+   "to": "kurnool",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     897,
+     1555
+    ],
+    [
+     867,
+     1525
+    ],
+    [
+     788,
+     1490
+    ],
+    [
+     780,
+     1488
+    ],
+    [
+     703,
+     1501
+    ],
+    [
+     696,
+     1505
+    ],
+    [
+     685,
+     1526
+    ],
+    [
+     676,
+     1557
+    ],
+    [
+     679,
+     1627
+    ]
+   ]
+  },
+  {
+   "from": "amaravati",
+   "to": "ongole",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     897,
+     1555
+    ],
+    [
+     822,
+     1617
+    ]
+   ]
+  },
+  {
+   "from": "amaravati",
+   "to": "visakhapatnam",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     897,
+     1555
+    ],
+    [
+     1034,
+     1499
+    ]
+   ]
+  },
+  {
+   "from": "amritsar",
+   "to": "chandigarh",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     529,
+     485
+    ],
+    [
+     538,
+     503
+    ],
+    [
+     552,
+     518
+    ],
+    [
+     567,
+     524
+    ],
+    [
+     578,
+     528
+    ],
+    [
+     648,
+     530
+    ]
+   ]
+  },
+  {
+   "from": "amritsar",
+   "to": "dharamshala",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     529,
+     485
+    ],
+    [
+     539,
+     504
+    ],
+    [
+     560,
+     523
+    ],
+    [
+     619,
+     530
+    ],
+    [
+     629,
+     431
+    ]
+   ]
+  },
+  {
+   "from": "amritsar",
+   "to": "hisar",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     529,
+     485
+    ],
+    [
+     534,
+     511
+    ],
+    [
+     527,
+     525
+    ],
+    [
+     532,
+     544
+    ],
+    [
+     563,
+     569
+    ],
+    [
+     566,
+     577
+    ],
+    [
+     566,
+     585
+    ],
+    [
+     548,
+     606
+    ],
+    [
+     548,
+     614
+    ],
+    [
+     566,
+     628
+    ]
+   ]
+  },
+  {
+   "from": "amritsar",
+   "to": "jammu",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     529,
+     485
+    ],
+    [
+     542,
+     469
+    ],
+    [
+     576,
+     448
+    ],
+    [
+     582,
+     433
+    ],
+    [
+     582,
+     421
+    ],
+    [
+     576,
+     406
+    ],
+    [
+     570,
+     401
+    ],
+    [
+     558,
+     399
+    ],
+    [
+     547,
+     376
+    ]
+   ]
+  },
+  {
+   "from": "asansol",
+   "to": "giridih",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1293,
+     1060
+    ],
+    [
+     1249,
+     1026
+    ]
+   ]
+  },
+  {
+   "from": "asansol",
+   "to": "jamshedpur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1293,
+     1060
+    ],
+    [
+     1269,
+     1078
+    ],
+    [
+     1248,
+     1125
+    ]
+   ]
+  },
+  {
+   "from": "asansol",
+   "to": "kolkata",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1293,
+     1060
+    ],
+    [
+     1328,
+     1073
+    ],
+    [
+     1373,
+     1123
+    ],
+    [
+     1394,
+     1138
+    ]
+   ]
+  },
+  {
+   "from": "aurangabad",
+   "to": "daman",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     508,
+     1313
+    ],
+    [
+     499,
+     1292
+    ],
+    [
+     414,
+     1269
+    ],
+    [
+     353,
+     1257
+    ]
+   ]
+  },
+  {
+   "from": "aurangabad",
+   "to": "nizamabad",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     508,
+     1313
+    ],
+    [
+     560,
+     1325
+    ],
+    [
+     576,
+     1336
+    ],
+    [
+     620,
+     1343
+    ],
+    [
+     640,
+     1356
+    ],
+    [
+     659,
+     1361
+    ],
+    [
+     672,
+     1370
+    ],
+    [
+     695,
+     1401
+    ]
+   ]
+  },
+  {
+   "from": "aurangabad",
+   "to": "pune",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     508,
+     1313
+    ],
+    [
+     491,
+     1333
+    ],
+    [
+     472,
+     1339
+    ],
+    [
+     456,
+     1350
+    ],
+    [
+     430,
+     1376
+    ],
+    [
+     418,
+     1395
+    ]
+   ]
+  },
+  {
+   "from": "badrinath",
+   "to": "gangotri",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     831,
+     660
+    ],
+    [
+     826,
+     640
+    ],
+    [
+     815,
+     619
+    ],
+    [
+     827,
+     562
+    ]
+   ]
+  },
+  {
+   "from": "badrinath",
+   "to": "lucknow",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     831,
+     660
+    ],
+    [
+     840,
+     679
+    ],
+    [
+     825,
+     741
+    ],
+    [
+     832,
+     768
+    ],
+    [
+     850,
+     789
+    ],
+    [
+     901,
+     816
+    ]
+   ]
+  },
+  {
+   "from": "badrinath",
+   "to": "new-delhi",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     831,
+     660
+    ],
+    [
+     812,
+     671
+    ],
+    [
+     778,
+     683
+    ],
+    [
+     724,
+     697
+    ],
+    [
+     663,
+     687
+    ]
+   ]
+  },
+  {
+   "from": "badrinath",
+   "to": "rishikesh",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     831,
+     660
+    ],
+    [
+     788,
+     681
+    ],
+    [
+     731,
+     697
+    ],
+    [
+     723,
+     695
+    ],
+    [
+     676,
+     638
+    ],
+    [
+     672,
+     626
+    ],
+    [
+     675,
+     599
+    ],
+    [
+     688,
+     579
+    ],
+    [
+     699,
+     576
+    ],
+    [
+     731,
+     582
+    ],
+    [
+     755,
+     572
+    ]
+   ]
+  },
+  {
+   "from": "bastar",
+   "to": "nagpur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     908,
+     1362
+    ],
+    [
+     886,
+     1356
+    ],
+    [
+     860,
+     1338
+    ],
+    [
+     835,
+     1302
+    ],
+    [
+     832,
+     1290
+    ],
+    [
+     820,
+     1280
+    ],
+    [
+     767,
+     1251
+    ],
+    [
+     735,
+     1240
+    ]
+   ]
+  },
+  {
+   "from": "bastar",
+   "to": "raipur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     908,
+     1362
+    ],
+    [
+     913,
+     1301
+    ],
+    [
+     923,
+     1283
+    ],
+    [
+     935,
+     1273
+    ],
+    [
+     936,
+     1246
+    ]
+   ]
+  },
+  {
+   "from": "bastar",
+   "to": "warangal",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     908,
+     1362
+    ],
+    [
+     886,
+     1376
+    ],
+    [
+     880,
+     1390
+    ],
+    [
+     865,
+     1404
+    ],
+    [
+     853,
+     1425
+    ],
+    [
+     823,
+     1452
+    ]
+   ]
+  },
+  {
+   "from": "behrampore",
+   "to": "madhubani",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1369,
+     955
+    ],
+    [
+     1339,
+     914
+    ],
+    [
+     1313,
+     899
+    ]
+   ]
+  },
+  {
+   "from": "behrampore",
+   "to": "patna",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1369,
+     955
+    ],
+    [
+     1304,
+     969
+    ],
+    [
+     1288,
+     958
+    ],
+    [
+     1269,
+     953
+    ],
+    [
+     1176,
+     939
+    ]
+   ]
+  },
+  {
+   "from": "bengaluru",
+   "to": "chennai",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     630,
+     1811
+    ],
+    [
+     704,
+     1811
+    ],
+    [
+     731,
+     1804
+    ],
+    [
+     791,
+     1804
+    ],
+    [
+     826,
+     1819
+    ]
+   ]
+  },
+  {
+   "from": "bengaluru",
+   "to": "chitradurga",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     630,
+     1811
+    ],
+    [
+     608,
+     1805
+    ],
+    [
+     593,
+     1793
+    ],
+    [
+     582,
+     1776
+    ],
+    [
+     574,
+     1723
+    ]
+   ]
+  },
+  {
+   "from": "bengaluru",
+   "to": "kadapa",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     630,
+     1811
+    ],
+    [
+     653,
+     1813
+    ],
+    [
+     667,
+     1774
+    ],
+    [
+     679,
+     1764
+    ],
+    [
+     686,
+     1750
+    ],
+    [
+     693,
+     1745
+    ],
+    [
+     704,
+     1745
+    ],
+    [
+     728,
+     1721
+    ]
+   ]
+  },
+  {
+   "from": "bengaluru",
+   "to": "madikeri",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     630,
+     1811
+    ],
+    [
+     616,
+     1831
+    ],
+    [
+     569,
+     1862
+    ],
+    [
+     554,
+     1883
+    ]
+   ]
+  },
+  {
+   "from": "bengaluru",
+   "to": "udupi",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     630,
+     1811
+    ],
+    [
+     604,
+     1823
+    ],
+    [
+     564,
+     1828
+    ],
+    [
+     508,
+     1827
+    ],
+    [
+     462,
+     1816
+    ],
+    [
+     437,
+     1799
+    ]
+   ]
+  },
+  {
+   "from": "bhopal",
+   "to": "gwalior",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     676,
+     1068
+    ],
+    [
+     689,
+     1051
+    ],
+    [
+     698,
+     1024
+    ],
+    [
+     698,
+     913
+    ],
+    [
+     704,
+     875
+    ]
+   ]
+  },
+  {
+   "from": "bhopal",
+   "to": "indore",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     676,
+     1068
+    ],
+    [
+     586,
+     1067
+    ],
+    [
+     566,
+     1071
+    ],
+    [
+     543,
+     1068
+    ]
+   ]
+  },
+  {
+   "from": "bhopal",
+   "to": "jabalpur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     676,
+     1068
+    ],
+    [
+     704,
+     1065
+    ],
+    [
+     776,
+     1071
+    ],
+    [
+     839,
+     1053
+    ]
+   ]
+  },
+  {
+   "from": "bhopal",
+   "to": "pench",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     676,
+     1068
+    ],
+    [
+     698,
+     1094
+    ],
+    [
+     787,
+     1168
+    ]
+   ]
+  },
+  {
+   "from": "bhopal",
+   "to": "sawai-madhopur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     676,
+     1068
+    ],
+    [
+     670,
+     1047
+    ],
+    [
+     612,
+     999
+    ],
+    [
+     556,
+     960
+    ],
+    [
+     552,
+     931
+    ]
+   ]
+  },
+  {
+   "from": "bhubaneshwar",
+   "to": "jamshedpur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1278,
+     1272
+    ],
+    [
+     1256,
+     1241
+    ],
+    [
+     1247,
+     1219
+    ],
+    [
+     1248,
+     1125
+    ]
+   ]
+  },
+  {
+   "from": "bhubaneshwar",
+   "to": "kolkata",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1278,
+     1272
+    ],
+    [
+     1281,
+     1222
+    ],
+    [
+     1291,
+     1205
+    ],
+    [
+     1339,
+     1149
+    ],
+    [
+     1349,
+     1143
+    ],
+    [
+     1394,
+     1138
+    ]
+   ]
+  },
+  {
+   "from": "bhubaneshwar",
+   "to": "srikakulam",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1278,
+     1272
+    ],
+    [
+     1258,
+     1284
+    ],
+    [
+     1242,
+     1284
+    ],
+    [
+     1191,
+     1313
+    ],
+    [
+     1102,
+     1421
+    ],
+    [
+     1079,
+     1433
+    ]
+   ]
+  },
+  {
+   "from": "bhuj",
+   "to": "gandhinagar",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     120,
+     1042
+    ],
+    [
+     138,
+     1030
+    ],
+    [
+     192,
+     1014
+    ],
+    [
+     216,
+     1017
+    ],
+    [
+     246,
+     1028
+    ],
+    [
+     304,
+     1041
+    ],
+    [
+     318,
+     1034
+    ],
+    [
+     356,
+     1038
+    ]
+   ]
+  },
+  {
+   "from": "bhuj",
+   "to": "porbandar",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     120,
+     1042
+    ],
+    [
+     146,
+     1046
+    ],
+    [
+     160,
+     1039
+    ],
+    [
+     204,
+     1038
+    ],
+    [
+     223,
+     1044
+    ],
+    [
+     229,
+     1059
+    ],
+    [
+     221,
+     1094
+    ],
+    [
+     203,
+     1115
+    ],
+    [
+     154,
+     1141
+    ],
+    [
+     127,
+     1147
+    ]
+   ]
+  },
+  {
+   "from": "bikaner",
+   "to": "hisar",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     417,
+     698
+    ],
+    [
+     457,
+     701
+    ],
+    [
+     475,
+     686
+    ],
+    [
+     483,
+     672
+    ],
+    [
+     509,
+     647
+    ],
+    [
+     540,
+     629
+    ],
+    [
+     566,
+     628
+    ]
+   ]
+  },
+  {
+   "from": "bikaner",
+   "to": "jaisalmer",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     417,
+     698
+    ],
+    [
+     373,
+     728
+    ],
+    [
+     289,
+     765
+    ],
+    [
+     279,
+     777
+    ],
+    [
+     254,
+     782
+    ]
+   ]
+  },
+  {
+   "from": "bilaspur",
+   "to": "jabalpur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     977,
+     1151
+    ],
+    [
+     929,
+     1137
+    ],
+    [
+     912,
+     1110
+    ],
+    [
+     889,
+     1106
+    ],
+    [
+     874,
+     1082
+    ],
+    [
+     839,
+     1053
+    ]
+   ]
+  },
+  {
+   "from": "bilaspur",
+   "to": "raipur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     977,
+     1151
+    ],
+    [
+     972,
+     1185
+    ],
+    [
+     962,
+     1211
+    ],
+    [
+     962,
+     1231
+    ],
+    [
+     957,
+     1237
+    ],
+    [
+     936,
+     1246
+    ]
+   ]
+  },
+  {
+   "from": "bilaspur",
+   "to": "ranchi",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     977,
+     1151
+    ],
+    [
+     1066,
+     1100
+    ],
+    [
+     1137,
+     1087
+    ],
+    [
+     1152,
+     1089
+    ],
+    [
+     1181,
+     1080
+    ]
+   ]
+  },
+  {
+   "from": "bilaspur",
+   "to": "rourkela",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     977,
+     1151
+    ],
+    [
+     1003,
+     1146
+    ],
+    [
+     1013,
+     1152
+    ],
+    [
+     1037,
+     1149
+    ],
+    [
+     1143,
+     1168
+    ]
+   ]
+  },
+  {
+   "from": "bilaspur",
+   "to": "varanasi",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     977,
+     1151
+    ],
+    [
+     997,
+     1143
+    ],
+    [
+     1069,
+     1099
+    ],
+    [
+     1099,
+     1093
+    ],
+    [
+     1108,
+     1054
+    ],
+    [
+     1100,
+     1003
+    ],
+    [
+     1090,
+     986
+    ],
+    [
+     1070,
+     967
+    ],
+    [
+     1040,
+     951
+    ]
+   ]
+  },
+  {
+   "from": "chandigarh",
+   "to": "rishikesh",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     648,
+     530
+    ],
+    [
+     683,
+     540
+    ],
+    [
+     714,
+     563
+    ],
+    [
+     755,
+     572
+    ]
+   ]
+  },
+  {
+   "from": "chandigarh",
+   "to": "shimla",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     648,
+     530
+    ],
+    [
+     663,
+     531
+    ],
+    [
+     673,
+     503
+    ]
+   ]
+  },
+  {
+   "from": "charaideo",
+   "to": "dibang-valley",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1808,
+     788
+    ],
+    [
+     1825,
+     768
+    ],
+    [
+     1842,
+     728
+    ],
+    [
+     1847,
+     713
+    ],
+    [
+     1848,
+     689
+    ]
+   ]
+  },
+  {
+   "from": "charaideo",
+   "to": "kohima",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1808,
+     788
+    ],
+    [
+     1777,
+     816
+    ],
+    [
+     1772,
+     827
+    ],
+    [
+     1772,
+     846
+    ],
+    [
+     1789,
+     878
+    ]
+   ]
+  },
+  {
+   "from": "chennai",
+   "to": "kadapa",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     826,
+     1819
+    ],
+    [
+     797,
+     1779
+    ],
+    [
+     761,
+     1748
+    ],
+    [
+     746,
+     1744
+    ],
+    [
+     728,
+     1721
+    ]
+   ]
+  },
+  {
+   "from": "chennai",
+   "to": "ongole",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     826,
+     1819
+    ],
+    [
+     801,
+     1712
+    ],
+    [
+     822,
+     1617
+    ]
+   ]
+  },
+  {
+   "from": "chennai",
+   "to": "puducherry",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     826,
+     1819
+    ],
+    [
+     814,
+     1836
+    ],
+    [
+     793,
+     1847
+    ],
+    [
+     781,
+     1863
+    ],
+    [
+     780,
+     1921
+    ]
+   ]
+  },
+  {
+   "from": "chennai",
+   "to": "salem",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     826,
+     1819
+    ],
+    [
+     800,
+     1831
+    ],
+    [
+     769,
+     1837
+    ],
+    [
+     723,
+     1853
+    ],
+    [
+     694,
+     1874
+    ],
+    [
+     692,
+     1885
+    ],
+    [
+     663,
+     1903
+    ]
+   ]
+  },
+  {
+   "from": "chitradurga",
+   "to": "hampi",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     574,
+     1723
+    ],
+    [
+     554,
+     1712
+    ],
+    [
+     523,
+     1687
+    ],
+    [
+     512,
+     1662
+    ],
+    [
+     516,
+     1636
+    ]
+   ]
+  },
+  {
+   "from": "chitradurga",
+   "to": "kurnool",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     574,
+     1723
+    ],
+    [
+     586,
+     1707
+    ],
+    [
+     612,
+     1653
+    ],
+    [
+     631,
+     1651
+    ],
+    [
+     647,
+     1639
+    ],
+    [
+     679,
+     1627
+    ]
+   ]
+  },
+  {
+   "from": "chitradurga",
+   "to": "udupi",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     574,
+     1723
+    ],
+    [
+     528,
+     1766
+    ],
+    [
+     504,
+     1780
+    ],
+    [
+     478,
+     1791
+    ],
+    [
+     437,
+     1799
+    ]
+   ]
+  },
+  {
+   "from": "coimbatore",
+   "to": "kochi",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     572,
+     1942
+    ],
+    [
+     572,
+     1968
+    ],
+    [
+     563,
+     1980
+    ],
+    [
+     553,
+     2050
+    ],
+    [
+     549,
+     2058
+    ],
+    [
+     529,
+     2068
+    ]
+   ]
+  },
+  {
+   "from": "coimbatore",
+   "to": "madikeri",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     572,
+     1942
+    ],
+    [
+     565,
+     1963
+    ],
+    [
+     563,
+     2009
+    ],
+    [
+     556,
+     2009
+    ],
+    [
+     520,
+     1990
+    ],
+    [
+     513,
+     1980
+    ],
+    [
+     514,
+     1960
+    ],
+    [
+     508,
+     1941
+    ],
+    [
+     554,
+     1883
+    ]
+   ]
+  },
+  {
+   "from": "coimbatore",
+   "to": "salem",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     572,
+     1942
+    ],
+    [
+     660,
+     1933
+    ],
+    [
+     664,
+     1926
+    ],
+    [
+     663,
+     1903
+    ]
+   ]
+  },
+  {
+   "from": "coimbatore",
+   "to": "thanjavur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     572,
+     1942
+    ],
+    [
+     591,
+     1965
+    ],
+    [
+     628,
+     1989
+    ],
+    [
+     666,
+     2001
+    ],
+    [
+     727,
+     1999
+    ]
+   ]
+  },
+  {
+   "from": "coimbatore",
+   "to": "wayanad",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     572,
+     1942
+    ],
+    [
+     564,
+     1915
+    ],
+    [
+     557,
+     1911
+    ],
+    [
+     490,
+     1920
+    ]
+   ]
+  },
+  {
+   "from": "daman",
+   "to": "mumbai",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     353,
+     1257
+    ],
+    [
+     346,
+     1282
+    ],
+    [
+     348,
+     1306
+    ],
+    [
+     340,
+     1333
+    ],
+    [
+     338,
+     1373
+    ]
+   ]
+  },
+  {
+   "from": "daman",
+   "to": "vadodara",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     353,
+     1257
+    ],
+    [
+     364,
+     1204
+    ],
+    [
+     351,
+     1182
+    ]
+   ]
+  },
+  {
+   "from": "dharamshala",
+   "to": "jammu",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     629,
+     431
+    ],
+    [
+     577,
+     415
+    ],
+    [
+     572,
+     401
+    ],
+    [
+     557,
+     397
+    ],
+    [
+     547,
+     376
+    ]
+   ]
+  },
+  {
+   "from": "dharamshala",
+   "to": "khirganga",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     629,
+     431
+    ],
+    [
+     692,
+     442
+    ],
+    [
+     744,
+     445
+    ]
+   ]
+  },
+  {
+   "from": "dharamshala",
+   "to": "leh",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     629,
+     431
+    ],
+    [
+     639,
+     391
+    ],
+    [
+     653,
+     368
+    ],
+    [
+     716,
+     298
+    ]
+   ]
+  },
+  {
+   "from": "dharamshala",
+   "to": "shimla",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     629,
+     431
+    ],
+    [
+     643,
+     474
+    ],
+    [
+     659,
+     486
+    ],
+    [
+     673,
+     503
+    ]
+   ]
+  },
+  {
+   "from": "dibang-valley",
+   "to": "ziro",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1848,
+     689
+    ],
+    [
+     1819,
+     664
+    ],
+    [
+     1801,
+     658
+    ],
+    [
+     1776,
+     670
+    ],
+    [
+     1723,
+     721
+    ]
+   ]
+  },
+  {
+   "from": "digligur",
+   "to": "sri-vijayapuram",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1736,
+     1797
+    ],
+    [
+     1737,
+     1911
+    ]
+   ]
+  },
+  {
+   "from": "gandhinagar",
+   "to": "udaipur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     356,
+     1038
+    ],
+    [
+     357,
+     1008
+    ],
+    [
+     383,
+     968
+    ],
+    [
+     380,
+     947
+    ]
+   ]
+  },
+  {
+   "from": "gandhinagar",
+   "to": "vadodara",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     356,
+     1038
+    ],
+    [
+     362,
+     1080
+    ],
+    [
+     371,
+     1098
+    ],
+    [
+     371,
+     1118
+    ],
+    [
+     351,
+     1182
+    ]
+   ]
+  },
+  {
+   "from": "gandhinagar",
+   "to": "veraval",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     356,
+     1038
+    ],
+    [
+     295,
+     1119
+    ],
+    [
+     265,
+     1146
+    ],
+    [
+     223,
+     1169
+    ],
+    [
+     201,
+     1172
+    ]
+   ]
+  },
+  {
+   "from": "gangotri",
+   "to": "rishikesh",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     827,
+     562
+    ],
+    [
+     781,
+     575
+    ],
+    [
+     755,
+     572
+    ]
+   ]
+  },
+  {
+   "from": "gangtok",
+   "to": "siliguri",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1391,
+     784
+    ],
+    [
+     1403,
+     812
+    ],
+    [
+     1407,
+     834
+    ]
+   ]
+  },
+  {
+   "from": "giridih",
+   "to": "patna",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1249,
+     1026
+    ],
+    [
+     1207,
+     975
+    ],
+    [
+     1184,
+     960
+    ],
+    [
+     1176,
+     939
+    ]
+   ]
+  },
+  {
+   "from": "giridih",
+   "to": "ranchi",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1249,
+     1026
+    ],
+    [
+     1232,
+     1045
+    ],
+    [
+     1181,
+     1080
+    ]
+   ]
+  },
+  {
+   "from": "gorakhpur",
+   "to": "patna",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1060,
+     832
+    ],
+    [
+     1080,
+     836
+    ],
+    [
+     1109,
+     857
+    ],
+    [
+     1158,
+     921
+    ],
+    [
+     1176,
+     939
+    ]
+   ]
+  },
+  {
+   "from": "gorakhpur",
+   "to": "varanasi",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1060,
+     832
+    ],
+    [
+     1060,
+     856
+    ],
+    [
+     1052,
+     878
+    ],
+    [
+     1068,
+     905
+    ],
+    [
+     1060,
+     924
+    ],
+    [
+     1040,
+     951
+    ]
+   ]
+  },
+  {
+   "from": "gulbarga",
+   "to": "hampi",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     604,
+     1500
+    ],
+    [
+     585,
+     1557
+    ],
+    [
+     570,
+     1586
+    ],
+    [
+     516,
+     1636
+    ]
+   ]
+  },
+  {
+   "from": "gulbarga",
+   "to": "hyderabad",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     604,
+     1500
+    ],
+    [
+     635,
+     1492
+    ],
+    [
+     679,
+     1473
+    ],
+    [
+     733,
+     1471
+    ]
+   ]
+  },
+  {
+   "from": "guwahati",
+   "to": "itanagar",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1622,
+     850
+    ],
+    [
+     1639,
+     838
+    ],
+    [
+     1642,
+     827
+    ],
+    [
+     1669,
+     798
+    ],
+    [
+     1701,
+     777
+    ]
+   ]
+  },
+  {
+   "from": "guwahati",
+   "to": "shillong",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1622,
+     850
+    ],
+    [
+     1624,
+     876
+    ],
+    [
+     1636,
+     901
+    ]
+   ]
+  },
+  {
+   "from": "guwahati",
+   "to": "siliguri",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1622,
+     850
+    ],
+    [
+     1601,
+     845
+    ],
+    [
+     1463,
+     849
+    ],
+    [
+     1407,
+     834
+    ]
+   ]
+  },
+  {
+   "from": "gwalior",
+   "to": "jabalpur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     704,
+     875
+    ],
+    [
+     722,
+     884
+    ],
+    [
+     754,
+     920
+    ],
+    [
+     784,
+     962
+    ],
+    [
+     788,
+     974
+    ],
+    [
+     801,
+     982
+    ],
+    [
+     802,
+     994
+    ],
+    [
+     839,
+     1053
+    ]
+   ]
+  },
+  {
+   "from": "gwalior",
+   "to": "lucknow",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     704,
+     875
+    ],
+    [
+     729,
+     883
+    ],
+    [
+     750,
+     873
+    ],
+    [
+     772,
+     882
+    ],
+    [
+     787,
+     876
+    ],
+    [
+     803,
+     876
+    ],
+    [
+     817,
+     863
+    ],
+    [
+     842,
+     851
+    ],
+    [
+     847,
+     840
+    ],
+    [
+     862,
+     827
+    ],
+    [
+     901,
+     816
+    ]
+   ]
+  },
+  {
+   "from": "gwalior",
+   "to": "sawai-madhopur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     704,
+     875
+    ],
+    [
+     623,
+     930
+    ],
+    [
+     604,
+     934
+    ],
+    [
+     552,
+     931
+    ]
+   ]
+  },
+  {
+   "from": "hampi",
+   "to": "panaji",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     516,
+     1636
+    ],
+    [
+     476,
+     1647
+    ],
+    [
+     384,
+     1633
+    ]
+   ]
+  },
+  {
+   "from": "hisar",
+   "to": "jaipur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     566,
+     628
+    ],
+    [
+     573,
+     660
+    ],
+    [
+     565,
+     687
+    ],
+    [
+     562,
+     735
+    ],
+    [
+     545,
+     808
+    ],
+    [
+     572,
+     819
+    ]
+   ]
+  },
+  {
+   "from": "hisar",
+   "to": "new-delhi",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     566,
+     628
+    ],
+    [
+     594,
+     649
+    ],
+    [
+     614,
+     651
+    ],
+    [
+     618,
+     666
+    ],
+    [
+     663,
+     687
+    ]
+   ]
+  },
+  {
+   "from": "hyderabad",
+   "to": "kurnool",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     733,
+     1471
+    ],
+    [
+     697,
+     1505
+    ],
+    [
+     683,
+     1529
+    ],
+    [
+     675,
+     1572
+    ],
+    [
+     679,
+     1627
+    ]
+   ]
+  },
+  {
+   "from": "hyderabad",
+   "to": "nizamabad",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     733,
+     1471
+    ],
+    [
+     726,
+     1446
+    ],
+    [
+     726,
+     1426
+    ],
+    [
+     721,
+     1420
+    ],
+    [
+     709,
+     1418
+    ],
+    [
+     695,
+     1401
+    ]
+   ]
+  },
+  {
+   "from": "hyderabad",
+   "to": "warangal",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     733,
+     1471
+    ],
+    [
+     802,
+     1461
+    ],
+    [
+     823,
+     1452
+    ]
+   ]
+  },
+  {
+   "from": "imphal",
+   "to": "kohima",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1750,
+     944
+    ],
+    [
+     1777,
+     910
+    ],
+    [
+     1789,
+     878
+    ]
+   ]
+  },
+  {
+   "from": "imphal",
+   "to": "silchar",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1750,
+     944
+    ],
+    [
+     1701,
+     955
+    ],
+    [
+     1682,
+     966
+    ]
+   ]
+  },
+  {
+   "from": "indore",
+   "to": "sawai-madhopur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     543,
+     1068
+    ],
+    [
+     552,
+     1047
+    ],
+    [
+     543,
+     1021
+    ],
+    [
+     520,
+     988
+    ],
+    [
+     522,
+     968
+    ],
+    [
+     518,
+     961
+    ],
+    [
+     522,
+     954
+    ],
+    [
+     552,
+     931
+    ]
+   ]
+  },
+  {
+   "from": "indore",
+   "to": "vadodara",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     543,
+     1068
+    ],
+    [
+     523,
+     1074
+    ],
+    [
+     428,
+     1086
+    ],
+    [
+     413,
+     1099
+    ],
+    [
+     378,
+     1157
+    ],
+    [
+     367,
+     1162
+    ],
+    [
+     351,
+     1182
+    ]
+   ]
+  },
+  {
+   "from": "itanagar",
+   "to": "ziro",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1701,
+     777
+    ],
+    [
+     1717,
+     761
+    ],
+    [
+     1714,
+     745
+    ],
+    [
+     1723,
+     721
+    ]
+   ]
+  },
+  {
+   "from": "jabalpur",
+   "to": "pench",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     839,
+     1053
+    ],
+    [
+     826,
+     1089
+    ],
+    [
+     787,
+     1168
+    ]
+   ]
+  },
+  {
+   "from": "jabalpur",
+   "to": "prayagraj",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     839,
+     1053
+    ],
+    [
+     870,
+     1014
+    ],
+    [
+     896,
+     956
+    ],
+    [
+     921,
+     937
+    ],
+    [
+     944,
+     926
+    ]
+   ]
+  },
+  {
+   "from": "jaipur",
+   "to": "jodhpur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     572,
+     819
+    ],
+    [
+     549,
+     822
+    ],
+    [
+     498,
+     813
+    ],
+    [
+     466,
+     813
+    ],
+    [
+     434,
+     817
+    ],
+    [
+     386,
+     830
+    ]
+   ]
+  },
+  {
+   "from": "jaipur",
+   "to": "sawai-madhopur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     572,
+     819
+    ],
+    [
+     577,
+     843
+    ],
+    [
+     568,
+     850
+    ],
+    [
+     548,
+     889
+    ],
+    [
+     552,
+     931
+    ]
+   ]
+  },
+  {
+   "from": "jaisalmer",
+   "to": "jodhpur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     254,
+     782
+    ],
+    [
+     281,
+     782
+    ],
+    [
+     304,
+     787
+    ],
+    [
+     356,
+     831
+    ],
+    [
+     386,
+     830
+    ]
+   ]
+  },
+  {
+   "from": "jamshedpur",
+   "to": "ranchi",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1248,
+     1125
+    ],
+    [
+     1211,
+     1095
+    ],
+    [
+     1181,
+     1080
+    ]
+   ]
+  },
+  {
+   "from": "jamshedpur",
+   "to": "rourkela",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1248,
+     1125
+    ],
+    [
+     1216,
+     1145
+    ],
+    [
+     1192,
+     1149
+    ],
+    [
+     1171,
+     1161
+    ],
+    [
+     1143,
+     1168
+    ]
+   ]
+  },
+  {
+   "from": "jodhpur",
+   "to": "udaipur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     386,
+     830
+    ],
+    [
+     377,
+     848
+    ],
+    [
+     366,
+     860
+    ],
+    [
+     360,
+     879
+    ],
+    [
+     363,
+     894
+    ],
+    [
+     380,
+     921
+    ],
+    [
+     380,
+     947
+    ]
+   ]
+  },
+  {
+   "from": "kadapa",
+   "to": "kurnool",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     728,
+     1721
+    ],
+    [
+     751,
+     1689
+    ],
+    [
+     749,
+     1681
+    ],
+    [
+     732,
+     1672
+    ],
+    [
+     735,
+     1653
+    ],
+    [
+     725,
+     1646
+    ],
+    [
+     697,
+     1645
+    ],
+    [
+     679,
+     1627
+    ]
+   ]
+  },
+  {
+   "from": "kadapa",
+   "to": "ongole",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     728,
+     1721
+    ],
+    [
+     805,
+     1787
+    ],
+    [
+     816,
+     1783
+    ],
+    [
+     818,
+     1776
+    ],
+    [
+     803,
+     1726
+    ],
+    [
+     801,
+     1706
+    ],
+    [
+     822,
+     1617
+    ]
+   ]
+  },
+  {
+   "from": "kanniyakumari",
+   "to": "madurai",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     613,
+     2164
+    ],
+    [
+     626,
+     2142
+    ],
+    [
+     653,
+     2068
+    ]
+   ]
+  },
+  {
+   "from": "kanniyakumari",
+   "to": "thiruvananthapuram",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     613,
+     2164
+    ],
+    [
+     578,
+     2142
+    ],
+    [
+     564,
+     2125
+    ]
+   ]
+  },
+  {
+   "from": "kargil",
+   "to": "leh",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     644,
+     247
+    ],
+    [
+     661,
+     259
+    ],
+    [
+     691,
+     291
+    ],
+    [
+     716,
+     298
+    ]
+   ]
+  },
+  {
+   "from": "kargil",
+   "to": "srinagar",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     644,
+     247
+    ],
+    [
+     622,
+     243
+    ],
+    [
+     594,
+     247
+    ],
+    [
+     578,
+     259
+    ],
+    [
+     554,
+     268
+    ]
+   ]
+  },
+  {
+   "from": "khirganga",
+   "to": "leh",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     744,
+     445
+    ],
+    [
+     744,
+     404
+    ],
+    [
+     734,
+     317
+    ],
+    [
+     716,
+     298
+    ]
+   ]
+  },
+  {
+   "from": "khirganga",
+   "to": "rishikesh",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     744,
+     445
+    ],
+    [
+     749,
+     471
+    ],
+    [
+     740,
+     483
+    ],
+    [
+     734,
+     518
+    ],
+    [
+     749,
+     546
+    ],
+    [
+     755,
+     572
+    ]
+   ]
+  },
+  {
+   "from": "kochi",
+   "to": "thiruvananthapuram",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     529,
+     2068
+    ],
+    [
+     547,
+     2087
+    ],
+    [
+     564,
+     2125
+    ]
+   ]
+  },
+  {
+   "from": "lucknow",
+   "to": "prayagraj",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     901,
+     816
+    ],
+    [
+     916,
+     837
+    ],
+    [
+     926,
+     883
+    ],
+    [
+     944,
+     926
+    ]
+   ]
+  },
+  {
+   "from": "madhubani",
+   "to": "patna",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1313,
+     899
+    ],
+    [
+     1271,
+     917
+    ],
+    [
+     1176,
+     939
+    ]
+   ]
+  },
+  {
+   "from": "madhubani",
+   "to": "siliguri",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1313,
+     899
+    ],
+    [
+     1338,
+     882
+    ],
+    [
+     1386,
+     840
+    ],
+    [
+     1407,
+     834
+    ]
+   ]
+  },
+  {
+   "from": "madikeri",
+   "to": "salem",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     554,
+     1883
+    ],
+    [
+     618,
+     1901
+    ],
+    [
+     663,
+     1903
+    ]
+   ]
+  },
+  {
+   "from": "madikeri",
+   "to": "wayanad",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     554,
+     1883
+    ],
+    [
+     533,
+     1885
+    ],
+    [
+     522,
+     1891
+    ],
+    [
+     516,
+     1905
+    ],
+    [
+     490,
+     1920
+    ]
+   ]
+  },
+  {
+   "from": "madurai",
+   "to": "nagapattinam",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     653,
+     2068
+    ],
+    [
+     676,
+     2049
+    ],
+    [
+     771,
+     2007
+    ]
+   ]
+  },
+  {
+   "from": "madurai",
+   "to": "thanjavur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     653,
+     2068
+    ],
+    [
+     671,
+     2032
+    ],
+    [
+     682,
+     2021
+    ],
+    [
+     727,
+     1999
+    ]
+   ]
+  },
+  {
+   "from": "madurai",
+   "to": "thiruvananthapuram",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     653,
+     2068
+    ],
+    [
+     642,
+     2085
+    ],
+    [
+     564,
+     2125
+    ]
+   ]
+  },
+  {
+   "from": "mumbai",
+   "to": "ratnagiri",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     338,
+     1373
+    ],
+    [
+     346,
+     1406
+    ],
+    [
+     355,
+     1424
+    ],
+    [
+     350,
+     1455
+    ],
+    [
+     362,
+     1481
+    ],
+    [
+     358,
+     1529
+    ]
+   ]
+  },
+  {
+   "from": "nagapattinam",
+   "to": "puducherry",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     771,
+     2007
+    ],
+    [
+     780,
+     1921
+    ]
+   ]
+  },
+  {
+   "from": "nagapattinam",
+   "to": "thanjavur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     771,
+     2007
+    ],
+    [
+     741,
+     2025
+    ],
+    [
+     727,
+     1999
+    ]
+   ]
+  },
+  {
+   "from": "nagpur",
+   "to": "nizamabad",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     735,
+     1240
+    ],
+    [
+     729,
+     1306
+    ],
+    [
+     695,
+     1401
+    ]
+   ]
+  },
+  {
+   "from": "nagpur",
+   "to": "pench",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     735,
+     1240
+    ],
+    [
+     760,
+     1217
+    ],
+    [
+     787,
+     1168
+    ]
+   ]
+  },
+  {
+   "from": "new-delhi",
+   "to": "rishikesh",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     663,
+     687
+    ],
+    [
+     689,
+     657
+    ],
+    [
+     676,
+     638
+    ],
+    [
+     671,
+     622
+    ],
+    [
+     673,
+     607
+    ],
+    [
+     684,
+     581
+    ],
+    [
+     695,
+     577
+    ],
+    [
+     735,
+     581
+    ],
+    [
+     755,
+     572
+    ]
+   ]
+  },
+  {
+   "from": "panaji",
+   "to": "ratnagiri",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     384,
+     1633
+    ],
+    [
+     382,
+     1611
+    ],
+    [
+     361,
+     1559
+    ],
+    [
+     358,
+     1529
+    ]
+   ]
+  },
+  {
+   "from": "panaji",
+   "to": "udupi",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     384,
+     1633
+    ],
+    [
+     395,
+     1651
+    ],
+    [
+     408,
+     1660
+    ],
+    [
+     420,
+     1676
+    ],
+    [
+     418,
+     1692
+    ],
+    [
+     427,
+     1714
+    ],
+    [
+     438,
+     1773
+    ],
+    [
+     437,
+     1799
+    ]
+   ]
+  },
+  {
+   "from": "patna",
+   "to": "varanasi",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1176,
+     939
+    ],
+    [
+     1040,
+     951
+    ]
+   ]
+  },
+  {
+   "from": "pench",
+   "to": "raipur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     787,
+     1168
+    ],
+    [
+     810,
+     1187
+    ],
+    [
+     862,
+     1208
+    ],
+    [
+     872,
+     1220
+    ],
+    [
+     895,
+     1236
+    ],
+    [
+     936,
+     1246
+    ]
+   ]
+  },
+  {
+   "from": "porbandar",
+   "to": "veraval",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     127,
+     1147
+    ],
+    [
+     160,
+     1164
+    ],
+    [
+     201,
+     1172
+    ]
+   ]
+  },
+  {
+   "from": "prayagraj",
+   "to": "varanasi",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     944,
+     926
+    ],
+    [
+     958,
+     943
+    ],
+    [
+     975,
+     952
+    ],
+    [
+     995,
+     953
+    ],
+    [
+     1014,
+     947
+    ],
+    [
+     1040,
+     951
+    ]
+   ]
+  },
+  {
+   "from": "pune",
+   "to": "ratnagiri",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     418,
+     1395
+    ],
+    [
+     415,
+     1424
+    ],
+    [
+     405,
+     1446
+    ],
+    [
+     380,
+     1496
+    ],
+    [
+     367,
+     1505
+    ],
+    [
+     358,
+     1529
+    ]
+   ]
+  },
+  {
+   "from": "raipur",
+   "to": "sambalpur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     936,
+     1246
+    ],
+    [
+     956,
+     1251
+    ],
+    [
+     1004,
+     1249
+    ],
+    [
+     1075,
+     1236
+    ],
+    [
+     1109,
+     1235
+    ]
+   ]
+  },
+  {
+   "from": "ranchi",
+   "to": "varanasi",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1181,
+     1080
+    ],
+    [
+     1106,
+     1042
+    ],
+    [
+     1099,
+     1001
+    ],
+    [
+     1091,
+     987
+    ],
+    [
+     1040,
+     951
+    ]
+   ]
+  },
+  {
+   "from": "rourkela",
+   "to": "sambalpur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1143,
+     1168
+    ],
+    [
+     1140,
+     1191
+    ],
+    [
+     1109,
+     1235
+    ]
+   ]
+  },
+  {
+   "from": "salem",
+   "to": "thanjavur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     663,
+     1903
+    ],
+    [
+     664,
+     1955
+    ],
+    [
+     681,
+     1972
+    ],
+    [
+     707,
+     1982
+    ],
+    [
+     727,
+     1999
+    ]
+   ]
+  },
+  {
+   "from": "sawai-madhopur",
+   "to": "udaipur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     552,
+     931
+    ],
+    [
+     522,
+     932
+    ],
+    [
+     453,
+     952
+    ],
+    [
+     380,
+     947
+    ]
+   ]
+  },
+  {
+   "from": "shillong",
+   "to": "silchar",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1636,
+     901
+    ],
+    [
+     1650,
+     923
+    ],
+    [
+     1671,
+     941
+    ],
+    [
+     1682,
+     966
+    ]
+   ]
+  },
+  {
+   "from": "srikakulam",
+   "to": "visakhapatnam",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1079,
+     1433
+    ],
+    [
+     1034,
+     1499
+    ]
+   ]
+  },
+  {
+   "from": "new-delhi",
+   "to": "lucknow",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     663,
+     687
+    ],
+    [
+     901,
+     816
+    ]
+   ]
+  },
+  {
+   "from": "new-delhi",
+   "to": "guwahati",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     663,
+     687
+    ],
+    [
+     1622,
+     850
+    ]
+   ]
+  },
+  {
+   "from": "new-delhi",
+   "to": "gandhinagar",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     663,
+     687
+    ],
+    [
+     356,
+     1038
+    ]
+   ]
+  },
+  {
+   "from": "new-delhi",
+   "to": "kolkata",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     663,
+     687
+    ],
+    [
+     1394,
+     1138
+    ]
+   ]
+  },
+  {
+   "from": "new-delhi",
+   "to": "mumbai",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     663,
+     687
+    ],
+    [
+     338,
+     1373
+    ]
+   ]
+  },
+  {
+   "from": "new-delhi",
+   "to": "hyderabad",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     663,
+     687
+    ],
+    [
+     733,
+     1471
+    ]
+   ]
+  },
+  {
+   "from": "new-delhi",
+   "to": "bengaluru",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     663,
+     687
+    ],
+    [
+     630,
+     1811
+    ]
+   ]
+  },
+  {
+   "from": "new-delhi",
+   "to": "chennai",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     663,
+     687
+    ],
+    [
+     826,
+     1819
+    ]
+   ]
+  },
+  {
+   "from": "new-delhi",
+   "to": "kochi",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     663,
+     687
+    ],
+    [
+     529,
+     2068
+    ]
+   ]
+  },
+  {
+   "from": "lucknow",
+   "to": "guwahati",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     901,
+     816
+    ],
+    [
+     1622,
+     850
+    ]
+   ]
+  },
+  {
+   "from": "lucknow",
+   "to": "gandhinagar",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     901,
+     816
+    ],
+    [
+     356,
+     1038
+    ]
+   ]
+  },
+  {
+   "from": "lucknow",
+   "to": "kolkata",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     901,
+     816
+    ],
+    [
+     1394,
+     1138
+    ]
+   ]
+  },
+  {
+   "from": "lucknow",
+   "to": "mumbai",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     901,
+     816
+    ],
+    [
+     338,
+     1373
+    ]
+   ]
+  },
+  {
+   "from": "lucknow",
+   "to": "hyderabad",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     901,
+     816
+    ],
+    [
+     733,
+     1471
+    ]
+   ]
+  },
+  {
+   "from": "lucknow",
+   "to": "bengaluru",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     901,
+     816
+    ],
+    [
+     630,
+     1811
+    ]
+   ]
+  },
+  {
+   "from": "lucknow",
+   "to": "chennai",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     901,
+     816
+    ],
+    [
+     826,
+     1819
+    ]
+   ]
+  },
+  {
+   "from": "lucknow",
+   "to": "kochi",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     901,
+     816
+    ],
+    [
+     529,
+     2068
+    ]
+   ]
+  },
+  {
+   "from": "guwahati",
+   "to": "gandhinagar",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     1622,
+     850
+    ],
+    [
+     356,
+     1038
+    ]
+   ]
+  },
+  {
+   "from": "guwahati",
+   "to": "kolkata",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     1622,
+     850
+    ],
+    [
+     1394,
+     1138
+    ]
+   ]
+  },
+  {
+   "from": "guwahati",
+   "to": "mumbai",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     1622,
+     850
+    ],
+    [
+     338,
+     1373
+    ]
+   ]
+  },
+  {
+   "from": "guwahati",
+   "to": "hyderabad",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     1622,
+     850
+    ],
+    [
+     733,
+     1471
+    ]
+   ]
+  },
+  {
+   "from": "guwahati",
+   "to": "bengaluru",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     1622,
+     850
+    ],
+    [
+     630,
+     1811
+    ]
+   ]
+  },
+  {
+   "from": "guwahati",
+   "to": "chennai",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     1622,
+     850
+    ],
+    [
+     826,
+     1819
+    ]
+   ]
+  },
+  {
+   "from": "guwahati",
+   "to": "kochi",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     1622,
+     850
+    ],
+    [
+     529,
+     2068
+    ]
+   ]
+  },
+  {
+   "from": "gandhinagar",
+   "to": "kolkata",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     356,
+     1038
+    ],
+    [
+     1394,
+     1138
+    ]
+   ]
+  },
+  {
+   "from": "gandhinagar",
+   "to": "mumbai",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     356,
+     1038
+    ],
+    [
+     338,
+     1373
+    ]
+   ]
+  },
+  {
+   "from": "gandhinagar",
+   "to": "hyderabad",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     356,
+     1038
+    ],
+    [
+     733,
+     1471
+    ]
+   ]
+  },
+  {
+   "from": "gandhinagar",
+   "to": "bengaluru",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     356,
+     1038
+    ],
+    [
+     630,
+     1811
+    ]
+   ]
+  },
+  {
+   "from": "gandhinagar",
+   "to": "chennai",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     356,
+     1038
+    ],
+    [
+     826,
+     1819
+    ]
+   ]
+  },
+  {
+   "from": "gandhinagar",
+   "to": "kochi",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     356,
+     1038
+    ],
+    [
+     529,
+     2068
+    ]
+   ]
+  },
+  {
+   "from": "kolkata",
+   "to": "mumbai",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     1394,
+     1138
+    ],
+    [
+     338,
+     1373
+    ]
+   ]
+  },
+  {
+   "from": "kolkata",
+   "to": "hyderabad",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     1394,
+     1138
+    ],
+    [
+     733,
+     1471
+    ]
+   ]
+  },
+  {
+   "from": "kolkata",
+   "to": "bengaluru",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     1394,
+     1138
+    ],
+    [
+     630,
+     1811
+    ]
+   ]
+  },
+  {
+   "from": "kolkata",
+   "to": "chennai",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     1394,
+     1138
+    ],
+    [
+     826,
+     1819
+    ]
+   ]
+  },
+  {
+   "from": "kolkata",
+   "to": "kochi",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     1394,
+     1138
+    ],
+    [
+     529,
+     2068
+    ]
+   ]
+  },
+  {
+   "from": "mumbai",
+   "to": "hyderabad",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     338,
+     1373
+    ],
+    [
+     733,
+     1471
+    ]
+   ]
+  },
+  {
+   "from": "mumbai",
+   "to": "bengaluru",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     338,
+     1373
+    ],
+    [
+     630,
+     1811
+    ]
+   ]
+  },
+  {
+   "from": "mumbai",
+   "to": "chennai",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     338,
+     1373
+    ],
+    [
+     826,
+     1819
+    ]
+   ]
+  },
+  {
+   "from": "mumbai",
+   "to": "kochi",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     338,
+     1373
+    ],
+    [
+     529,
+     2068
+    ]
+   ]
+  },
+  {
+   "from": "hyderabad",
+   "to": "bengaluru",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     733,
+     1471
+    ],
+    [
+     630,
+     1811
+    ]
+   ]
+  },
+  {
+   "from": "hyderabad",
+   "to": "chennai",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     733,
+     1471
+    ],
+    [
+     826,
+     1819
+    ]
+   ]
+  },
+  {
+   "from": "hyderabad",
+   "to": "kochi",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     733,
+     1471
+    ],
+    [
+     529,
+     2068
+    ]
+   ]
+  },
+  {
+   "from": "bengaluru",
+   "to": "chennai",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     630,
+     1811
+    ],
+    [
+     826,
+     1819
+    ]
+   ]
+  },
+  {
+   "from": "bengaluru",
+   "to": "kochi",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     630,
+     1811
+    ],
+    [
+     529,
+     2068
+    ]
+   ]
+  },
+  {
+   "from": "chennai",
+   "to": "kochi",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     826,
+     1819
+    ],
+    [
+     529,
+     2068
+    ]
+   ]
+  },
+  {
+   "from": "kolkata",
+   "to": "behrampore",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1394,
+     1138
+    ],
+    [
+     1383,
+     1085
+    ],
+    [
+     1374,
+     1018
+    ],
+    [
+     1369,
+     955
+    ]
+   ]
+  },
+  {
+   "from": "aurangabad",
+   "to": "bhopal",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     508,
+     1313
+    ],
+    [
+     548,
+     1245
+    ],
+    [
+     578,
+     1188
+    ],
+    [
+     612,
+     1140
+    ],
+    [
+     676,
+     1068
+    ]
+   ]
+  },
+  {
+   "from": "gulbarga",
+   "to": "ratnagiri",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     604,
+     1500
+    ],
+    [
+     520,
+     1497
+    ],
+    [
+     440,
+     1506
+    ],
+    [
+     358,
+     1529
+    ]
+   ]
+  },
+  {
+   "from": "lucknow",
+   "to": "gorakhpur",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     901,
+     816
+    ],
+    [
+     960,
+     820
+    ],
+    [
+     1010,
+     826
+    ],
+    [
+     1060,
+     832
+    ]
+   ]
+  },
+  {
+   "from": "sambalpur",
+   "to": "srikakulam",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1109,
+     1235
+    ],
+    [
+     1097,
+     1292
+    ],
+    [
+     1086,
+     1362
+    ],
+    [
+     1079,
+     1433
+    ]
+   ]
+  },
+  {
+   "from": "srinagar",
+   "to": "jammu",
+   "type": "road",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     554,
+     268
+    ],
+    [
+     578,
+     300
+    ],
+    [
+     582,
+     330
+    ],
+    [
+     570,
+     355
+    ],
+    [
+     547,
+     376
+    ]
+   ]
+  },
+  {
+   "from": "agatti",
+   "to": "bengaluru",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     210,
+     1912
+    ],
+    [
+     630,
+     1811
+    ]
+   ]
+  },
+  {
+   "from": "chennai",
+   "to": "sri-vijayapuram",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     826,
+     1819
+    ],
+    [
+     1737,
+     1911
+    ]
+   ]
+  },
+  {
+   "from": "kolkata",
+   "to": "sri-vijayapuram",
+   "type": "flight",
+   "steps": 1,
+   "surcharge": 4000,
+   "path": [
+    [
+     1394,
+     1138
+    ],
+    [
+     1737,
+     1911
+    ]
+   ]
+  },
+  {
+   "from": "kochi",
+   "to": "kavaratti",
+   "type": "ship",
+   "steps": 1,
+   "surcharge": 1000,
+   "path": [
+    [
+     529,
+     2068
+    ],
+    [
+     234,
+     1946
+    ]
+   ]
+  },
+  {
+   "from": "agatti",
+   "to": "kavaratti",
+   "type": "ship",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     210,
+     1912
+    ],
+    [
+     234,
+     1946
+    ]
+   ]
+  },
+  {
+   "from": "sri-vijayapuram",
+   "to": "great-nicobar",
+   "type": "ship",
+   "steps": 1,
+   "surcharge": 0,
+   "path": [
+    [
+     1737,
+     1911
+    ],
+    [
+     1860,
+     2314
+    ]
+   ]
+  }
+ ],
+ "characters": [
+  {
+   "id": "pilgrim",
+   "name": "Pilgrim",
+   "start": "varanasi",
+   "startBlurb": "Kashi Vishwanath",
+   "goals": [
+    {
+     "city": "nagapattinam",
+     "blurb": "Velankanni Church"
+    },
+    {
+     "city": "amritsar",
+     "blurb": "Harmandir Sahib"
+    },
+    {
+     "city": "srinagar",
+     "blurb": "Dargah Hazratbal"
+    },
+    {
+     "city": "daman",
+     "blurb": "Iranshah, Udvada"
+    },
+    {
+     "city": "giridih",
+     "blurb": "Sammed Shikharji"
+    },
+    {
+     "city": "agartala",
+     "blurb": "Chaturdasha Devata Temple"
+    }
+   ]
+  },
+  {
+   "id": "conservationist",
+   "name": "Conservationist",
+   "start": "sawai-madhopur",
+   "startBlurb": "Tigers of Ranthambore",
+   "goals": [
+    {
+     "city": "veraval",
+     "blurb": "Lions of Gir"
+    },
+    {
+     "city": "leh",
+     "blurb": "Shan of Hemis"
+    },
+    {
+     "city": "wayanad",
+     "blurb": "Elephants of Muthanga"
+    },
+    {
+     "city": "guwahati",
+     "blurb": "Rhinos of Kaziranga"
+    },
+    {
+     "city": "bhubaneshwar",
+     "blurb": "Turtles of Gahirmatha"
+    },
+    {
+     "city": "great-nicobar",
+     "blurb": "Biosphere Reserve"
+    }
+   ]
+  },
+  {
+   "id": "riverkeeper",
+   "name": "Riverkeeper",
+   "start": "agra",
+   "startBlurb": "Yamuna",
+   "goals": [
+    {
+     "city": "jabalpur",
+     "blurb": "Narmada"
+    },
+    {
+     "city": "varanasi",
+     "blurb": "Ganga"
+    },
+    {
+     "city": "guwahati",
+     "blurb": "Brahmaputra"
+    },
+    {
+     "city": "madikeri",
+     "blurb": "Kaveri"
+    },
+    {
+     "city": "leh",
+     "blurb": "Indus"
+    },
+    {
+     "city": "amaravati",
+     "blurb": "Krishna"
+    }
+   ]
+  },
+  {
+   "id": "musician",
+   "name": "Musician",
+   "start": "gwalior",
+   "startBlurb": "Dhrupad tradition",
+   "goals": [
+    {
+     "city": "ziro",
+     "blurb": "Festival of Music"
+    },
+    {
+     "city": "jodhpur",
+     "blurb": "Folk Music"
+    },
+    {
+     "city": "kochi",
+     "blurb": "Sopanam Sangeetham"
+    },
+    {
+     "city": "chennai",
+     "blurb": "Carnatic Music"
+    },
+    {
+     "city": "mumbai",
+     "blurb": "Desi Hip-Hop"
+    },
+    {
+     "city": "kolkata",
+     "blurb": "Baul Sangeet"
+    }
+   ]
+  },
+  {
+   "id": "historian",
+   "name": "Historian",
+   "start": "new-delhi",
+   "startBlurb": "Mughal capital",
+   "goals": [
+    {
+     "city": "patna",
+     "blurb": "Mauryan capital"
+    },
+    {
+     "city": "hampi",
+     "blurb": "Vijayanagara ruins"
+    },
+    {
+     "city": "sri-vijayapuram",
+     "blurb": "Colonial prison"
+    },
+    {
+     "city": "thanjavur",
+     "blurb": "Chola temple"
+    },
+    {
+     "city": "charaideo",
+     "blurb": "Ahom tombs"
+    },
+    {
+     "city": "bhopal",
+     "blurb": "Stone Age art"
+    }
+   ]
+  },
+  {
+   "id": "explorer",
+   "name": "Explorer",
+   "start": "rishikesh",
+   "startBlurb": "Ganga rafting",
+   "goals": [
+    {
+     "city": "gangtok",
+     "blurb": "Kanchenjunga Trek"
+    },
+    {
+     "city": "hampi",
+     "blurb": "Bouldering"
+    },
+    {
+     "city": "sri-vijayapuram",
+     "blurb": "Snorkeling"
+    },
+    {
+     "city": "jaisalmer",
+     "blurb": "Desert Dune Surfing"
+    },
+    {
+     "city": "shillong",
+     "blurb": "Spelunking"
+    },
+    {
+     "city": "kavaratti",
+     "blurb": "Scuba diving"
+    }
+   ]
+  }
+ ]
+}
