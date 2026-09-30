@@ -1,4 +1,4 @@
-// Renders the map area of the printed RAHEE board (RaheeA-Fincurve.pdf) into a
+// Renders the map area of the printed RAHEE board (Rahee-A-fincurve.pdf) into a
 // background plate PNG, erasing the printed furniture that sits over the map
 // (suit legend, QR code, credit text) since the digital UI renders those itself.
 //
@@ -23,10 +23,13 @@ export const PLATE = { x0: 20, y0: 515, x1: 1010, y1: 1728, scale: 2 };
 // printed credit line and licence badges down the left margin are left alone:
 // they are attribution, and the Porbandar-Veraval road runs close beside them.
 const ERASE = [
-  [0, 0, 430, 140],      // "Learn to play" QR block
+  [0, 0, 385, 140],      // "Learn to play" QR block — stops short of the Ladakh
+                         // fir tree, whose foliage starts around x=400
   [1270, 0, 1980, 515],  // Language + Food suit-legend cards
 ];
-const CREAM = [250, 247, 233];
+// Sampled from the plate's own blank background (e.g. plate pixel 1260,300),
+// not guessed — a mismatched fill here shows up as a visible seam.
+const CREAM = [250, 243, 212];
 
 const doc = mupdf.Document.openDocument(fs.readFileSync(boardPdf), "application/pdf");
 const page = doc.loadPage(0);

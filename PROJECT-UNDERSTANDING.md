@@ -194,4 +194,4 @@ The manual is silent on these, so we chose an answer and wrote it down. The firs
 
 1. CS 202 Project — Requirements Sheet: *RAHEE, a digital version of a travel board game*, CCL, IIT Gandhinagar.
 2. *Rahee — A Traveller's Journey Across India*, official manual. Design: Jyothi Krishnan & CCL, IITGN. Art: Parvathy Subramanian.
-3. The printed board, `RaheeA-Fincurve.pdf`. Artwork © CCL, IITGN.
+3. The printed board, `Rahee-A-fincurve.pdf`. Artwork © CCL, IITGN.

@@ -7,7 +7,7 @@
 | Source | What it gave me |
 |---|---|
 | `Games Software Developement Projects.pdf` | The CS 202 requirements sheet (scope, architecture, deliverable). Not the rules. |
-| `RaheeA-Fincurve.pdf` | The printed board plate: map, 6 character cards, 51 tourist stamps, cost banner, 4 memory suits. |
+| `Rahee-A-fincurve.pdf` | The printed board plate: map, 6 character cards, 51 tourist stamps, cost banner, 4 memory suits. |
 | QR code on the board → `canvaqr.com/RGHKkBUktF` → `gamesweplay-ccl.github.io/games/rahee.html` | Link to the official material. |
 | **`manual.pdf` (8 pages, "Rahee – A Traveller's Journey Across India")** | **The complete official ruleset.** Downloaded from the Drive link on that page and saved next to this file. |
 
@@ -171,15 +171,16 @@ Note: the same numbered city can be a goal for two characters with different fla
 
 ### Non-tourist cities on the map (plain dots — waypoints only)
 
-Kargil, Jammu, Dharamshala, Khirganga, Shimla, Chandigarh, Gangotri, Badrinath, Hisar, Bikaner, Udaipur, Indore, Akola, Pune, Nizamabad, Warangal, Gulbarga, Ratnagiri, Panaji, Chitradurga, Kurnool, Kadapa, Bengaluru, Salem, Puducherry, Coimbatore, Madurai, Thiruvananthapuram, Ongole, Visakhapatnam, Srikakulam, Raipur, Bastar*, Bilaspur, Rourkela, Jamshedpur, Asansol, Behrampore, Prayagraj, Gorakhpur, Siliguri, Itanagar, Dibang Valley, Kohima, Imphal, Silchar, Aizwal, Porbandar, Veraval, Agatti, Digligur, Pench, Sambalpur*, Penchmore…
+Kargil, Jammu, Dharamshala, Khirganga, Shimla, Chandigarh, Gangotri, Badrinath, Hisar, Bikaner, Udaipur, Indore, Akola, Pune, Nizamabad, Warangal, Gulbarga, Ratnagiri, Panaji, Chitradurga, Kurnool, Kadapa, Bengaluru, Salem, Puducherry, Coimbatore, Madurai, Thiruvananthapuram, Ongole, Visakhapatnam, Srikakulam, Raipur, Bastar*, Bilaspur, Rourkela, Jamshedpur, Asansol, Behrampore, Prayagraj, Gorakhpur, Siliguri, Itanagar, Dibang Valley, Kohima, Imphal, Silchar, Aizwal, Porbandar, Veraval, Agatti, Diglipur, Pench, Sambalpur*, Penchmore…
 
 *(This list is read off the artwork and is **not** yet exhaustive or verified — see below.)*
 
 ### Special routes
 
 - **Airports** (blue plane icons) — flights connect airport-to-airport for 1 step + ₹4,000.
-- **Dashed white lines** — the island air routes (Kochi/Bengaluru/Chennai ↔ Agatti–Kavaratti, and Chennai/Kolkata ↔ Sri Vijayapuram ↔ Digligur ↔ Great Nicobar).
+- **Dashed white lines** — the island air routes (Kochi/Bengaluru/Chennai ↔ Agatti–Kavaratti, and Chennai/Kolkata ↔ Sri Vijayapuram).
 - **Blue wavy line, "Rs. 1000"** — the Kochi–Kavaratti ship.
+- **Blue wavy line, "Rs. 200"** — the Sri Vijayapuram–Great Nicobar ship (Diglipur joins Sri Vijayapuram by the ordinary road ribbon, not by water).
 
 ---
 

@@ -12,7 +12,7 @@
   "width": 1980,
   "height": 2426,
   "source": {
-   "pdf": "RaheeA-Fincurve.pdf",
+   "pdf": "Rahee-A-fincurve.pdf",
    "regionPt": [
     20,
     515,
@@ -915,8 +915,8 @@
    "y": 1723
   },
   {
-   "id": "digligur",
-   "name": "Digligur",
+   "id": "diglipur",
+   "name": "Diglipur",
    "state": "AN",
    "x": 1736,
    "y": 1797
@@ -3313,7 +3313,7 @@
    ]
   },
   {
-   "from": "digligur",
+   "from": "diglipur",
    "to": "sri-vijayapuram",
    "type": "road",
    "steps": 1,
@@ -6335,7 +6335,7 @@
    "to": "great-nicobar",
    "type": "ship",
    "steps": 1,
-   "surcharge": 0,
+   "surcharge": 200,
    "path": [
     [
      1737,
@@ -6354,6 +6354,7 @@
    "name": "Pilgrim",
    "start": "varanasi",
    "startBlurb": "Kashi Vishwanath",
+   "card": "assets/cards/pilgrim.png",
    "goals": [
     {
      "city": "nagapattinam",
@@ -6386,6 +6387,7 @@
    "name": "Conservationist",
    "start": "sawai-madhopur",
    "startBlurb": "Tigers of Ranthambore",
+   "card": "assets/cards/conservationist.png",
    "goals": [
     {
      "city": "veraval",
@@ -6418,6 +6420,7 @@
    "name": "Riverkeeper",
    "start": "agra",
    "startBlurb": "Yamuna",
+   "card": "assets/cards/riverkeeper.png",
    "goals": [
     {
      "city": "jabalpur",
@@ -6450,6 +6453,7 @@
    "name": "Musician",
    "start": "gwalior",
    "startBlurb": "Dhrupad tradition",
+   "card": "assets/cards/musician.png",
    "goals": [
     {
      "city": "ziro",
@@ -6482,6 +6486,7 @@
    "name": "Historian",
    "start": "new-delhi",
    "startBlurb": "Mughal capital",
+   "card": "assets/cards/historian.png",
    "goals": [
     {
      "city": "patna",
@@ -6514,6 +6519,7 @@
    "name": "Explorer",
    "start": "rishikesh",
    "startBlurb": "Ganga rafting",
+   "card": "assets/cards/explorer.png",
    "goals": [
     {
      "city": "gangtok",

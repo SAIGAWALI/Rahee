@@ -1,20 +1,27 @@
-// Bootstraps the board data, owns the screen the player is looking at, and
-// wires the board view and sidebar to the engine.
+// Bootstraps the board data, connects to the server, owns the screen the
+// player is looking at, and wires the board view and sidebar to the
+// (server-redacted) state. No game rule ever runs in this file or in the
+// browser at all — every mutation is a message to the server, and the
+// screen only ever updates once the server's own "state" broadcast arrives.
 import * as E from "./engine.js";
+import * as net from "./net.js";
 import { createBoardView } from "./board-view.js";
 import { renderSidebar, h, money, cardChip } from "./sidebar.js";
-import { setupScreen, handoverScreen, layCardScreen, scoreboardScreen } from "./screens.js";
+import { landingScreen, lobbyScreen, waitingScreen, layCardScreen, scoreboardScreen } from "./screens.js";
 
 const app = document.getElementById("app");
-let board, graph, state = null, view = null, mounted = null;
+let board, graph, view = null, mounted = null;
+
+// Connection / room identity — who this device is, not part of game state.
+let connected = false, you = null, roomCode = null, seats = [];
+// The authoritative game state, as last broadcast by the server. Never
+// mutated locally — only ever replaced wholesale by net.js's onState.
+let state = null;
 
 // Per-turn interface state that is not part of the game itself.
 let local = blankLocal();
 function blankLocal() {
-  return {
-    selectedCardId: null, aceId: null, aceMode: "boost", aceSuit: null,
-    handoverAck: false, invite: null, focus: null,
-  };
+  return { selectedCardId: null, aceId: null, aceMode: "boost", aceSuit: null, invite: null, focus: null };
 }
 
 // ---------------------------------------------------------------------------
@@ -24,65 +31,78 @@ function blankLocal() {
     board = await (await fetch("data/board.json")).json();
   } catch (err) {
     app.innerHTML = `<div class="boot">Could not load <code>data/board.json</code>.<br>
-      Serve this folder over HTTP — for example <code>python3 -m http.server</code> — rather than opening the file directly.</div>`;
+      Make sure the server is running — <code>node server/app.js</code> — rather than opening this file directly.</div>`;
     console.error(err);
     return;
   }
   graph = E.buildGraph(board);
-  const resumed = E.loadSave(board);
-  if (resumed) {
-    state = resumed;
-    local.handoverAck = false;
-  }
-  render();
+  connectToServer();
 })();
 
-function commit(fn) {
-  try { fn(); } catch (err) { console.warn(err); }
-  if (state) E.save(state);
+function connectToServer() {
+  net.connect({
+    onOpen: () => { connected = true; render(); },
+    onClose: () => { connected = false; render(); },
+    onRoomCreated: (msg) => { you = msg.seatIndex; roomCode = msg.code; render(); },
+    onJoined: (msg) => { you = msg.seatIndex; roomCode = msg.code; seats = msg.seats; render(); },
+    onLobby: (msg) => { if (msg.code === roomCode) { seats = msg.seats; render(); } },
+    // The server never sends `board` (the client already has its own copy —
+    // see boot() — and resending ~70KB on every move would be wasteful).
+    // engine.js's read-only accessors (characterOf, cityOf, ...) and
+    // sidebar.js's cardChip all expect it on the state object, exactly as
+    // it was in the old single-device build, so it's reattached here from
+    // the client's own copy before anything renders.
+    onState: (s) => { state = { ...s, board }; render(); },
+    onError: (msg) => flashError(msg.message),
+  });
   render();
 }
 
-function newGame(config) {
-  state = E.newGame({ board, ...config });
-  local = blankLocal();
-  commit(() => {});
+function commit(name, args) {
+  net.action(name, args ?? {});
 }
 
 function restart() {
-  E.clearSave();
-  state = null;
-  mounted = null;
-  view = null;
-  local = blankLocal();
+  you = null; roomCode = null; seats = []; state = null; mounted = null; view = null; local = blankLocal();
   render();
+  connectToServer(); // fresh socket, fresh room — the old one stays live server-side but this device leaves it
+}
+
+let errorTimer = null;
+function flashError(message) {
+  let el = document.getElementById("neterr");
+  if (!el) { el = document.createElement("div"); el.id = "neterr"; el.className = "toast-error"; document.body.append(el); }
+  el.textContent = message;
+  el.style.display = "block";
+  clearTimeout(errorTimer);
+  errorTimer = setTimeout(() => { el.style.display = "none"; }, 4000);
 }
 
 // ---------------------------------------------------------------------------
 
 function render() {
-  if (!state) return swap(setupScreen(board, newGame));
+  if (!connected) return swap(h("div", { class: "boot" }, "Connecting to the server…"));
+
+  if (!state) {
+    if (roomCode === null) return swap(landingScreen(
+      (name) => net.createRoom(name),
+      (code, name) => net.joinRoom(code, name),
+    ));
+    return swap(lobbyScreen(board, {
+      code: roomCode, seats, you,
+      onPickCharacter: (id) => net.pickCharacter(id),
+      onStart: () => net.startGame(),
+    }));
+  }
+
   if (state.phase === "over") return swap(scoreboardScreen(state, restart));
 
   if (state.phase === "setup-roadtrip-card") {
     const p = E.currentPlayer(state);
-    if (!local.handoverAck) {
-      return swap(handoverScreen(p, "Everyone has been dealt their hand. Lay one card face-up as your first road-trip card.",
-        () => { local.handoverAck = true; render(); }));
+    if (p.id === you) {
+      return swap(layCardScreen(state, state.players[you], (id) => commit("layRoadTripCard", { cardId: id })));
     }
-    return swap(layCardScreen(state, p, (id) => commit(() => {
-      E.layRoadTripCard(state, p.id, id);
-      local.handoverAck = false;
-    })));
-  }
-
-  if (state.phase === "handover" && !local.handoverAck) {
-    const p = E.currentPlayer(state);
-    const ch = E.characterOf(state, p);
-    const endNote = state.endTriggeredBy !== null ? " This is the final round." : "";
-    mounted = null;
-    return swap(handoverScreen(p, `Round ${state.round} · ${ch.name} · ${p.hand.length} cards in hand.${endNote}`,
-      () => { local = blankLocal(); local.handoverAck = true; state.phase = "play"; render(); }));
+    return swap(waitingScreen("Waiting for the table…", `${p.name} is laying their first road-trip card.`));
   }
 
   renderPlay();
@@ -100,6 +120,9 @@ function swap(node) {
 // ---------------------------------------------------------------------------
 
 function renderPlay() {
+  const viewer = state.players[you];
+  const viewerCh = E.characterOf(state, viewer);
+
   if (!mounted) {
     app.innerHTML = "";
     const stage = h("div", { class: "stage" });
@@ -112,23 +135,24 @@ function renderPlay() {
     stage.prepend(boardHost);
     view = createBoardView(boardHost, board, { onCityClick: onCityClick });
     mounted = { wrap, stage, topbar, hint, boardHost, sidebar: null };
-    if (state.turn) view.focusOn(E.currentPlayer(state).city, { zoom: 900 });
+    view.focusOn(viewer.city, { zoom: 900 });
   }
 
   const p = E.currentPlayer(state);
   const t = state.turn;
   const ch = E.characterOf(state, p);
+  const isMyTurn = p.id === you;
 
-  // --- top bar
+  // --- top bar — a shared status ticker: whose turn it is right now.
   mounted.topbar.innerHTML = "";
   mounted.topbar.append(...[
     h("div", { class: "turnchip" },
       h("div", { class: "dot", style: `background:${p.colour}` }),
-      h("div", {}, h("b", {}, p.name), h("div", { class: "tiny muted" }, ch.name)),
+      h("div", {}, h("b", {}, isMyTurn ? "Your turn" : `${p.name}'s turn`), h("div", { class: "tiny muted" }, ch.name)),
       h("div", { class: "sep" }),
       h("div", { class: "stat" }, "Round", h("b", {}, String(state.round))),
       h("div", { class: "sep" }),
-      h("div", { class: "stat" }, "Budget left", h("b", {}, money(Math.max(0, board.economy.startingBudget - p.spent))))),
+      h("div", { class: "stat" }, "Their budget left", h("b", {}, money(Math.max(0, board.economy.startingBudget - p.spent))))),
     state.endTriggeredBy !== null
       ? h("div", { class: "turnchip", style: "background:#fff4d6;border-color:#e8cf95" },
           h("div", { class: "stat", style: "padding:0 8px" }, "Final round",
@@ -138,13 +162,13 @@ function renderPlay() {
       h("button", { title: "Zoom in", onClick: () => view.zoomIn() }, "＋"),
       h("button", { title: "Zoom out", onClick: () => view.zoomOut() }, "−"),
       h("button", { class: "wide", title: "Fit the whole board", onClick: () => view.fitAll() }, "Fit"),
-      h("button", { class: "wide", title: "Centre on your traveller", onClick: () => view.focusOn(p.city, { zoom: 800 }) }, "Me"),
-      h("button", { class: "wide", title: "Start a new game", onClick: () => { if (confirm("Abandon this game and start a new one?")) restart(); } }, "New")),
+      h("button", { class: "wide", title: "Centre on your traveller", onClick: () => view.focusOn(viewer.city, { zoom: 800 }) }, "Me"),
+      h("button", { class: "wide", title: "Leave and start a new game", onClick: () => { if (confirm("Leave this game and start a new one?")) restart(); } }, "New")),
   ].filter(Boolean));
 
   // --- hint line
   mounted.hint.innerHTML = "";
-  const hintText = currentHint(t, p);
+  const hintText = currentHint(t, p, isMyTurn, you);
   mounted.hint.hidden = !hintText;
   if (hintText) mounted.hint.innerHTML = hintText;
 
@@ -152,54 +176,65 @@ function renderPlay() {
   const moving = t && (t.stage === "moving" || t.stage === "roadtrip-moving");
   const options = moving ? E.movementOptions(state, graph) : [];
   const walked = t ? [...t.legs, ...(t.roadTrip?.legs ?? [])] : [];
-  const goalCities = new Set(ch.goals.map((g) => g.city));
+  const goalCities = new Set(viewerCh.goals.map((g) => g.city));
   view.render({
     legalRoutes: options.map((o) => o.route),
     walked,
     pulse: new Set(options.map((o) => o.to)),
     goals: goalCities,
-    visited: new Set(p.visited),
-    reached: new Set(p.reached),
+    visited: new Set(viewer.visited),
+    reached: new Set(viewer.reached),
     tokens: state.players.map((pl) => ({ city: pl.city, colour: pl.colour, active: pl.id === p.id })),
     hover: (cityId) => {
       const here = state.players.filter((pl) => pl.city === cityId).map((pl) => pl.name);
       const opt = options.find((o) => o.to === cityId);
       const bits = [];
       if (opt) bits.push(`${opt.route.type} · ${money(E.routeCost(board, opt.route))}`);
-      if (goalCities.has(cityId)) bits.push(p.reached.includes(cityId) ? "your destination ✓" : "your destination");
+      if (goalCities.has(cityId)) bits.push(viewer.reached.includes(cityId) ? "your destination ✓" : "your destination");
       if (here.length) bits.push(`here: ${here.join(", ")}`);
       return bits.join(" · ");
     },
   });
 
-  // --- sidebar
+  // --- sidebar — always your own hand, budget and progress, whoever's turn it is.
+  // An invited companion gets their own accept/decline prompt regardless of
+  // whose turn it is — everyone else's device just watches the turn happen.
+  const awaitingMyResponse = t?.stage === "roadtrip-pending"
+    && t.pendingTrip.companions.includes(you) && !(you in t.pendingTrip.responses);
   const sidebar = renderSidebar(state, {
-    viewPlayer: p,
+    viewPlayer: viewer,
     showHand: true,
-    canPlay: !t,
+    canPlay: isMyTurn && !t,
     selectedCardId: local.selectedCardId,
     selectedAceId: local.aceId,
     onPickCard: pickCard,
     onFocusCity: (id) => view.focusOn(id, { zoom: 620 }),
-    actions: buildActions(),
+    actions: awaitingMyResponse ? respondActions(t) : isMyTurn ? buildActions() : waitingActionsPanel(p, t),
   });
   if (mounted.sidebar) mounted.sidebar.replaceWith(sidebar);
   else mounted.wrap.append(sidebar);
   mounted.sidebar = sidebar;
 }
 
-function currentHint(t, p) {
-  if (!t) return "Pick a card from your hand — it is both your movement and the suit of the memories you can make.";
+function currentHint(t, p, isMyTurn, you) {
+  if (!t) return isMyTurn
+    ? "Pick a card from your hand — it is both your movement and the suit of the memories you can make."
+    : `Waiting for ${p.name} to pick a card.`;
   if (t.stage === "moving") {
     const left = t.allowance - t.stepsUsed;
     return left > 0
       ? `Click a highlighted city to travel. <b>${left}</b> step${left === 1 ? "" : "s"} left — stopping on exactly ${t.allowance} earns an efficient-travel memory.`
-      : "You have used the whole card. Finish your move.";
+      : "The whole card has been used. Finishing the move next.";
   }
   if (t.stage === "roadtrip-moving") {
     const rt = t.roadTrip;
     const left = rt.allowance - rt.stepsUsed;
     return `Road trip on ${rt.card.id}. <b>${left}</b> step${left === 1 ? "" : "s"} left — everyone aboard travels together.`;
+  }
+  if (t.stage === "roadtrip-pending") {
+    return t.pendingTrip.companions.includes(you) && !(you in t.pendingTrip.responses)
+      ? "You've been invited on a road trip — accept or decline below."
+      : "A road trip has been proposed — waiting for everyone invited to answer.";
   }
   return "";
 }
@@ -221,15 +256,40 @@ function pickCard(id) {
 
 function onCityClick(cityId) {
   const t = state.turn;
-  if (!t) return;
+  if (!t || E.currentPlayer(state).id !== you) return;
   if (t.stage !== "moving" && t.stage !== "roadtrip-moving") return;
   if (!E.movementOptions(state, graph).some((o) => o.to === cityId)) return;
-  commit(() => E.stepTo(state, graph, cityId));
+  commit("stepTo", { cityId });
 }
 
 // ---------------------------------------------------------------------------
-// Action panel
+// Action panel — shown only on the device whose turn it is.
 // ---------------------------------------------------------------------------
+
+function waitingActionsPanel(p, t) {
+  let text = t ? `Waiting for ${p.name} to finish their move…` : `Waiting for ${p.name} to play a card…`;
+  if (t?.stage === "roadtrip-pending") {
+    const pt = t.pendingTrip;
+    const waitingOn = pt.companions.filter((id) => !(id in pt.responses)).map((id) => state.players[id].name);
+    text = `${p.name} invited ${pt.companions.map((id) => state.players[id].name).join(", ")} on a road trip — waiting on ${waitingOn.join(", ")}.`;
+  }
+  return h("div", { class: "actions" }, h("div", { class: "row" }, h("span", { class: "tiny muted" }, text)));
+}
+
+/** Shown on an invited companion's own device until they accept or decline. */
+function respondActions(t) {
+  const pt = t.pendingTrip;
+  const inviter = E.currentPlayer(state);
+  const owner = state.players[pt.owner];
+  const card = owner.faceUp.find((f) => f.card.id === pt.cardId)?.card;
+  return h("div", { class: "actions" },
+    h("div", { class: "row" },
+      h("span", { class: "tiny" }, h("b", {}, inviter.name), " invites you on a road trip",
+        card ? ` — flipping ${pt.owner === inviter.id ? "their" : `${owner.name}'s`} ${card.id}, ${E.cardValue(board, card)} steps` : "")),
+    h("div", { class: "row", style: "margin-top:10px" },
+      h("button", { class: "btn ghost", onClick: () => commit("respondRoadTrip", { accept: false }) }, "Decline"),
+      h("button", { class: "btn primary", style: "margin-left:auto", onClick: () => commit("respondRoadTrip", { accept: true }) }, "Join the trip")));
+}
 
 function buildActions() {
   const p = E.currentPlayer(state);
@@ -239,6 +299,7 @@ function buildActions() {
   if (!t) return chooseCardActions(box, p);
   if (t.stage === "moving" || t.stage === "roadtrip-moving") return movingActions(box, p, t);
   if (t.stage === "roadtrip-invite") return inviteActions(box, p, t);
+  if (t.stage === "roadtrip-pending") return pendingTripActions(box, t);
   return resolveActions(box, p, t);
 }
 
@@ -291,13 +352,10 @@ function chooseCardActions(box, p) {
     h("button", { class: "btn ghost", onClick: () => { local.selectedCardId = null; local.aceId = null; renderPlay(); } }, "Clear"),
     h("button", {
       class: "btn primary", style: "margin-left:auto",
-      onClick: () => commit(() => {
-        E.playCard(state, {
-          cardId: main.id,
-          ace: ace ? { cardId: ace.id, mode: local.aceMode, suit: local.aceSuit } : null,
-        });
+      onClick: () => {
+        commit("playCard", { cardId: main.id, ace: ace ? { cardId: ace.id, mode: local.aceMode, suit: local.aceSuit } : null });
         view.focusOn(p.city, { zoom: 900 });
-      }),
+      },
     }, "Play and travel")));
   return box;
 }
@@ -322,17 +380,17 @@ function movingActions(box, p, t) {
       riders.append(r.droppedAt
         ? h("div", { class: "tiny muted", style: "padding:4px 2px" },
             `${pl.name} left at ${E.cityOf(state, r.droppedAt).name} after ${r.stepsTravelled} step${r.stepsTravelled === 1 ? "" : "s"}.`)
-        : h("button", { class: "btn small", onClick: () => commit(() => E.dropOff(state, r.id)) },
+        : h("button", { class: "btn small", onClick: () => commit("dropOff", { riderId: r.id }) },
             `Drop ${pl.name} off here`));
     }
     box.append(riders);
   }
 
   box.append(h("div", { class: "row", style: "margin-top:10px" },
-    !rt ? h("button", { class: "btn", disabled: used === 0, onClick: () => commit(() => E.undoStep(state)) }, "Undo step") : null,
+    !rt ? h("button", { class: "btn", disabled: used === 0, onClick: () => commit("undoStep") }, "Undo step") : null,
     h("button", {
       class: "btn primary", style: "margin-left:auto", disabled: used === 0,
-      onClick: () => commit(() => (rt ? E.endRoadTrip(state) : E.endMovement(state))),
+      onClick: () => commit(rt ? "endRoadTrip" : "endMovement"),
     }, rt ? "End the road trip" : used === allowance ? "Finish move (efficient!)" : "Finish move here")));
   return box;
 }
@@ -376,25 +434,41 @@ function inviteActions(box, p, t) {
   }
 
   box.append(h("div", { class: "row", style: "margin-top:10px" },
-    h("button", { class: "btn ghost", onClick: () => { local.invite = null; state.turn.stage = "resolve"; renderPlay(); } }, "Never mind"),
+    h("button", { class: "btn ghost", onClick: () => { local.invite = null; commit("cancelRoadTripInvite"); } }, "Never mind"),
     h("button", {
       class: "btn primary", style: "margin-left:auto",
       disabled: !local.invite.companions.length || !local.invite.card,
-      onClick: () => commit(() => {
-        E.startRoadTrip(state, { companions: local.invite.companions, owner: local.invite.owner, cardId: local.invite.card });
+      onClick: () => {
+        const { companions, owner, card } = local.invite;
         local.invite = null;
-      }),
-    }, "Set off together")));
+        commit("proposeRoadTrip", { companions, owner, cardId: card });
+      },
+    }, "Send the invitation")));
+  return box;
+}
+
+/** The inviter's own view while the invited companions haven't all answered yet. */
+function pendingTripActions(box, t) {
+  const pt = t.pendingTrip;
+  const waitingOn = pt.companions.filter((id) => !(id in pt.responses));
+  const answered = pt.companions.filter((id) => id in pt.responses);
+  box.append(h("div", { class: "row" },
+    h("span", { class: "tiny muted" }, `Waiting on ${waitingOn.map((id) => state.players[id].name).join(", ")} to respond…`)));
+  if (answered.length) {
+    const bits = answered.map((id) => `${state.players[id].name} ${pt.responses[id] === "accepted" ? "is in" : "said no"}`);
+    box.append(h("div", { class: "row", style: "margin-top:6px" }, h("span", { class: "tiny" }, bits.join(" · "))));
+  }
+  box.append(h("div", { class: "row", style: "margin-top:10px" },
+    h("button", { class: "btn ghost", onClick: () => commit("cancelRoadTripInvite") }, "Withdraw the invitation")));
   return box;
 }
 
 function resolveActions(box, p, t) {
-  const board_ = board;
   const gained = t.gained.filter((g) => g.player === p.id);
   if (t.gained.length) {
     const bits = t.gained.map((g) => {
       const who = g.player === p.id ? "" : `${state.players[g.player].name}: `;
-      return `${who}${E.SUIT_SYMBOL[g.suit]} ${E.memoryName(board_, g.suit)} (${g.why})`;
+      return `${who}${E.SUIT_SYMBOL[g.suit]} ${E.memoryName(board, g.suit)} (${g.why})`;
     });
     box.append(h("div", { class: "row" }, h("span", { class: "tiny" }, h("b", {}, "Memories: "), bits.join(" · "))));
   } else {
@@ -403,7 +477,7 @@ function resolveActions(box, p, t) {
 
   // Tourism — discounted when a road trip has just finished here.
   const didTrip = !!t.roadTrip;
-  const price = didTrip ? board_.economy.sharedTouristVisit : board_.economy.touristVisit;
+  const price = didTrip ? board.economy.sharedTouristVisit : board.economy.touristVisit;
   const candidates = didTrip
     ? E.sharedVisitors(state)
     : (E.touristHere(state, p) ? [p.id] : []);
@@ -415,7 +489,7 @@ function resolveActions(box, p, t) {
     for (const id of candidates)
       row.append(h("button", {
         class: "btn small primary",
-        onClick: () => commit(() => E.visitTourist(state, id, didTrip)),
+        onClick: () => commit("visitTourist", { playerId: id, discounted: didTrip }),
       }, `${id === p.id ? "Visit" : `${state.players[id].name} visits`} · ${money(price)}`));
     box.append(row);
   }
@@ -425,15 +499,12 @@ function resolveActions(box, p, t) {
 
   box.append(h("div", { class: "row", style: "margin-top:10px" },
     canTrip
-      ? h("button", { class: "btn", onClick: () => { state.turn.stage = "roadtrip-invite"; local.invite = null; renderPlay(); } },
+      ? h("button", { class: "btn", onClick: () => { local.invite = null; commit("offerRoadTrip"); } },
           `Offer a road trip (${others.map((o) => o.name).join(", ")})`)
       : null,
     h("button", {
       class: "btn primary", style: "margin-left:auto",
-      onClick: () => commit(() => {
-        E.endTurn(state);
-        local = blankLocal();
-      }),
+      onClick: () => { commit("endTurn"); local = blankLocal(); },
     }, "End turn")));
   return box;
 }

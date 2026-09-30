@@ -1,121 +1,101 @@
-// Setup, private handover, and the final scoreboard.
+// Landing (create/join a room), the online lobby, laying a road-trip card,
+// waiting for another seat's turn, and the final scoreboard.
 import { h, money, cardChip } from "./sidebar.js";
-import {
-  PLAYER_COLOURS, SUIT_SYMBOL, dealSpec, characterOf, cityOf, finalScores, SUITS,
-} from "./engine.js";
+import { PLAYER_COLOURS, SUIT_SYMBOL, characterOf, cityOf, finalScores, SUITS } from "./engine.js";
 
-/** Character choice runs anticlockwise from the player to the first player's right. */
-export const pickOrder = (n, first) =>
-  Array.from({ length: n }, (_, i) => ((first - 1 - i) % n + n) % n);
+/** Create a room, or join one by its 4-character code. */
+export function landingScreen(onCreate, onJoin) {
+  let name = "";
+  let code = "";
+  const nameInput = h("input", { type: "text", placeholder: "Your name", maxlength: "18" });
+  nameInput.addEventListener("input", () => { name = nameInput.value; });
+  const codeInput = h("input", {
+    type: "text", placeholder: "Room code", maxlength: "4",
+    style: "text-transform:uppercase;letter-spacing:.08em;max-width:120px",
+  });
+  codeInput.addEventListener("input", () => { code = codeInput.value.toUpperCase(); });
 
-export function setupScreen(board, onStart) {
-  const draft = {
-    count: 3,
-    first: 0,
-    names: ["Player 1", "Player 2", "Player 3", "Player 4", "Player 5", "Player 6"],
-    characters: {},   // player index -> character id
-  };
-
-  const root = h("div", { class: "sheet-wrap" });
-  const sheet = h("div", { class: "sheet" });
-  root.append(sheet);
-
-  function draw() {
-    sheet.innerHTML = "";
-    sheet.append(h("div", { class: "masthead" },
+  const sheet = h("div", { class: "sheet narrow" },
+    h("div", { class: "masthead" },
       h("h1", { class: "wordmark" }, "RAHEE"),
-      h("p", {}, "A traveller's journey across India — local hotseat for 2–6 players")));
-
-    // players
-    const countSeg = h("div", { class: "seg" });
-    for (let n = 2; n <= 6; n++) {
-      countSeg.append(h("button", {
-        "aria-pressed": draft.count === n ? "true" : "false",
-        onClick: () => { draft.count = n; draft.first = Math.min(draft.first, n - 1); draft.characters = {}; draw(); },
-      }, String(n)));
-    }
-    const rows = h("div", {});
-    for (let i = 0; i < draft.count; i++) {
-      const input = h("input", { type: "text", value: draft.names[i], maxlength: "18" });
-      input.addEventListener("input", () => { draft.names[i] = input.value; });
-      rows.append(h("div", { class: "playerrow" },
-        h("div", { class: "swatch", style: `background:${PLAYER_COLOURS[i]}` }),
-        input,
-        h("button", {
-          class: `btn small${draft.first === i ? " primary" : ""}`,
-          onClick: () => { draft.first = i; draft.characters = {}; draw(); },
-        }, draft.first === i ? "First player" : "Go first")));
-    }
-    const spec = dealSpec(board, draft.count);
-    sheet.append(h("section", { class: "panel" },
-      h("h3", {}, "Travellers"),
-      h("div", { class: "field" }, h("label", {}, "How many"), countSeg),
-      rows,
-      h("p", { class: "tiny muted", style: "margin:12px 0 0" },
-        `The player who most recently travelled furthest goes first; turns then pass clockwise. ` +
-        `With ${draft.count} players the deck is ${spec.ranks.join(", ")} in all four suits, and everyone is dealt ` +
-        `one ${spec.guaranteed.join(" or ")} plus ${spec.dealt} more cards.`)));
-
-    // characters, chosen in the printed order
-    const order = pickOrder(draft.count, draft.first);
-    const nextIdx = order.find((i) => !draft.characters[i]);
-    const taken = new Set(Object.values(draft.characters));
-    const grid = h("div", { class: "chargrid" });
-    for (const ch of board.characters) {
-      const owner = Object.entries(draft.characters).find(([, id]) => id === ch.id)?.[0];
-      grid.append(h("button", {
-        class: "charcard",
-        "aria-pressed": owner !== undefined ? "true" : "false",
-        disabled: nextIdx === undefined || (taken.has(ch.id) && owner === undefined),
-        onClick: () => {
-          if (owner !== undefined) delete draft.characters[owner];
-          else if (nextIdx !== undefined) draft.characters[nextIdx] = ch.id;
-          draw();
-        },
-      },
-        h("h4", {}, ch.name),
-        h("div", { class: "start" }, `Starts at ${cityOf({ board }, ch.start).name} — ${ch.startBlurb}`),
-        h("ul", {}, ch.goals.map((g) => h("li", {},
-          h("b", {}, cityOf({ board }, g.city).name), h("span", {}, `· ${g.blurb}`)))),
-        owner !== undefined
-          ? h("div", { style: "margin-top:9px" },
-              h("span", { class: "tag", style: `background:${PLAYER_COLOURS[owner]}22;color:${PLAYER_COLOURS[owner]}` }, draft.names[owner]))
-          : null));
-    }
-    sheet.append(h("section", { class: "panel" },
-      h("h3", {}, "Characters"),
-      h("p", { class: "tiny muted", style: "margin:-4px 0 12px" },
-        nextIdx === undefined
-          ? "Everyone has a character."
-          : `${draft.names[nextIdx]} chooses — selection runs anticlockwise from the player to the first player's right.`),
-      grid));
-
-    const ready = Object.keys(draft.characters).length === draft.count;
-    sheet.append(h("div", { style: "display:flex;justify-content:flex-end;gap:10px;margin-top:18px" },
-      h("button", { class: "btn primary", disabled: !ready, onClick: () => onStart({
-        players: Array.from({ length: draft.count }, (_, i) => ({
-          name: draft.names[i].trim() || `Player ${i + 1}`,
-          characterId: draft.characters[i],
-        })),
-        firstPlayer: draft.first,
-      }) }, ready ? "Deal the cards" : "Choose every character first")));
-  }
-
-  draw();
-  return root;
+      h("p", {}, "A traveller's journey across India — play with friends on their own devices")),
+    h("section", { class: "panel" },
+      h("div", { class: "field" }, h("label", {}, "Your name"), nameInput),
+      h("div", { style: "display:flex;flex-direction:column;gap:10px;margin-top:16px" },
+        h("button", { class: "btn primary", onClick: () => onCreate(name) }, "Create a room"),
+        h("div", { style: "display:flex;gap:8px;align-items:center" },
+          codeInput,
+          h("button", { class: "btn", style: "flex:1", onClick: () => onJoin(code, name) }, "Join with a code")))));
+  return h("div", { class: "sheet-wrap centre" }, sheet);
 }
 
-export function handoverScreen(player, subtitle, onContinue) {
+/** The room's own colour+character picker, reusable once seats change shape (lobby, or read-only after the game starts). */
+function characterGrid(board, seats, you, onPick) {
+  const taken = seats.map((s) => s.characterId);
+  const grid = h("div", { class: "chargrid" });
+  for (const ch of board.characters) {
+    const ownerIdx = taken.indexOf(ch.id);
+    const mine = ownerIdx === you;
+    grid.append(h("button", {
+      class: "charcard",
+      "aria-pressed": mine ? "true" : "false",
+      "aria-label": `${ch.name} — starts at ${cityOf({ board }, ch.start).name}, ${ch.startBlurb}`,
+      disabled: !onPick || (ownerIdx !== -1 && !mine),
+      onClick: onPick ? () => onPick(ch.id) : null,
+    },
+      h("img", { class: "charcard-art", src: ch.card, alt: `${ch.name}'s printed character card`, loading: "lazy" }),
+      ownerIdx !== -1
+        ? h("span", {
+            class: "tag charcard-owner",
+            style: `background:${PLAYER_COLOURS[ownerIdx % PLAYER_COLOURS.length]}22;color:${PLAYER_COLOURS[ownerIdx % PLAYER_COLOURS.length]}`,
+          }, seats[ownerIdx].name)
+        : null));
+  }
+  return grid;
+}
+
+/** Waiting room: who's here, pick a character, the host starts once everyone has. */
+export function lobbyScreen(board, { code, seats, you, onPickCharacter, onStart }) {
+  const rows = h("div", {});
+  seats.forEach((s, i) => {
+    rows.append(h("div", { class: "playerrow" },
+      h("div", { class: "swatch", style: `background:${PLAYER_COLOURS[i % PLAYER_COLOURS.length]}` }),
+      h("div", { style: "flex:1" }, s.name, i === you ? h("span", { class: "tiny muted" }, "  (you)") : null),
+      h("span", { class: "tiny muted" }, s.characterId ? board.characters.find((c) => c.id === s.characterId)?.name : "choosing…")));
+  });
+
+  const ready = seats.length >= 2 && seats.every((s) => s.characterId);
+  const startRow = you === 0
+    ? h("button", {
+        class: "btn primary", disabled: !ready, onClick: onStart,
+      }, ready ? "Deal the cards" : seats.length < 2 ? "Waiting for more players…" : "Waiting for everyone to choose…")
+    : h("span", { class: "tiny muted" }, ready ? "Waiting for the host to start…" : "Waiting for everyone to choose…");
+
+  return h("div", { class: "sheet-wrap" },
+    h("div", { class: "sheet" },
+      h("div", { class: "masthead" },
+        h("h1", { class: "wordmark" }, "RAHEE"),
+        h("p", {}, "Room code ", h("b", { style: "letter-spacing:.1em" }, code), " — share it with the other players")),
+      h("section", { class: "panel" },
+        h("h3", {}, "Players"), rows,
+        h("p", { class: "tiny muted", style: "margin:12px 0 0" }, `${seats.length} joined — up to ${board.characters.length}.`)),
+      h("section", { class: "panel" },
+        h("h3", {}, "Characters"),
+        h("p", { class: "tiny muted", style: "margin:-4px 0 12px" }, "Pick any character nobody else here has taken."),
+        characterGrid(board, seats, you, onPickCharacter)),
+      h("div", { style: "display:flex;justify-content:flex-end;margin-top:18px" }, startRow)));
+}
+
+/** A plain placeholder shown while it's some other seat's turn to act. */
+export function waitingScreen(title, subtitle) {
   return h("div", { class: "sheet-wrap centre" },
     h("div", { class: "sheet narrow" },
-      h("div", { class: "panel handover" },
-        h("div", { class: "dot", style: `background:${player.colour}` }),
-        h("h2", {}, `Pass the device to ${player.name}`),
-        h("p", {}, subtitle),
-        h("button", { class: "btn primary", onClick: onContinue }, `I'm ${player.name} — show my cards`))));
+      h("div", { class: "panel", style: "text-align:center;padding:56px 24px" },
+        h("h2", { style: "font:600 26px/1.2 var(--serif)" }, title),
+        subtitle ? h("p", { class: "muted", style: "max-width:380px;margin:10px auto 0" }, subtitle) : null)));
 }
 
-/** Private screen where a player lays their first face-up road-trip card. */
+/** Shown only to the seat that currently owes a face-up road-trip card. */
 export function layCardScreen(state, player, onLay) {
   const hand = h("div", { class: "hand", style: "justify-content:center" });
   for (const c of player.hand)

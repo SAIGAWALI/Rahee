@@ -59,7 +59,7 @@ const SPECIAL = [
   ["kolkata", "sri-vijayapuram", "flight", 4000],   // dotted line south-east from Kolkata
   ["kochi", "kavaratti", "ship", 1000],             // the "Rs. 1000" boat line
   ["agatti", "kavaratti", "ship", 0],               // short link inside Lakshadweep
-  ["sri-vijayapuram", "great-nicobar", "ship", 0],  // the line down the Nicobar chain
+  ["sri-vijayapuram", "great-nicobar", "ship", 200], // the "Rs. 200" line down the Nicobar chain
 ];
 for (const [from, to, type, surcharge] of SPECIAL) {
   const a = byId.get(from), b = byId.get(to);
@@ -100,7 +100,7 @@ const board = {
     image: "assets/board-plate.png",
     width: 1980,
     height: 2426,
-    source: { pdf: "RaheeA-Fincurve.pdf", regionPt: [20, 515, 1010, 1728], scale: 2 },
+    source: { pdf: "Rahee-A-fincurve.pdf", regionPt: [20, 515, 1010, 1728], scale: 2 },
   },
   suits: [
     { id: "spades", symbol: "♠", memory: "Bazaar", blurb: "shopping at a bazaar", colour: "#2f3640" },
@@ -139,6 +139,7 @@ const board = {
   routes,
   characters: CHARACTERS.map(([id, name, start, startBlurb, goals]) => ({
     id, name, start, startBlurb,
+    card: `assets/cards/${id}.png`,
     goals: goals.map(([city, blurb]) => ({ city, blurb })),
   })),
 };
@@ -175,7 +176,7 @@ const gseen = new Set(["new-delhi"]);
 for (const q = ["new-delhi"]; q.length; ) {
   for (const n of ground.get(q.pop())) if (!gseen.has(n)) { gseen.add(n); q.push(n); }
 }
-const ANDAMANS = new Set(["sri-vijayapuram", "digligur", "great-nicobar"]);
+const ANDAMANS = new Set(["sri-vijayapuram", "diglipur", "great-nicobar"]);
 const stranded = cities.filter((c) => !gseen.has(c.id) && !ANDAMANS.has(c.id)).map((c) => c.id);
 if (stranded.length) problems.push(`reachable only by air: ${stranded.join(", ")}`);
 

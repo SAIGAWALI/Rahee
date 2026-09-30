@@ -177,6 +177,7 @@ export function playCard(s, { cardId: mainId, ace }) {
     stage: "moving",
     gained: [],
     roadTrip: null,
+    pendingTrip: null,
   };
   log(s, `plays ${main.id}${aceCard ? ` with ${aceCard.id} (${ace.mode})` : ""} — up to ${allowance} step${allowance > 1 ? "s" : ""}`);
   return s;
@@ -305,26 +306,89 @@ export function roadTripCards(s, participantIds) {
   return out;
 }
 
-export function startRoadTrip(s, { companions, owner, cardId: rtCardId }) {
+/** Enter the invite step so companions and a face-up card can be chosen. */
+export function offerRoadTrip(s) {
+  const t = s.turn;
+  if (!t || t.stage !== "resolve") throw new Error("no move to offer a road trip from");
   const p = currentPlayer(s);
+  const others = playersAt(s, p.city, p.id);
+  if (!others.length) throw new Error("nobody here to invite");
+  if (!roadTripCards(s, [p.id, ...others.map((o) => o.id)]).length) throw new Error("no face-up card available to flip");
+  t.stage = "roadtrip-invite";
+  return s;
+}
+
+/** Back out of the invite step, or a pending invitation, without a trip starting. */
+export function cancelRoadTripInvite(s) {
+  const t = s.turn;
+  if (!t || (t.stage !== "roadtrip-invite" && t.stage !== "roadtrip-pending"))
+    throw new Error("not offering a road trip");
+  t.pendingTrip = null;
+  t.stage = "resolve";
+  return s;
+}
+
+/**
+ * Sends the invitation — each companion now needs to accept or decline on
+ * their own before the trip actually starts (see respondRoadTrip). Nothing
+ * moves and no card is flipped yet.
+ */
+export function proposeRoadTrip(s, { companions, owner, cardId: rtCardId }) {
+  const t = s.turn;
+  if (!t || t.stage !== "roadtrip-invite") throw new Error("not offering a road trip");
+  if (!companions.length) throw new Error("invite at least one companion");
   const holder = s.players[owner];
   const entry = holder.faceUp.find((f) => f.card.id === rtCardId && !f.flipped);
   if (!entry) throw new Error("that road-trip card is not available");
-  entry.flipped = true;
 
-  s.turn.roadTrip = {
+  t.pendingTrip = { companions, owner, cardId: rtCardId, responses: {} };
+  t.stage = "roadtrip-pending";
+  log(s, `invites ${companions.map((id) => s.players[id].name).join(" & ")} on a road trip, proposing to flip ${entry.card.id}`);
+  return s;
+}
+
+/**
+ * One invited companion accepts or declines. Once everyone invited has
+ * answered, the trip starts with whoever said yes (flipping the card at
+ * that point, not before) — or is called off if nobody did.
+ */
+export function respondRoadTrip(s, playerId, accept) {
+  const t = s.turn;
+  const pt = t?.pendingTrip;
+  if (!pt) throw new Error("no road-trip invitation to respond to");
+  if (!pt.companions.includes(playerId)) throw new Error("you were not invited on this road trip");
+  if (playerId in pt.responses) throw new Error("you already responded");
+  pt.responses[playerId] = accept ? "accepted" : "declined";
+  log(s, `${s.players[playerId].name} ${accept ? "joins" : "declines"} the road trip`);
+
+  if (!pt.companions.every((id) => id in pt.responses)) return s; // still waiting on others
+
+  const accepted = pt.companions.filter((id) => pt.responses[id] === "accepted");
+  t.pendingTrip = null;
+  if (!accepted.length) {
+    log(s, "nobody wanted to come along — the road trip is off");
+    t.stage = "resolve";
+    return s;
+  }
+
+  const p = currentPlayer(s);
+  const holder = s.players[pt.owner];
+  const entry = holder.faceUp.find((f) => f.card.id === pt.cardId && !f.flipped);
+  if (!entry) throw new Error("that road-trip card is no longer available");
+  entry.flipped = true;
+  t.roadTrip = {
     card: entry.card,
-    owner,
+    owner: pt.owner,
     allowance: cardValue(s.board, entry.card),
     stepsUsed: 0,
     driverPaid: 0,
     start: p.city,
     path: [p.city],
     legs: [],
-    riders: companions.map((id) => ({ id, stepsTravelled: 0, droppedAt: null })),
+    riders: accepted.map((id) => ({ id, stepsTravelled: 0, droppedAt: null })),
   };
-  s.turn.stage = "roadtrip-moving";
-  log(s, `invites ${companions.map((id) => s.players[id].name).join(" & ")} on a road trip — flips ${entry.card.id}`);
+  t.stage = "roadtrip-moving";
+  log(s, `sets off with ${accepted.map((id) => s.players[id].name).join(" & ")} — flips ${entry.card.id}`);
   return s;
 }
 
