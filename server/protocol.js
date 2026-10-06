@@ -22,7 +22,7 @@ export const ERROR = "error";
 // engine.js itself performs every other legality check and throws on misuse.
 export const TURN_GATED_ACTIONS = new Set([
   "layRoadTripCard", "playCard", "stepTo", "undoStep", "endMovement",
-  "offerRoadTrip", "proposeRoadTrip", "cancelRoadTripInvite", "endRoadTrip", "endTurn",
+  "offerRoadTrip", "proposeRoadTrip", "cancelRoadTripInvite", "confirmRoadTrip", "endRoadTrip", "endTurn",
 ]);
 // visitTourist, dropOff and respondRoadTrip are actions any seated player may
 // send for themselves — engine.js validates the target itself (touristHere,

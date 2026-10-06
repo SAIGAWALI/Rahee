@@ -114,28 +114,43 @@ function randomGame(seed) {
     const cards = others.length ? E.roadTripCards(s, [p.id, ...others.map((o) => o.id)]) : [];
     if (cards.length && rand() < 0.7) {
       const chosen = pick(cards);
-      E.offerRoadTrip(s);
-      E.proposeRoadTrip(s, { companions: others.map((o) => o.id), owner: chosen.owner, cardId: chosen.card.id });
-      // Each invited companion answers on their own; the trip only actually
-      // starts (stage -> "roadtrip-moving") once everyone has, and only if
-      // at least one said yes.
-      for (const o of others) E.respondRoadTrip(s, o.id, rand() < 0.8);
-      if (s.turn.stage === "roadtrip-moving") {
-        let rtMoved = 0;
-        while (true) {
-          const opts = E.movementOptions(s, graph);
-          if (!opts.length) break;
-          if (rtMoved >= 1 && rand() < 0.4) break;
-          E.stepTo(s, graph, pick(opts).to);
-          rtMoved++;
-          if (s.turn.roadTrip.stepsUsed >= s.turn.roadTrip.allowance) break;
-        }
-        if (rtMoved >= 1) {
-          if (rand() < 0.25 && s.turn.roadTrip.riders.length) E.dropOff(s, pick(s.turn.roadTrip.riders).id);
-          E.endRoadTrip(s);
-          for (const id of E.sharedVisitors(s)) if (rand() < 0.5) E.visitTourist(s, id, true);
-        } else {
-          s.turn.stage = "resolve";
+      const allowance = E.cardValue(board, chosen.card);
+      // Find some city the proposed card can actually reach, same way a
+      // player would via the click-to-route feature.
+      let destination = null;
+      for (let tries = 0; tries < 20 && !destination; tries++) {
+        const candidate = pick(board.cities).id;
+        if (E.shortestPath(graph, p.city, candidate, allowance)) destination = candidate;
+      }
+      if (destination) {
+        E.offerRoadTrip(s);
+        E.proposeRoadTrip(s, graph, { companions: others.map((o) => o.id), owner: chosen.owner, cardId: chosen.card.id, destination });
+        // Each invited companion answers on their own — accept (riding to
+        // the proposed destination) or decline; the driver reviews once
+        // everyone has, same as a real player would.
+        for (const o of others) E.respondRoadTrip(s, graph, o.id, rand() < 0.8 ? { type: "accept" } : { type: "decline" });
+        if (s.turn.stage === "roadtrip-review") {
+          if (rand() < 0.05) {
+            E.cancelRoadTripInvite(s); // occasionally the driver backs out even after everyone answered
+          } else {
+            E.confirmRoadTrip(s);
+            let rtMoved = 0;
+            while (true) {
+              const opts = E.movementOptions(s, graph);
+              if (!opts.length) break;
+              if (rtMoved >= 1 && rand() < 0.4) break;
+              E.stepTo(s, graph, pick(opts).to);
+              rtMoved++;
+              if (s.turn.roadTrip.stepsUsed >= s.turn.roadTrip.allowance) break;
+            }
+            if (rtMoved >= 1) {
+              if (rand() < 0.25 && s.turn.roadTrip.riders.length) E.dropOff(s, pick(s.turn.roadTrip.riders).id);
+              E.endRoadTrip(s);
+              for (const id of E.sharedVisitors(s)) if (rand() < 0.5) E.visitTourist(s, id, true);
+            } else {
+              s.turn.stage = "resolve";
+            }
+          }
         }
       }
     }

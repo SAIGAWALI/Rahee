@@ -17,10 +17,12 @@ const ACTIONS = {
   undoStep: (s) => E.undoStep(s),
   endMovement: (s) => E.endMovement(s),
   offerRoadTrip: (s) => E.offerRoadTrip(s),
-  proposeRoadTrip: (s, g, seatIndex, a) => E.proposeRoadTrip(s, { companions: a.companions, owner: a.owner, cardId: a.cardId }),
+  proposeRoadTrip: (s, g, seatIndex, a) => E.proposeRoadTrip(s, g, { companions: a.companions, owner: a.owner, cardId: a.cardId, destination: a.destination }),
   // The responder is always the sending seat's own id, never a client-supplied
-  // one — a player may only accept or decline for themselves.
-  respondRoadTrip: (s, g, seatIndex, a) => E.respondRoadTrip(s, seatIndex, !!a.accept),
+  // one — a player may only accept, counter, or decline for themselves. `a`
+  // is passed through as-is: {type:"accept", stop} | {type:"counter", destination} | {type:"decline"}.
+  respondRoadTrip: (s, g, seatIndex, a) => E.respondRoadTrip(s, g, seatIndex, a),
+  confirmRoadTrip: (s) => E.confirmRoadTrip(s),
   cancelRoadTripInvite: (s) => E.cancelRoadTripInvite(s),
   dropOff: (s, g, seatIndex, a) => E.dropOff(s, a.riderId),
   endRoadTrip: (s) => E.endRoadTrip(s),

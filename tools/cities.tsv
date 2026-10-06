@@ -1,102 +1,102 @@
 > id	name	state	x	y	tourist	attraction
-new-delhi	New Delhi	DL	663	687	1	Qutb Minar
-rishikesh	Rishikesh	UK	755	572	2	Ganga rafting
-leh	Leh	LA	716	298	3	Thiksey Monastery
-srinagar	Srinagar	JK	554	268	4	Hazrat Bal
-amritsar	Amritsar	PB	529	485	5	Golden Temple
-jaisalmer	Jaisalmer	RJ	254	782	6	Junnagarh Fort
-jodhpur	Jodhpur	RJ	386	830	7	Ghoomar
-jaipur	Jaipur	RJ	572	819	8	Hawa Mahal
-agra	Agra	UP	714	805	9	Taj Mahal
-lucknow	Lucknow	UP	901	816	10	Kathak
-gwalior	Gwalior	MP	704	875	11	Gwalior Fort
-sawai-madhopur	Sawai Madhopur	RJ	552	931	12	Ranthambore tiger reserve
-gandhinagar	Gandhinagar	GJ	356	1038	13	Adalaj Stepwell
-bhuj	Bhuj	GJ	120	1042	14	Rann of Kutch
-veraval	Veraval	GJ	201	1172	15	Gir National Park
-vadodara	Vadodara	GJ	351	1182	16	Garba
-daman	Daman	DD	353	1257	17	Atash Behram, Iranshah
-mumbai	Mumbai	MH	338	1373	18	Gateway of India
-aurangabad	Aurangabad	MH	508	1313	19	Ajanta Caves
-nagpur	Nagpur	MH	735	1240	20	Dikshabhoomi
-bhopal	Bhopal	MP	676	1068	21	Bhimbetka Caves
-jabalpur	Jabalpur	MP	839	1053	22	Nidan Falls
-varanasi	Varanasi	UP	1040	951	23	Ghats of Varanasi
-ranchi	Ranchi	JH	1181	1080	24	Sal Forest
-giridih	Giridih	JH	1249	1026	25	Sammed Shikarji
-patna	Patna	BR	1176	939	26	Bodh Gaya
-madhubani	Madhubani	BR	1313	899	27	Madhubani Art
-gangtok	Gangtok	SK	1391	784	28	Khangchendzonga
-guwahati	Guwahati	AS	1622	850	29	Sattriya
-shillong	Shillong	ML	1636	901	30	Root Bridges
-ziro	Ziro	AR	1723	721	31	Dree Festival
-charaideo	Charaideo	AS	1808	788	32	Moidams
-agartala	Agartala	TR	1614	1036	33	Chaturdash Devta Temple
-kolkata	Kolkata	WB	1394	1138	34	Sundarbans
-bhubaneshwar	Bhubaneshwar	OD	1278	1272	35	Turtle Nesting
-sambalpur	Sambalpur	OD	1109	1235	36	Odissi
-bastar	Bastar	CG	908	1362	37	Gond Art
-hyderabad	Hyderabad	TG	733	1471	38	Char Minar
-amaravati	Amaravati	AP	897	1555	39	Tapetta Gulla
-chennai	Chennai	TN	826	1819	40	Carnatic Music
-nagapattinam	Nagapattinam	TN	771	2007	41	Velankanni Church
-thanjavur	Thanjavur	TN	727	1999	42	Brihadisvara Temple
-kanniyakumari	Kanniyakumari	TN	613	2164	43	Land's End
-kochi	Kochi	KL	529	2068	44	Kathakali
-wayanad	Wayanad	KL	490	1920	45	Elephants Reserve
-madikeri	Madikeri	KA	554	1883	46	Kumara Parvata
-udupi	Udupi	KA	437	1799	47	Yakshagana
-hampi	Hampi	KA	516	1636	48	Stone Chariot
-kavaratti	Kavaratti	LA	234	1946	49	Snorkelling
-sri-vijayapuram	Sri Vijayapuram	AN	1737	1911	50	Coral Island
-great-nicobar	Great Nicobar	AN	1860	2314	51	Dugong
-kargil	Kargil	LA	644	247
-jammu	Jammu	JK	547	376
-dharamshala	Dharamshala	HP	629	431
-khirganga	Khirganga	HP	744	445
-shimla	Shimla	HP	673	503
-chandigarh	Chandigarh	CH	648	530
-gangotri	Gangotri	UK	827	562
-hisar	Hisar	HR	566	628
-badrinath	Badrinath	UK	831	660
-dibang-valley	Dibang Valley	AR	1848	689
-bikaner	Bikaner	RJ	417	698
-itanagar	Itanagar	AR	1701	777
-gorakhpur	Gorakhpur	UP	1060	832
-siliguri	Siliguri	WB	1407	834
-kohima	Kohima	NL	1789	878
-prayagraj	Prayagraj	UP	944	926
-imphal	Imphal	MN	1750	944
-udaipur	Udaipur	RJ	380	947
-behrampore	Behrampore	WB	1369	955
-silchar	Silchar	AS	1682	966
-aizwal	Aizwal	MZ	1691	1053
-asansol	Asansol	WB	1293	1060
-indore	Indore	MP	543	1068
-jamshedpur	Jamshedpur	JH	1248	1125
-porbandar	Porbandar	GJ	127	1147
-bilaspur	Bilaspur	CG	977	1151
-pench	Pench	MP	787	1168
-rourkela	Rourkela	OD	1143	1168
-raipur	Raipur	CG	936	1246
-akola	Akola	MH	618	1275
-nizamabad	Nizamabad	TG	695	1401
-srikakulam	Srikakulam	AP	1079	1433
-warangal	Warangal	TG	823	1452
-visakhapatnam	Visakhapatnam	AP	1034	1499
-gulbarga	Gulbarga	KA	604	1500
-ratnagiri	Ratnagiri	MH	358	1529
-pune	Pune	MH	418	1395
-ongole	Ongole	AP	822	1617
-kurnool	Kurnool	AP	679	1627
-panaji	Panaji	GA	384	1633
-kadapa	Kadapa	AP	728	1721
-chitradurga	Chitradurga	KA	574	1723
-diglipur	Diglipur	AN	1736	1797
-bengaluru	Bengaluru	KA	630	1811
-salem	Salem	TN	663	1903
-agatti	Agatti	LA	210	1912
-puducherry	Puducherry	PY	780	1921
-coimbatore	Coimbatore	TN	572	1942
-madurai	Madurai	TN	653	2068
-thiruvananthapuram	Thiruvananthapuram	KL	564	2125
+new-delhi	New Delhi	DL	703	718	1	Qutb Minar
+rishikesh	Rishikesh	UK	795	603	2	Ganga rafting
+leh	Leh	LA	756	329	3	Thiksey Monastery
+srinagar	Srinagar	JK	594	300	4	Hazrat Bal
+amritsar	Amritsar	PB	569	516	5	Golden Temple
+jaisalmer	Jaisalmer	RJ	294	814	6	Junnagarh Fort
+jodhpur	Jodhpur	RJ	426	861	7	Ghoomar
+jaipur	Jaipur	RJ	612	850	8	Hawa Mahal
+agra	Agra	UP	754	836	9	Taj Mahal
+lucknow	Lucknow	UP	941	847	10	Kathak
+gwalior	Gwalior	MP	744	907	11	Gwalior Fort
+sawai-madhopur	Sawai Madhopur	RJ	592	962	12	Ranthambore tiger reserve
+gandhinagar	Gandhinagar	GJ	396	1069	13	Adalaj Stepwell
+bhuj	Bhuj	GJ	160	1074	14	Rann of Kutch
+veraval	Veraval	GJ	241	1204	15	Gir National Park
+vadodara	Vadodara	GJ	391	1213	16	Garba
+daman	Daman	DD	393	1289	17	Atash Behram, Iranshah
+mumbai	Mumbai	MH	378	1404	18	Gateway of India
+aurangabad	Aurangabad	MH	548	1344	19	Ajanta Caves
+nagpur	Nagpur	MH	775	1271	20	Dikshabhoomi
+bhopal	Bhopal	MP	716	1100	21	Bhimbetka Caves
+jabalpur	Jabalpur	MP	879	1085	22	Nidan Falls
+varanasi	Varanasi	UP	1080	983	23	Ghats of Varanasi
+ranchi	Ranchi	JH	1221	1111	24	Sal Forest
+giridih	Giridih	JH	1289	1058	25	Sammed Shikarji
+patna	Patna	BR	1216	970	26	Bodh Gaya
+madhubani	Madhubani	BR	1353	930	27	Madhubani Art
+gangtok	Gangtok	SK	1431	815	28	Khangchendzonga
+guwahati	Guwahati	AS	1662	881	29	Sattriya
+shillong	Shillong	ML	1675	932	30	Root Bridges
+ziro	Ziro	AR	1763	752	31	Dree Festival
+charaideo	Charaideo	AS	1848	819	32	Moidams
+agartala	Agartala	TR	1654	1067	33	Chaturdash Devta Temple
+kolkata	Kolkata	WB	1434	1169	34	Sundarbans
+bhubaneshwar	Bhubaneshwar	OD	1318	1303	35	Turtle Nesting
+sambalpur	Sambalpur	OD	1149	1266	36	Odissi
+bastar	Bastar	CG	948	1393	37	Gond Art
+hyderabad	Hyderabad	TG	773	1503	38	Char Minar
+amaravati	Amaravati	AP	937	1586	39	Tapetta Gulla
+chennai	Chennai	TN	866	1851	40	Carnatic Music
+nagapattinam	Nagapattinam	TN	810	2038	41	Velankanni Church
+thanjavur	Thanjavur	TN	766	2031	42	Brihadisvara Temple
+kanniyakumari	Kanniyakumari	TN	653	2196	43	Land's End
+kochi	Kochi	KL	569	2100	44	Kathakali
+wayanad	Wayanad	KL	530	1951	45	Elephants Reserve
+madikeri	Madikeri	KA	594	1915	46	Kumara Parvata
+udupi	Udupi	KA	477	1830	47	Yakshagana
+hampi	Hampi	KA	556	1667	48	Stone Chariot
+kavaratti	Kavaratti	LA	274	1977	49	Snorkelling
+sri-vijayapuram	Sri Vijayapuram	AN	1777	1943	50	Coral Island
+great-nicobar	Great Nicobar	AN	1900	2346	51	Dugong
+kargil	Kargil	LA	684	278		
+jammu	Jammu	JK	587	407		
+dharamshala	Dharamshala	HP	669	463		
+khirganga	Khirganga	HP	784	477		
+shimla	Shimla	HP	713	534		
+chandigarh	Chandigarh	CH	688	561		
+gangotri	Gangotri	UK	867	593		
+hisar	Hisar	HR	606	659		
+badrinath	Badrinath	UK	871	691		
+dibang-valley	Dibang Valley	AR	1888	721		
+bikaner	Bikaner	RJ	457	729		
+itanagar	Itanagar	AR	1741	808		
+gorakhpur	Gorakhpur	UP	1100	863		
+siliguri	Siliguri	WB	1447	865		
+kohima	Kohima	NL	1829	909		
+prayagraj	Prayagraj	UP	984	958		
+imphal	Imphal	MN	1790	975		
+udaipur	Udaipur	RJ	420	978		
+behrampore	Behrampore	WB	1409	986		
+silchar	Silchar	AS	1722	997		
+aizwal	Aizwal	MZ	1731	1084		
+asansol	Asansol	WB	1333	1092		
+indore	Indore	MP	583	1100		
+jamshedpur	Jamshedpur	JH	1288	1156		
+porbandar	Porbandar	GJ	167	1179		
+bilaspur	Bilaspur	CG	1017	1182		
+pench	Pench	MP	827	1199		
+rourkela	Rourkela	OD	1183	1199		
+raipur	Raipur	CG	976	1278		
+akola	Akola	MH	658	1306		
+nizamabad	Nizamabad	TG	735	1433		
+srikakulam	Srikakulam	AP	1119	1464		
+warangal	Warangal	TG	863	1483		
+visakhapatnam	Visakhapatnam	AP	1074	1530		
+gulbarga	Gulbarga	KA	644	1532		
+ratnagiri	Ratnagiri	MH	398	1560		
+pune	Pune	MH	450	1426		
+ongole	Ongole	AP	862	1648		
+kurnool	Kurnool	AP	719	1658		
+panaji	Panaji	GA	424	1664		
+kadapa	Kadapa	AP	768	1752		
+chitradurga	Chitradurga	KA	614	1754		
+diglipur	Diglipur	AN	1776	1829		
+bengaluru	Bengaluru	KA	670	1843		
+salem	Salem	TN	703	1934		
+agatti	Agatti	LA	250	1943		
+puducherry	Puducherry	PY	820	1952		
+coimbatore	Coimbatore	TN	612	1973		
+madurai	Madurai	TN	693	2100		
+thiruvananthapuram	Thiruvananthapuram	KL	604	2156		

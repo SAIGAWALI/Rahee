@@ -48,6 +48,39 @@ export function buildGraph(board) {
 export const routeCost = (board, route) =>
   route.steps * board.economy.costPerStep + (route.surcharge || 0);
 
+/**
+ * Shortest route from one city to another, within a steps budget. Weight is
+ * route.steps (the movement-allowance cost that a card actually spends), not
+ * money — see routeCost for that separate concern. 101 cities is small enough
+ * that a heap-free O(V²) Dijkstra is plenty fast. Returns `null` if the city
+ * isn't reachable within `maxSteps` (or at all).
+ */
+export function shortestPath(graph, fromCityId, toCityId, maxSteps) {
+  if (fromCityId === toCityId) return { edges: [], totalSteps: 0 };
+  const dist = new Map([[fromCityId, 0]]);
+  const prev = new Map(); // cityId -> { from, edge }
+  const visited = new Set();
+  for (;;) {
+    let u = null, best = Infinity;
+    for (const [id, d] of dist) if (!visited.has(id) && d < best) { best = d; u = id; }
+    if (u === null || u === toCityId) break;
+    visited.add(u);
+    for (const edge of graph.get(u) || []) {
+      const nd = best + edge.route.steps;
+      if (nd > maxSteps) continue;
+      if (!dist.has(edge.to) || nd < dist.get(edge.to)) { dist.set(edge.to, nd); prev.set(edge.to, { from: u, edge }); }
+    }
+  }
+  if (!dist.has(toCityId)) return null;
+  const edges = [];
+  for (let cur = toCityId; cur !== fromCityId;) {
+    const { from, edge } = prev.get(cur);
+    edges.unshift({ to: edge.to, route: edge.route });
+    cur = from;
+  }
+  return { edges, totalSteps: dist.get(toCityId) };
+}
+
 // ---------------------------------------------------------------------------
 // Setup
 // ---------------------------------------------------------------------------
@@ -225,6 +258,13 @@ export function stepTo(s, graph, cityId) {
       p.spent -= s.board.economy.roadTripSharePerStep * opt.route.steps;
       c.stepsTravelled += opt.route.steps;
       rider.city = cityId;
+      // Reaching their pre-agreed stop drops them off automatically; the
+      // manual "drop off" action still exists for anyone who wants off
+      // somewhere the drive doesn't end up passing through, or earlier.
+      if (c.stopAt === cityId) {
+        c.droppedAt = cityId;
+        log(s, `${rider.name} gets off at ${cityOf(s, cityId).name} as planned`);
+      }
     }
     p.city = cityId;
   }
@@ -318,64 +358,104 @@ export function offerRoadTrip(s) {
   return s;
 }
 
-/** Back out of the invite step, or a pending invitation, without a trip starting. */
+/** Back out of the invite step, a pending invitation, or the review step — anywhere before a trip actually starts. */
 export function cancelRoadTripInvite(s) {
   const t = s.turn;
-  if (!t || (t.stage !== "roadtrip-invite" && t.stage !== "roadtrip-pending"))
-    throw new Error("not offering a road trip");
+  const cancellableStages = ["roadtrip-invite", "roadtrip-pending", "roadtrip-review"];
+  if (!t || !cancellableStages.includes(t.stage)) throw new Error("not offering a road trip");
   t.pendingTrip = null;
   t.stage = "resolve";
   return s;
 }
 
 /**
- * Sends the invitation — each companion now needs to accept or decline on
- * their own before the trip actually starts (see respondRoadTrip). Nothing
- * moves and no card is flipped yet.
+ * Sends the invitation — the driver names companions, a face-up card to
+ * flip, and the destination they intend to drive to. Each companion now
+ * needs to accept (with their own drop-off stop), counter with a different
+ * destination, or decline, before the trip actually starts (see
+ * respondRoadTrip). Nothing moves and no card is flipped yet.
  */
-export function proposeRoadTrip(s, { companions, owner, cardId: rtCardId }) {
+export function proposeRoadTrip(s, graph, { companions, owner, cardId: rtCardId, destination }) {
   const t = s.turn;
   if (!t || t.stage !== "roadtrip-invite") throw new Error("not offering a road trip");
   if (!companions.length) throw new Error("invite at least one companion");
   const holder = s.players[owner];
   const entry = holder.faceUp.find((f) => f.card.id === rtCardId && !f.flipped);
   if (!entry) throw new Error("that road-trip card is not available");
+  const allowance = cardValue(s.board, entry.card);
+  const p = currentPlayer(s);
+  if (!shortestPath(graph, p.city, destination, allowance)) throw new Error("that destination is out of reach on this card");
 
-  t.pendingTrip = { companions, owner, cardId: rtCardId, responses: {} };
+  t.pendingTrip = { companions, owner, cardId: rtCardId, destination, responses: {} };
   t.stage = "roadtrip-pending";
-  log(s, `invites ${companions.map((id) => s.players[id].name).join(" & ")} on a road trip, proposing to flip ${entry.card.id}`);
+  log(s, `invites ${companions.map((id) => s.players[id].name).join(" & ")} to ${cityOf(s, destination).name} — proposing to flip ${entry.card.id}`);
   return s;
 }
 
 /**
- * One invited companion accepts or declines. Once everyone invited has
- * answered, the trip starts with whoever said yes (flipping the card at
- * that point, not before) — or is called off if nobody did.
+ * One invited companion answers: `{type:"accept", stop}` (ride along, get
+ * dropped at `stop` — any city reachable on the proposed card, not
+ * necessarily on one exact path), `{type:"counter", destination}` (would
+ * come, but only to a different destination — recorded for the driver to
+ * see, not acted on automatically), or `{type:"decline"}`. Once everyone
+ * invited has answered, the driver gets the final say (see
+ * confirmRoadTrip) — unless nobody accepted, in which case it's simply off.
  */
-export function respondRoadTrip(s, playerId, accept) {
+export function respondRoadTrip(s, graph, playerId, response) {
   const t = s.turn;
   const pt = t?.pendingTrip;
   if (!pt) throw new Error("no road-trip invitation to respond to");
   if (!pt.companions.includes(playerId)) throw new Error("you were not invited on this road trip");
   if (playerId in pt.responses) throw new Error("you already responded");
-  pt.responses[playerId] = accept ? "accepted" : "declined";
-  log(s, `${s.players[playerId].name} ${accept ? "joins" : "declines"} the road trip`);
+
+  const driver = currentPlayer(s);
+  const entry = s.players[pt.owner].faceUp.find((f) => f.card.id === pt.cardId);
+  if (!entry) throw new Error("that road-trip card is no longer available");
+  const allowance = cardValue(s.board, entry.card);
+  if (response.type === "accept") {
+    const stop = response.stop ?? pt.destination;
+    if (!shortestPath(graph, driver.city, stop, allowance)) throw new Error("that stop is out of reach on this card");
+    pt.responses[playerId] = { type: "accept", stop };
+    log(s, `${s.players[playerId].name} joins the road trip, getting off at ${cityOf(s, stop).name}`);
+  } else if (response.type === "counter") {
+    if (!shortestPath(graph, driver.city, response.destination, allowance)) throw new Error("that destination is out of reach on this card");
+    pt.responses[playerId] = { type: "counter", destination: response.destination };
+    log(s, `${s.players[playerId].name} would rather go to ${cityOf(s, response.destination).name}`);
+  } else {
+    pt.responses[playerId] = { type: "decline" };
+    log(s, `${s.players[playerId].name} declines the road trip`);
+  }
 
   if (!pt.companions.every((id) => id in pt.responses)) return s; // still waiting on others
 
-  const accepted = pt.companions.filter((id) => pt.responses[id] === "accepted");
-  t.pendingTrip = null;
+  const accepted = pt.companions.filter((id) => pt.responses[id].type === "accept");
   if (!accepted.length) {
     log(s, "nobody wanted to come along — the road trip is off");
+    t.pendingTrip = null;
     t.stage = "resolve";
     return s;
   }
+  t.stage = "roadtrip-review"; // the driver confirms or cancels next — see confirmRoadTrip
+  return s;
+}
 
+/**
+ * The driver's final word once every invited companion has answered: starts
+ * the trip with whoever accepted (flipping the card only now), each given a
+ * `stopAt` so stepTo can drop them automatically when the drive passes
+ * through it — or cancels the whole thing (same as cancelRoadTripInvite).
+ */
+export function confirmRoadTrip(s) {
+  const t = s.turn;
+  const pt = t?.pendingTrip;
+  if (!pt || t.stage !== "roadtrip-review") throw new Error("nothing to confirm");
   const p = currentPlayer(s);
   const holder = s.players[pt.owner];
   const entry = holder.faceUp.find((f) => f.card.id === pt.cardId && !f.flipped);
   if (!entry) throw new Error("that road-trip card is no longer available");
   entry.flipped = true;
+
+  const accepted = pt.companions.filter((id) => pt.responses[id].type === "accept");
   t.roadTrip = {
     card: entry.card,
     owner: pt.owner,
@@ -385,8 +465,9 @@ export function respondRoadTrip(s, playerId, accept) {
     start: p.city,
     path: [p.city],
     legs: [],
-    riders: accepted.map((id) => ({ id, stepsTravelled: 0, droppedAt: null })),
+    riders: accepted.map((id) => ({ id, stopAt: pt.responses[id].stop, stepsTravelled: 0, droppedAt: null })),
   };
+  t.pendingTrip = null;
   t.stage = "roadtrip-moving";
   log(s, `sets off with ${accepted.map((id) => s.players[id].name).join(" & ")} — flips ${entry.card.id}`);
   return s;

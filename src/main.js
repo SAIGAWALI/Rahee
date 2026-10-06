@@ -21,7 +21,21 @@ let state = null;
 // Per-turn interface state that is not part of the game itself.
 let local = blankLocal();
 function blankLocal() {
-  return { selectedCardId: null, aceId: null, aceMode: "boost", aceSuit: null, invite: null, focus: null };
+  return {
+    selectedCardId: null, aceId: null, aceMode: "boost", aceSuit: null, invite: null, focus: null,
+    // A click-to-route walk in progress: the remaining edges to send as
+    // stepTo actions, one per server round-trip, plus how many have already
+    // landed (so clicking the destination again can undo the whole walk).
+    autoWalk: null,
+    // A single "pick a city within N steps, with a live preview" interaction,
+    // shared by three places: the driver choosing a road-trip destination
+    // before sending the invite, and a companion choosing their accept-stop
+    // or counter-destination while responding to one. `purpose` says which.
+    picking: null,
+    // Which sub-flow a companion is in while responding to an invite: null
+    // (not yet answered), "accept" or "counter" (mid-pick, see `picking`).
+    respondMode: null,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -142,6 +156,18 @@ function renderPlay() {
   const t = state.turn;
   const ch = E.characterOf(state, p);
   const isMyTurn = p.id === you;
+  const awaitingMyResponse = t?.stage === "roadtrip-pending"
+    && t.pendingTrip.companions.includes(you) && !(you in t.pendingTrip.responses);
+
+  // A picking/respond session can't outlive the context that started it —
+  // e.g. the driver cancels the invite while a companion is mid-pick.
+  if (local.picking) {
+    const stillValid =
+      (local.picking.purpose === "invite-destination" && t?.stage === "roadtrip-invite" && isMyTurn) ||
+      ((local.picking.purpose === "accept-stop" || local.picking.purpose === "counter-destination") && awaitingMyResponse);
+    if (!stillValid) local.picking = null;
+  }
+  if (local.respondMode && !awaitingMyResponse) local.respondMode = null;
 
   // --- top bar — a shared status ticker: whose turn it is right now.
   mounted.topbar.innerHTML = "";
@@ -180,6 +206,7 @@ function renderPlay() {
   view.render({
     legalRoutes: options.map((o) => o.route),
     walked,
+    preview: local.picking?.route ? local.picking.route.edges.map((e) => e.route) : [],
     pulse: new Set(options.map((o) => o.to)),
     goals: goalCities,
     visited: new Set(viewer.visited),
@@ -197,10 +224,8 @@ function renderPlay() {
   });
 
   // --- sidebar — always your own hand, budget and progress, whoever's turn it is.
-  // An invited companion gets their own accept/decline prompt regardless of
-  // whose turn it is — everyone else's device just watches the turn happen.
-  const awaitingMyResponse = t?.stage === "roadtrip-pending"
-    && t.pendingTrip.companions.includes(you) && !(you in t.pendingTrip.responses);
+  // An invited companion gets their own accept/counter/decline prompt
+  // regardless of whose turn it is — everyone else's device just watches.
   const sidebar = renderSidebar(state, {
     viewPlayer: viewer,
     showHand: true,
@@ -233,8 +258,13 @@ function currentHint(t, p, isMyTurn, you) {
   }
   if (t.stage === "roadtrip-pending") {
     return t.pendingTrip.companions.includes(you) && !(you in t.pendingTrip.responses)
-      ? "You've been invited on a road trip — accept or decline below."
+      ? "You've been invited on a road trip — accept, counter, or decline below."
       : "A road trip has been proposed — waiting for everyone invited to answer.";
+  }
+  if (t.stage === "roadtrip-review") {
+    return isMyTurn
+      ? "Everyone has answered — review the responses below and confirm or cancel the trip."
+      : "Waiting for the driver to confirm the road trip.";
   }
   return "";
 }
@@ -254,12 +284,62 @@ function pickCard(id) {
   renderPlay();
 }
 
+// Current position of whatever's moving this turn (the player, or the whole
+// road-trip party) — the same stage-dependent lookup engine.js's own
+// movementOptions uses.
+function moverCity(t) {
+  return t.stage === "moving" ? t.path[t.path.length - 1] : t.roadTrip.path[t.roadTrip.path.length - 1];
+}
+function stepsLeft(t) {
+  return t.stage === "moving" ? t.allowance - t.stepsUsed : t.roadTrip.allowance - t.roadTrip.stepsUsed;
+}
+
 function onCityClick(cityId) {
+  // Picking a destination/stop for a road-trip proposal or response takes
+  // priority over ordinary movement — the two never overlap in practice
+  // (picking only happens outside the "moving"/"roadtrip-moving" stages),
+  // but checking it first keeps the two interactions cleanly separate.
+  if (local.picking) { pickForPicking(cityId); return; }
+
   const t = state.turn;
   if (!t || E.currentPlayer(state).id !== you) return;
   if (t.stage !== "moving" && t.stage !== "roadtrip-moving") return;
-  if (!E.movementOptions(state, graph).some((o) => o.to === cityId)) return;
-  commit("stepTo", { cityId });
+
+  // Clicking the city you just auto-walked to, while still standing on it,
+  // undoes the whole walk at once rather than doing nothing.
+  if (local.autoWalk && local.autoWalk.destCity === cityId && cityId === moverCity(t)) {
+    for (let i = 0; i < local.autoWalk.steps; i++) commit("undoStep");
+    local.autoWalk = null;
+    return;
+  }
+
+  if (E.movementOptions(state, graph).some((o) => o.to === cityId)) {
+    local.autoWalk = null; // a manual step supersedes any remembered walk
+    commit("stepTo", { cityId });
+    return;
+  }
+
+  // Not an immediate neighbour — walk the shortest route there, if it fits
+  // what's left on the card. The server re-validates every one of these
+  // steps exactly as if they'd been clicked one at a time.
+  const left = stepsLeft(t);
+  const route = E.shortestPath(graph, moverCity(t), cityId, left);
+  if (!route) { flashError(`No route there within ${left} step${left === 1 ? "" : "s"}.`); return; }
+  for (const edge of route.edges) commit("stepTo", { cityId: edge.to });
+  local.autoWalk = { destCity: cityId, steps: route.edges.length };
+}
+
+/** Advances a `local.picking` session — clicking a reachable city previews
+ * the route to it; clicking the origin city again clears the pick. Nothing
+ * is sent to the server here; the caller's "confirm" button does that. */
+function pickForPicking(cityId) {
+  const pk = local.picking;
+  if (cityId === pk.fromCity) { pk.selected = null; pk.route = null; renderPlay(); return; }
+  const route = E.shortestPath(graph, pk.fromCity, cityId, pk.maxSteps);
+  if (!route) { flashError(`No route there within ${pk.maxSteps} step${pk.maxSteps === 1 ? "" : "s"}.`); return; }
+  pk.selected = cityId;
+  pk.route = route;
+  renderPlay();
 }
 
 // ---------------------------------------------------------------------------
@@ -272,23 +352,95 @@ function waitingActionsPanel(p, t) {
     const pt = t.pendingTrip;
     const waitingOn = pt.companions.filter((id) => !(id in pt.responses)).map((id) => state.players[id].name);
     text = `${p.name} invited ${pt.companions.map((id) => state.players[id].name).join(", ")} on a road trip — waiting on ${waitingOn.join(", ")}.`;
+  } else if (t?.stage === "roadtrip-review") {
+    text = `${p.name} is deciding whether to confirm the road trip.`;
   }
   return h("div", { class: "actions" }, h("div", { class: "row" }, h("span", { class: "tiny muted" }, text)));
 }
 
-/** Shown on an invited companion's own device until they accept or decline. */
+/**
+ * Shown on an invited companion's own device until they answer. Three
+ * flows: decline outright, accept (then optionally pick a different
+ * drop-off than the proposed destination), or counter with somewhere else
+ * entirely — both of the latter use the shared `local.picking` interaction,
+ * previewed on the map from the driver's current city.
+ */
 function respondActions(t) {
   const pt = t.pendingTrip;
-  const inviter = E.currentPlayer(state);
+  const driver = E.currentPlayer(state);
   const owner = state.players[pt.owner];
   const card = owner.faceUp.find((f) => f.card.id === pt.cardId)?.card;
-  return h("div", { class: "actions" },
-    h("div", { class: "row" },
-      h("span", { class: "tiny" }, h("b", {}, inviter.name), " invites you on a road trip",
-        card ? ` — flipping ${pt.owner === inviter.id ? "their" : `${owner.name}'s`} ${card.id}, ${E.cardValue(board, card)} steps` : "")),
-    h("div", { class: "row", style: "margin-top:10px" },
-      h("button", { class: "btn ghost", onClick: () => commit("respondRoadTrip", { accept: false }) }, "Decline"),
-      h("button", { class: "btn primary", style: "margin-left:auto", onClick: () => commit("respondRoadTrip", { accept: true }) }, "Join the trip")));
+  const allowance = card ? E.cardValue(board, card) : 0;
+  const destCity = E.cityOf(state, pt.destination);
+
+  const box = h("div", { class: "actions" });
+  box.append(h("div", { class: "row" },
+    h("span", { class: "tiny" }, h("b", {}, driver.name), " wants to drive to ", h("b", {}, destCity.name),
+      card ? ` — flipping ${pt.owner === driver.id ? "their" : `${owner.name}'s`} ${card.id}, ${allowance} step${allowance === 1 ? "" : "s"}` : "")));
+
+  if (!local.respondMode) {
+    box.append(h("div", { class: "row", style: "margin-top:10px" },
+      h("button", { class: "btn ghost", onClick: () => commit("respondRoadTrip", { type: "decline" }) }, "Decline"),
+      h("button", {
+        class: "btn",
+        onClick: () => {
+          local.respondMode = "counter";
+          local.picking = { purpose: "counter-destination", fromCity: driver.city, maxSteps: allowance, selected: null, route: null };
+          renderPlay();
+        },
+      }, "Suggest somewhere else"),
+      h("button", {
+        class: "btn primary", style: "margin-left:auto",
+        onClick: () => {
+          local.respondMode = "accept";
+          local.picking = { purpose: "accept-stop", fromCity: driver.city, maxSteps: allowance, selected: pt.destination, route: null };
+          renderPlay();
+        },
+      }, "Join the trip")));
+    return box;
+  }
+
+  if (local.respondMode === "accept") {
+    box.append(h("div", { class: "row", style: "margin-top:10px" },
+      h("span", { class: "tiny muted" }, "Click where you'd like to get off — defaults to ", h("b", {}, destCity.name), ".")));
+    if (local.picking.selected) {
+      const stopCity = E.cityOf(state, local.picking.selected);
+      box.append(h("div", { class: "row", style: "margin-top:6px" },
+        h("span", { class: "tiny" }, "Getting off at ", h("b", {}, stopCity.name),
+          local.picking.route ? ` (${local.picking.route.totalSteps} step${local.picking.route.totalSteps === 1 ? "" : "s"})` : " — the planned stop")));
+    }
+    box.append(h("div", { class: "row", style: "margin-top:10px" },
+      h("button", { class: "btn ghost", onClick: () => { local.respondMode = null; local.picking = null; renderPlay(); } }, "Back"),
+      h("button", {
+        class: "btn primary", style: "margin-left:auto", disabled: !local.picking.selected,
+        onClick: () => {
+          const stop = local.picking.selected;
+          local.respondMode = null; local.picking = null;
+          commit("respondRoadTrip", { type: "accept", stop });
+        },
+      }, "Confirm")));
+    return box;
+  }
+
+  // counter
+  box.append(h("div", { class: "row", style: "margin-top:10px" },
+    h("span", { class: "tiny muted" }, `Click where you'd rather go — up to ${allowance} step${allowance === 1 ? "" : "s"} from ${driver.name}'s position.`)));
+  if (local.picking.selected) {
+    const altCity = E.cityOf(state, local.picking.selected);
+    box.append(h("div", { class: "row", style: "margin-top:6px" },
+      h("span", { class: "tiny" }, "Suggesting ", h("b", {}, altCity.name), ` (${local.picking.route.totalSteps} step${local.picking.route.totalSteps === 1 ? "" : "s"})`)));
+  }
+  box.append(h("div", { class: "row", style: "margin-top:10px" },
+    h("button", { class: "btn ghost", onClick: () => { local.respondMode = null; local.picking = null; renderPlay(); } }, "Back"),
+    h("button", {
+      class: "btn primary", style: "margin-left:auto", disabled: !local.picking.selected,
+      onClick: () => {
+        const destination = local.picking.selected;
+        local.respondMode = null; local.picking = null;
+        commit("respondRoadTrip", { type: "counter", destination });
+      },
+    }, "Send suggestion")));
+  return box;
 }
 
 function buildActions() {
@@ -300,6 +452,7 @@ function buildActions() {
   if (t.stage === "moving" || t.stage === "roadtrip-moving") return movingActions(box, p, t);
   if (t.stage === "roadtrip-invite") return inviteActions(box, p, t);
   if (t.stage === "roadtrip-pending") return pendingTripActions(box, t);
+  if (t.stage === "roadtrip-review") return reviewActions(box, t);
   return resolveActions(box, p, t);
 }
 
@@ -353,6 +506,7 @@ function chooseCardActions(box, p) {
     h("button", {
       class: "btn primary", style: "margin-left:auto",
       onClick: () => {
+        local.autoWalk = null;
         commit("playCard", { cardId: main.id, ace: ace ? { cardId: ace.id, mode: local.aceMode, suit: local.aceSuit } : null });
         view.focusOn(p.city, { zoom: 900 });
       },
@@ -387,10 +541,10 @@ function movingActions(box, p, t) {
   }
 
   box.append(h("div", { class: "row", style: "margin-top:10px" },
-    !rt ? h("button", { class: "btn", disabled: used === 0, onClick: () => commit("undoStep") }, "Undo step") : null,
+    !rt ? h("button", { class: "btn", disabled: used === 0, onClick: () => { local.autoWalk = null; commit("undoStep"); } }, "Undo step") : null,
     h("button", {
       class: "btn primary", style: "margin-left:auto", disabled: used === 0,
-      onClick: () => commit(rt ? "endRoadTrip" : "endMovement"),
+      onClick: () => { local.autoWalk = null; commit(rt ? "endRoadTrip" : "endMovement"); },
     }, rt ? "End the road trip" : used === allowance ? "Finish move (efficient!)" : "Finish move here")));
   return box;
 }
@@ -408,7 +562,7 @@ function inviteActions(box, p, t) {
         local.invite.companions = on
           ? local.invite.companions.filter((x) => x !== o.id)
           : [...local.invite.companions, o.id];
-        local.invite.owner = null; local.invite.card = null;
+        local.invite.owner = null; local.invite.card = null; local.picking = null;
         renderPlay();
       },
     }, o.name));
@@ -425,7 +579,11 @@ function inviteActions(box, p, t) {
       row.append(cardChip(state, c.card, {
         faceUp: true,
         selected: local.invite.owner === c.owner && local.invite.card === c.card.id,
-        onClick: () => { local.invite.owner = c.owner; local.invite.card = c.card.id; renderPlay(); },
+        onClick: () => {
+          local.invite.owner = c.owner; local.invite.card = c.card.id;
+          local.picking = { purpose: "invite-destination", fromCity: p.city, maxSteps: E.cardValue(board, c.card), selected: null, route: null };
+          renderPlay();
+        },
         title: `${c.card.id} — ${state.players[c.owner].name}'s card, ${E.cardValue(board, c.card)} steps`,
       }));
     }
@@ -433,21 +591,37 @@ function inviteActions(box, p, t) {
     box.append(row);
   }
 
+  if (local.invite.card) {
+    const allowance = local.picking?.maxSteps ?? 0;
+    box.append(h("div", { class: "row", style: "margin-top:10px" },
+      h("span", { class: "tiny muted" }, "Click your destination on the map — up to ", h("b", {}, String(allowance)), ` step${allowance === 1 ? "" : "s"}.`)));
+    if (local.picking?.selected) {
+      const city = E.cityOf(state, local.picking.selected);
+      box.append(h("div", { class: "row", style: "margin-top:6px" },
+        h("span", { class: "tiny" }, "Destination: ", h("b", {}, city.name), ` (${local.picking.route.totalSteps} step${local.picking.route.totalSteps === 1 ? "" : "s"})`),
+        h("button", {
+          class: "btn small ghost", style: "margin-left:auto",
+          onClick: () => { local.picking.selected = null; local.picking.route = null; renderPlay(); },
+        }, "Clear")));
+    }
+  }
+
   box.append(h("div", { class: "row", style: "margin-top:10px" },
-    h("button", { class: "btn ghost", onClick: () => { local.invite = null; commit("cancelRoadTripInvite"); } }, "Never mind"),
+    h("button", { class: "btn ghost", onClick: () => { local.invite = null; local.picking = null; commit("cancelRoadTripInvite"); } }, "Never mind"),
     h("button", {
       class: "btn primary", style: "margin-left:auto",
-      disabled: !local.invite.companions.length || !local.invite.card,
+      disabled: !local.invite.companions.length || !local.invite.card || !local.picking?.selected,
       onClick: () => {
         const { companions, owner, card } = local.invite;
-        local.invite = null;
-        commit("proposeRoadTrip", { companions, owner, cardId: card });
+        const destination = local.picking.selected;
+        local.invite = null; local.picking = null;
+        commit("proposeRoadTrip", { companions, owner, cardId: card, destination });
       },
     }, "Send the invitation")));
   return box;
 }
 
-/** The inviter's own view while the invited companions haven't all answered yet. */
+/** The driver's own view while the invited companions haven't all answered yet. */
 function pendingTripActions(box, t) {
   const pt = t.pendingTrip;
   const waitingOn = pt.companions.filter((id) => !(id in pt.responses));
@@ -455,11 +629,43 @@ function pendingTripActions(box, t) {
   box.append(h("div", { class: "row" },
     h("span", { class: "tiny muted" }, `Waiting on ${waitingOn.map((id) => state.players[id].name).join(", ")} to respond…`)));
   if (answered.length) {
-    const bits = answered.map((id) => `${state.players[id].name} ${pt.responses[id] === "accepted" ? "is in" : "said no"}`);
+    const bits = answered.map((id) => {
+      const r = pt.responses[id];
+      const name = state.players[id].name;
+      if (r.type === "accept") return `${name} is in (off at ${E.cityOf(state, r.stop).name})`;
+      if (r.type === "counter") return `${name} suggests ${E.cityOf(state, r.destination).name}`;
+      return `${name} said no`;
+    });
     box.append(h("div", { class: "row", style: "margin-top:6px" }, h("span", { class: "tiny" }, bits.join(" · "))));
   }
   box.append(h("div", { class: "row", style: "margin-top:10px" },
     h("button", { class: "btn ghost", onClick: () => commit("cancelRoadTripInvite") }, "Withdraw the invitation")));
+  return box;
+}
+
+/** The driver's final review once everyone invited has answered: who's in
+ * (and where they'll get off), who countered (and with what), who declined
+ * — then confirm (flips the card and sets off) or cancel outright. */
+function reviewActions(box, t) {
+  const pt = t.pendingTrip;
+  const destCity = E.cityOf(state, pt.destination);
+  box.append(h("div", { class: "row" },
+    h("span", { class: "tiny" }, "Everyone has answered — heading to ", h("b", {}, destCity.name), "?")));
+
+  const rows = h("div", { class: "choice", style: "margin-top:9px" });
+  for (const id of pt.companions) {
+    const name = state.players[id].name;
+    const r = pt.responses[id];
+    const text = r.type === "accept" ? `${name} is in — off at ${E.cityOf(state, r.stop).name}`
+      : r.type === "counter" ? `${name} would rather go to ${E.cityOf(state, r.destination).name}`
+      : `${name} declines`;
+    rows.append(h("div", { class: "tiny", style: "padding:4px 2px" }, text));
+  }
+  box.append(rows);
+
+  box.append(h("div", { class: "row", style: "margin-top:10px" },
+    h("button", { class: "btn ghost", onClick: () => commit("cancelRoadTripInvite") }, "Cancel the trip"),
+    h("button", { class: "btn primary", style: "margin-left:auto", onClick: () => commit("confirmRoadTrip") }, "Confirm & set off")));
   return box;
 }
 
@@ -499,7 +705,7 @@ function resolveActions(box, p, t) {
 
   box.append(h("div", { class: "row", style: "margin-top:10px" },
     canTrip
-      ? h("button", { class: "btn", onClick: () => { local.invite = null; commit("offerRoadTrip"); } },
+      ? h("button", { class: "btn", onClick: () => { local.invite = null; local.picking = null; commit("offerRoadTrip"); } },
           `Offer a road trip (${others.map((o) => o.name).join(", ")})`)
       : null,
     h("button", {

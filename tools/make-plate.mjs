@@ -1,6 +1,10 @@
-// Renders the map area of the printed RAHEE board (Rahee-A-fincurve.pdf) into a
-// background plate PNG, erasing the printed furniture that sits over the map
-// (suit legend, QR code, credit text) since the digital UI renders those itself.
+// Renders the map out of the printed RAHEE board PDF into a background plate
+// PNG. Most source PDFs (the current one included) are just the map with
+// nothing else on the page, so the whole page is used as-is.
+// `Rahee-A-fincurve.pdf` (superseded) was a full board sheet with the map
+// cropped out of one corner and some printed furniture (QR code, suit-legend
+// cards) painted over — that config is kept here only so the earlier build
+// stays reproducible.
 //
 //   node make-plate.mjs <mupdfDir> <boardPdf> <outDir> [--grid]
 //
@@ -15,31 +19,37 @@ const [mupdfDir, boardPdf, outDir] = process.argv.slice(2);
 const wantGrid = process.argv.includes("--grid");
 const mupdf = await import(pathToFileURL(path.join(mupdfDir, "node_modules/mupdf/dist/mupdf.js")).href);
 
-// Region of the printed sheet holding the map, in PDF points, and the render scale.
-export const PLATE = { x0: 20, y0: 515, x1: 1010, y1: 1728, scale: 2 };
+const SCALE = 2;
 
-// Printed furniture to paint out, in plate pixels: [x0, y0, x1, y1].
-// Only the two blocks that are not part of the map itself are painted out. The
-// printed credit line and licence badges down the left margin are left alone:
-// they are attribution, and the Porbandar-Veraval road runs close beside them.
-const ERASE = [
-  [0, 0, 385, 140],      // "Learn to play" QR block — stops short of the Ladakh
-                         // fir tree, whose foliage starts around x=400
-  [1270, 0, 1980, 515],  // Language + Food suit-legend cards
-];
-// Sampled from the plate's own blank background (e.g. plate pixel 1260,300),
-// not guessed — a mismatched fill here shows up as a visible seam.
-const CREAM = [250, 243, 212];
+// Per-source crop region (PDF points) and furniture to paint over. A source
+// not listed here is assumed to already be just the map — the whole page is
+// used, nothing is erased.
+const SOURCES = {
+  "Rahee-A-fincurve.pdf": {
+    region: [20, 515, 1010, 1728],
+    erase: [
+      [0, 0, 385, 140],      // "Learn to play" QR block
+      [1270, 0, 1980, 515],  // Language + Food suit-legend cards
+    ],
+    // Sampled from the plate's own blank background, not guessed — a
+    // mismatched fill here shows up as a visible seam.
+    cream: [250, 243, 212],
+  },
+};
 
 const doc = mupdf.Document.openDocument(fs.readFileSync(boardPdf), "application/pdf");
 const page = doc.loadPage(0);
 const list = page.toDisplayList();
+const pageBounds = page.getBounds(); // [x0, y0, x1, y1] in PDF points
 
-const s = PLATE.scale;
-const bbox = [PLATE.x0 * s, PLATE.y0 * s, PLATE.x1 * s, PLATE.y1 * s].map(Math.round);
+const config = SOURCES[path.basename(boardPdf)];
+const region = config?.region ?? pageBounds;
+const erase = config?.erase ?? [];
+
+const bbox = [region[0] * SCALE, region[1] * SCALE, region[2] * SCALE, region[3] * SCALE].map(Math.round);
 const pix = new mupdf.Pixmap(mupdf.ColorSpace.DeviceRGB, bbox, false);
 pix.clear(255);
-const dev = new mupdf.DrawDevice(mupdf.Matrix.scale(s, s), pix);
+const dev = new mupdf.DrawDevice(mupdf.Matrix.scale(SCALE, SCALE), pix);
 list.run(dev, mupdf.Matrix.identity);
 dev.close();
 
@@ -60,11 +70,11 @@ const fill = (x0, y0, x1, y1, [r, g, b]) => {
       img.data[d] = r; img.data[d + 1] = g; img.data[d + 2] = b;
     }
 };
-for (const r of ERASE) fill(...r, CREAM);
+for (const r of erase) fill(...r, config.cream);
 
 fs.mkdirSync(outDir, { recursive: true });
 fs.writeFileSync(path.join(outDir, "board-plate.png"), encodePNG(img));
-console.log(`board-plate.png ${width}x${height}  (pdf ${PLATE.x0},${PLATE.y0} .. ${PLATE.x1},${PLATE.y1} @${s}x)`);
+console.log(`board-plate.png ${width}x${height}  (pdf ${region.join(",")} @${SCALE}x)`);
 
 if (wantGrid) {
   // Debug copy with a 100px grid so map features can be read off in plate pixels.

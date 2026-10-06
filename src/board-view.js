@@ -214,7 +214,7 @@ export function createBoardView(host, board, handlers = {}) {
   // --- dynamic layer ------------------------------------------------------
   function render(model) {
     const {
-      legalRoutes = [], walked = [], tokens = [], goals = new Set(),
+      legalRoutes = [], walked = [], preview = [], tokens = [], goals = new Set(),
       visited = new Set(), reached = new Set(), pulse = new Set(), hover,
     } = model;
     hoverInfo = hover ?? (() => null);
@@ -246,6 +246,20 @@ export function createBoardView(host, board, handlers = {}) {
         "stroke-linecap": "round", "stroke-linejoin": "round", "stroke-dasharray": dash,
       });
       gLive.append(line);
+    }
+
+    // a destination/stop being picked but not yet sent anywhere — orange so
+    // it reads as "proposed," distinct from the already-committed walked
+    // route (green) and the currently-clickable next steps (blue)
+    for (const r of preview) {
+      gLive.append(el("polyline", {
+        points: pathOf(r), fill: "none", stroke: "#ffffff", "stroke-opacity": ".8",
+        "stroke-width": 9, "stroke-linecap": "round", "stroke-linejoin": "round",
+      }));
+      gLive.append(el("polyline", {
+        points: pathOf(r), fill: "none", stroke: "#d97f2f", "stroke-width": 4,
+        "stroke-linecap": "round", "stroke-linejoin": "round", "stroke-dasharray": "1 10",
+      }));
     }
 
     // per-city status rings

@@ -39,14 +39,18 @@ for (let i = 0; i < mainlandAirports.length; i++)
 
 // Printed roads the tracer could not follow because a bus, tree or other piece of
 // artwork is drawn across them. Each was confirmed against the plate by eye and
-// its polyline read off the artwork.
+// its polyline read off the artwork. (Kolkata-Behrampore, the sixth such gap on
+// the previous map source, traces cleanly on this one and needs no entry here.)
 const EXTRA_ROADS = [
-  ["kolkata", "behrampore", [[1394, 1138], [1383, 1085], [1374, 1018], [1369, 955]]],
-  ["aurangabad", "bhopal", [[508, 1313], [548, 1245], [578, 1188], [612, 1140], [676, 1068]]],
-  ["gulbarga", "ratnagiri", [[604, 1500], [520, 1497], [440, 1506], [358, 1529]]],
-  ["lucknow", "gorakhpur", [[901, 816], [960, 820], [1010, 826], [1060, 832]]],
-  ["sambalpur", "srikakulam", [[1109, 1235], [1097, 1292], [1086, 1362], [1079, 1433]]],
-  ["srinagar", "jammu", [[554, 268], [578, 300], [582, 330], [570, 355], [547, 376]]],
+  ["aurangabad", "bhopal", [[548, 1344], [620, 1280], [650, 1220], [680, 1150], [716, 1100]]],
+  ["gulbarga", "ratnagiri", [[398, 1560], [480, 1570], [540, 1555], [644, 1532]]],
+  ["lucknow", "gorakhpur", [[941, 847], [990, 840], [1035, 835], [1070, 850], [1100, 863]]],
+  ["sambalpur", "srikakulam", [[1149, 1266], [1140, 1310], [1135, 1350], [1125, 1400], [1119, 1464]]],
+  ["srinagar", "jammu", [[594, 300], [600, 330], [610, 355], [600, 380], [587, 407]]],
+  // The only ground link into the whole Northeast cluster — without it, every
+  // city from Guwahati onward is reachable only by air. Hidden under a
+  // decorative houseboat icon.
+  ["siliguri", "guwahati", [[1447, 865], [1500, 862], [1560, 870], [1610, 878], [1662, 881]]],
 ];
 for (const [from, to, path] of EXTRA_ROADS)
   routes.push({ from, to, type: "road", steps: 1, surcharge: 0, path });
@@ -98,9 +102,9 @@ const board = {
   },
   plate: {
     image: "assets/board-plate.png",
-    width: 1980,
-    height: 2426,
-    source: { pdf: "Rahee-A-fincurve.pdf", regionPt: [20, 515, 1010, 1728], scale: 2 },
+    width: 2147,
+    height: 2457,
+    source: { pdf: "Rahee-gameboard.pdf", regionPt: [0, 0, 1073.26, 1228.62], scale: 2 },
   },
   suits: [
     { id: "spades", symbol: "♠", memory: "Bazaar", blurb: "shopping at a bazaar", colour: "#2f3640" },
