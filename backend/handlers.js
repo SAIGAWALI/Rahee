@@ -4,8 +4,8 @@
 // lives in engine.js itself, which already throws on bad input — this file
 // only adds the one check engine.js has no way to make on its own: which
 // *seat* is allowed to act as the current player.
-import * as E from "../src/engine.js";
-import { createRoom, findRoom, addSeat, pickCharacter, startGame } from "./rooms.js";
+import * as E from "../frontend/src/engine.js";
+import { createRoom, findRoom, addSeat, pickCharacter, startGame, persistRoom } from "./rooms.js";
 import { redact } from "./redact.js";
 import * as T from "./protocol.js";
 
@@ -58,7 +58,7 @@ export function handleConnection(ws, { board, graph }) {
     return { room, seatIndex: id.seatIndex };
   }
 
-  ws.on("message", (raw) => {
+  ws.on("message", async (raw) => {
     let msg;
     try {
       msg = JSON.parse(raw);
@@ -68,8 +68,8 @@ export function handleConnection(ws, { board, graph }) {
     try {
       switch (msg.type) {
         case T.CREATE_ROOM: {
-          const room = createRoom(board);
-          const seatIndex = addSeat(room, msg.name, ws);
+          const room = await createRoom(board);
+          const seatIndex = await addSeat(room, msg.name, ws);
           ws._identity = { code: room.code, seatIndex };
           send(ws, T.ROOM_CREATED, { code: room.code, seatIndex });
           broadcastLobby(room);
@@ -78,7 +78,7 @@ export function handleConnection(ws, { board, graph }) {
         case T.JOIN_ROOM: {
           const room = findRoom(msg.code);
           if (!room) throw new Error("no room with that code");
-          const seatIndex = addSeat(room, msg.name, ws);
+          const seatIndex = await addSeat(room, msg.name, ws);
           ws._identity = { code: room.code, seatIndex };
           send(ws, T.JOINED, { code: room.code, seatIndex, seats: lobbySeats(room) });
           broadcastLobby(room);
@@ -86,14 +86,14 @@ export function handleConnection(ws, { board, graph }) {
         }
         case T.PICK_CHARACTER: {
           const { room, seatIndex } = requireSeat();
-          pickCharacter(room, seatIndex, msg.characterId);
+          await pickCharacter(room, seatIndex, msg.characterId);
           broadcastLobby(room);
           break;
         }
         case T.START_GAME: {
           const { room, seatIndex } = requireSeat();
           if (seatIndex !== 0) throw new Error("only the player who created the room can start it");
-          startGame(room);
+          await startGame(room);
           broadcastState(room);
           break;
         }
@@ -105,6 +105,7 @@ export function handleConnection(ws, { board, graph }) {
           if (T.TURN_GATED_ACTIONS.has(msg.name) && E.currentPlayer(room.state).id !== seatIndex)
             throw new Error("it isn't your turn");
           fn(room.state, graph, seatIndex, msg.args ?? {});
+          await persistRoom(room); // durable before the table hears about it — a crash right after still remembers this move
           broadcastState(room);
           break;
         }

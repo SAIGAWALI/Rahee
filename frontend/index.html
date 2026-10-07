@@ -11,6 +11,13 @@
 <div id="app" class="app">
   <div class="boot">Loading the board…</div>
 </div>
+<script>
+  // Set this to the backend's own WebSocket URL when this frontend is
+  // deployed separately from it (e.g. this on Netlify, the backend on
+  // Render) — see src/config.js. Leave it unset for local development,
+  // where one `node app.js` in backend/ answers both.
+  // window.RAHEE_SERVER_URL = "wss://your-backend.onrender.com";
+</script>
 <script type="module" src="src/main.js"></script>
 </body>
 </html>

@@ -1,10 +1,12 @@
 // Owns the one WebSocket connection to the server and turns the gameplay
 // actions main.js used to call on engine.js directly into one uniform
-// `action(name, args)` message, mirroring server/protocol.js's envelope.
+// `action(name, args)` message, mirroring backend/protocol.js's envelope.
+import { SERVER_URL } from "./config.js";
+
 let ws = null;
 
 export function connect(handlers) {
-  ws = new WebSocket(`ws://${location.host}`);
+  ws = new WebSocket(SERVER_URL);
   ws.addEventListener("open", () => handlers.onOpen?.());
   ws.addEventListener("close", () => handlers.onClose?.());
   ws.addEventListener("error", () => handlers.onClose?.());

@@ -9,8 +9,8 @@ import { pathToFileURL } from "node:url";
 
 const root = process.argv[2];
 const games = +(process.argv[3] || 40);
-const board = JSON.parse(fs.readFileSync(path.join(root, "data/board.json"), "utf8"));
-const E = await import(pathToFileURL(path.join(root, "src/engine.js")).href);
+const board = JSON.parse(fs.readFileSync(path.join(root, "frontend/data/board.json"), "utf8"));
+const E = await import(pathToFileURL(path.join(root, "frontend/src/engine.js")).href);
 
 let failures = 0;
 const check = (cond, msg) => { if (!cond) { failures++; console.log("  FAIL:", msg); } };

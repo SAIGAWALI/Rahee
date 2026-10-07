@@ -1,0 +1,14 @@
+{
+  "name": "rahee-backend",
+  "private": true,
+  "type": "module",
+  "description": "RAHEE's multiplayer API/WebSocket backend — persists every room to a MySQL-compatible database (MySQL, MariaDB, or TiDB) and enforces every rule via ../frontend/src/engine.js unmodified.",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "mysql2": "^3.11.0",
+    "ws": "^8.18.0"
+  }
+}

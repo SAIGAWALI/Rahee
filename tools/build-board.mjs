@@ -7,7 +7,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const root = process.argv[2];
-const traced = JSON.parse(fs.readFileSync(path.join(root, "assets/routes-traced.json"), "utf8"));
+const traced = JSON.parse(fs.readFileSync(path.join(root, "frontend/assets/routes-traced.json"), "utf8"));
 
 const cities = fs.readFileSync(path.join(root, "tools/cities.tsv"), "utf8")
   .trim().split("\n").slice(1).map((line) => {
@@ -184,8 +184,8 @@ const ANDAMANS = new Set(["sri-vijayapuram", "diglipur", "great-nicobar"]);
 const stranded = cities.filter((c) => !gseen.has(c.id) && !ANDAMANS.has(c.id)).map((c) => c.id);
 if (stranded.length) problems.push(`reachable only by air: ${stranded.join(", ")}`);
 
-fs.mkdirSync(path.join(root, "data"), { recursive: true });
-fs.writeFileSync(path.join(root, "data/board.json"), JSON.stringify(board, null, 1));
+fs.mkdirSync(path.join(root, "frontend/data"), { recursive: true });
+fs.writeFileSync(path.join(root, "frontend/data/board.json"), JSON.stringify(board, null, 1));
 console.log(`board.json: ${cities.length} cities (${touristNums.length} tourist), ${board.routes.length} routes ` +
   `(${board.routes.filter((r) => r.type === "road").length} road, ${board.routes.filter((r) => r.type === "flight").length} flight, ` +
   `${board.routes.filter((r) => r.type === "ship").length} ship), ${board.characters.length} characters`);
