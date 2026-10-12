@@ -36,15 +36,56 @@ const graph = E.buildGraph(board);
 // --- deals ------------------------------------------------------------------
 for (let n = 2; n <= 6; n++) {
   const spec = E.dealSpec(board, n);
-  const { hands, leftover } = E.deal(board, n, 12345 + n);
+  const { hands, leftover, setAside } = E.deal(board, n, 12345 + n);
   check(hands.length === n, `${n}p: wrong number of hands`);
   for (const hand of hands) {
     check(hand.length === spec.dealt + 1, `${n}p: hand size ${hand.length}, expected ${spec.dealt + 1}`);
     check(hand.some((c) => spec.guaranteed.includes(c.rank)), `${n}p: hand without a guaranteed high card`);
   }
-  const all = [...hands.flat(), ...leftover].map((c) => `${c.rank}${c.suit}`);
+  // B3: spare high cards are set aside — never dealt and never left in the draw deck.
+  check(!leftover.some((c) => spec.guaranteed.includes(c.rank)), `${n}p: spare high card shuffled back into the deck`);
+  check(setAside.every((c) => spec.guaranteed.includes(c.rank)), `${n}p: set-aside pile holds a non-high card`);
+  check(hands.every((h) => h.filter((c) => spec.guaranteed.includes(c.rank)).length === 1), `${n}p: a hand holds more than one high card`);
+  const all = [...hands.flat(), ...leftover, ...setAside].map((c) => `${c.rank}${c.suit}`);
   check(new Set(all).size === all.length, `${n}p: a card was dealt twice`);
   check(all.length === spec.ranks.length * 4, `${n}p: deck size wrong`);
+}
+
+// --- B3 across many seeds ---------------------------------------------------
+for (let n = 2; n <= 6; n++) {
+  const spec = E.dealSpec(board, n);
+  for (let seed = 1; seed <= 200; seed++) {
+    const { hands } = E.deal(board, n, seed);
+    if (!hands.every((h) => h.filter((c) => spec.guaranteed.includes(c.rank)).length === 1)) { check(false, `${n}p seed ${seed}: hand with !=1 high card`); break; }
+  }
+}
+
+// --- B2: roads before flights ------------------------------------------------
+{
+  const route = E.shortestPath(graph, "new-delhi", "mumbai", 99);
+  check(route && route.edges.every((e) => e.route.type !== "flight"), "B2: New Delhi -> Mumbai should be by road, not a flight");
+  const tight = E.shortestPath(graph, "new-delhi", "mumbai", 1);
+  check(tight && tight.edges.length === 1 && tight.edges[0].route.type === "flight", "B2: with only 1 step allowed, the flight is the fallback");
+  // reachability must be unchanged: anything reachable with flights is still reachable
+  for (const a of ["new-delhi", "sawai-madhopur"]) for (const b of board.cities.map((c) => c.id)) {
+    const r = E.shortestPath(graph, a, b, 4);
+    if (r) check(r.totalSteps <= 4, `B2: ${a}->${b} exceeds budget`);
+  }
+}
+
+// --- B1: no road may jump over a city that the printed board links through ----
+{
+  const has = (a, b) => board.routes.some((r) => (r.from === a && r.to === b) || (r.from === b && r.to === a));
+  check(!has("bhopal", "lucknow"), "B1: there is no printed Bhopal-Lucknow road (it is Bhopal-Gwalior + Gwalior-Lucknow)");
+  check(has("bhopal", "gwalior") && has("gwalior", "lucknow"), "B1: Bhopal-Gwalior and Gwalior-Lucknow roads must exist");
+  // roads that jump over a city the printed board routes through
+  for (const [a, c, m] of [["amritsar","jammu","dharamshala"],["aizwal","imphal","silchar"],["bengaluru","wayanad","madikeri"],["daman","pune","mumbai"],["kochi","madikeri","wayanad"],["madurai","thiruvananthapuram","kanniyakumari"],["badrinath","rishikesh","new-delhi"]]) {
+    check(!has(a, c), `B1: ${a}-${c} is not a printed road (it is ${a}-${m} + ${m}-${c})`);
+    check(has(a, m) && has(m, c), `B1: ${a}-${m} and ${m}-${c} must exist`);
+  }
+  const r = E.shortestPath(graph, "sawai-madhopur", "madikeri", 4);
+  const stops = r ? r.edges.map((e) => e.to) : [];
+  check(stops.includes("gwalior"), `B1: Sawai Madhopur -> Madikeri (4 steps) should pass through Gwalior, got ${stops.join(" > ")}`);
 }
 
 // --- scoring worked example from the manual --------------------------------

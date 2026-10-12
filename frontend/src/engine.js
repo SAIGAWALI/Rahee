@@ -54,8 +54,20 @@ export const routeCost = (board, route) =>
  * money — see routeCost for that separate concern. 101 cities is small enough
  * that a heap-free O(V²) Dijkstra is plenty fast. Returns `null` if the city
  * isn't reachable within `maxSteps` (or at all).
+ *
+ * Flights are a last resort: a route that stays on roads (and ships) is always
+ * preferred, even when it is longer than a flight, as long as it fits within
+ * `maxSteps`. A flight is only used when no road/ship route fits the budget.
+ * Reachability is unchanged — only which route is chosen.
  */
 export function shortestPath(graph, fromCityId, toCityId, maxSteps) {
+  return (
+    dijkstra(graph, fromCityId, toCityId, maxSteps, (route) => route.type !== "flight") ||
+    dijkstra(graph, fromCityId, toCityId, maxSteps, () => true)
+  );
+}
+
+function dijkstra(graph, fromCityId, toCityId, maxSteps, allowed) {
   if (fromCityId === toCityId) return { edges: [], totalSteps: 0 };
   const dist = new Map([[fromCityId, 0]]);
   const prev = new Map(); // cityId -> { from, edge }
@@ -66,6 +78,7 @@ export function shortestPath(graph, fromCityId, toCityId, maxSteps) {
     if (u === null || u === toCityId) break;
     visited.add(u);
     for (const edge of graph.get(u) || []) {
+      if (!allowed(edge.route)) continue;
       const nd = best + edge.route.steps;
       if (nd > maxSteps) continue;
       if (!dist.has(edge.to) || nd < dist.get(edge.to)) { dist.set(edge.to, nd); prev.set(edge.to, { from: u, edge }); }
@@ -101,8 +114,9 @@ export function buildDeck(board, playerCount) {
 
 /**
  * Deals hands. Every player is first guaranteed one high-movement card (a 10,
- * or a J once the face cards are in), then the rest of the deck is shuffled and
- * the remainder of each hand dealt from it. Nothing is drawn after this.
+ * or a J once the face cards are in). Any other 10s/Js are then set aside, and
+ * the remainder of each hand is dealt from the rest of the shuffled deck.
+ * Nothing is drawn after this.
  */
 export function deal(board, playerCount, seed) {
   const spec = dealSpec(board, playerCount);
@@ -115,11 +129,17 @@ export function deal(board, playerCount, seed) {
     if (at < 0) throw new Error("not enough high cards to guarantee one each");
     guaranteed.push(deck.splice(at, 1)[0]);
   }
+  // Every other high-movement card (the spare 10s / Js) is set aside, not
+  // shuffled back in: only the guaranteed card of each player is high-value.
+  const setAside = deck.filter((c) => spec.guaranteed.includes(c.rank));
+  const rest = deck.filter((c) => !spec.guaranteed.includes(c.rank));
+  deck.length = 0;
+  deck.push(...rest);
   const hands = guaranteed.map((c) => [c]);
   for (let n = 0; n < spec.dealt; n++)
     for (let p = 0; p < playerCount; p++) hands[p].push(deck.pop());
 
-  return { hands, leftover: deck };
+  return { hands, leftover: deck, setAside };
 }
 
 export function newGame({ board, players, firstPlayer = 0, seed = Date.now() & 0xffffffff }) {

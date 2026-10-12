@@ -24,8 +24,29 @@ for (const id of traced.airports) byId.get(id).airport = true;
 const ISLAND_AIRPORTS = ["agatti"];
 for (const id of ISLAND_AIRPORTS) byId.get(id).airport = true;
 
-const routes = traced.routes.map((e) => ({
-  from: e.from, to: e.to, type: "road", steps: 1, surcharge: 0, path: e.path,
+// Traced "roads" that are not printed roads: the tracer followed two real roads
+// end to end through the node between them and reported one long edge. Dropping
+// them leaves the real two-road link in place (bhopal-gwalior, gwalior-lucknow),
+// so a path from one end to the other now passes through the middle city.
+// Each is really two printed roads (A-middle + middle-C), both of which exist.
+const SPURIOUS = [
+  ["bhopal", "lucknow"],          // via Gwalior
+  ["amritsar", "jammu"],          // via Dharamshala
+  ["aizwal", "imphal"],           // via Silchar
+  ["bengaluru", "wayanad"],       // via Madikeri
+  ["daman", "pune"],              // via Mumbai
+  ["kochi", "madikeri"],          // via Wayanad
+  ["madurai", "thiruvananthapuram"], // via Kanniyakumari
+  ["badrinath", "rishikesh"],     // via New Delhi
+];
+const isSpurious = (e) => SPURIOUS.some(([a, b]) => (e.from === a && e.to === b) || (e.from === b && e.to === a));
+
+// Real roads whose traced polyline wandered onto a neighbouring road: redraw.
+const PATH_FIXES = new Map([["bhopal|indore", [[716, 1100], [650, 1100], [583, 1100]]]]);
+const fixPath = (e) => PATH_FIXES.get(`${e.from}|${e.to}`) || PATH_FIXES.get(`${e.to}|${e.from}`)?.slice().reverse() || e.path;
+
+const routes = traced.routes.filter((e) => !isSpurious(e)).map((e) => ({
+  from: e.from, to: e.to, type: "road", steps: 1, surcharge: 0, path: fixPath(e),
 }));
 
 // Every mainland airport pair is a legal flight; the board draws no line for
