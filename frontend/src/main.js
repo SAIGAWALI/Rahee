@@ -13,7 +13,11 @@ const app = document.getElementById("app");
 let board, graph, view = null, mounted = null;
 
 // Connection / room identity — who this device is, not part of game state.
-let connected = false, you = null, roomCode = null, seats = [];
+// `resuming`: a seat was asked back from the server and its answer hasn't arrived.
+// `replaced`: another window took this seat over (see net.js).
+// `online`: per seat, whether that player currently has a live connection.
+let connected = false, resuming = false, replaced = false;
+let you = null, roomCode = null, seats = [], online = [];
 // The authoritative game state, as last broadcast by the server. Never
 // mutated locally — only ever replaced wholesale by net.js's onState.
 let state = null;
@@ -62,10 +66,29 @@ function blankLocal() {
 
 function connectToServer() {
   net.connect({
-    onOpen: () => { connected = true; render(); },
-    onClose: () => { connected = false; render(); },
+    // net.js has already sent "resume" if this browser holds a seat; until the
+    // server answers, the screen stays as it is (or on "Rejoining…") rather than
+    // flashing the landing page.
+    onOpen: ({ resuming: r }) => { connected = true; resuming = r; render(); },
+    // A dropped connection does not end the game: net.js reconnects on its own
+    // and resumes the seat. Meanwhile the screen stays up under a banner.
+    onClose: () => { connected = false; resuming = false; render(); },
     onRoomCreated: (msg) => { you = msg.seatIndex; roomCode = msg.code; render(); },
     onJoined: (msg) => { you = msg.seatIndex; roomCode = msg.code; seats = msg.seats; render(); },
+    onResumed: (msg) => {
+      resuming = false;
+      you = msg.seatIndex; roomCode = msg.code; seats = msg.seats; online = msg.online ?? [];
+      state = msg.state ? { ...msg.state, board } : null; // null while the room is still a lobby
+      render();
+    },
+    onResumeFailed: () => {
+      // The room or seat is gone (e.g. the database was wiped): back to the start.
+      resetLocal();
+      render();
+      flashError("That game is no longer available — create or join a new one.");
+    },
+    onPresence: (o) => { online = o; render(); },
+    onReplaced: () => { replaced = true; render(); },
     onLobby: (msg) => { if (msg.code === roomCode) { seats = msg.seats; render(); } },
     // The server never sends `board` (the client already has its own copy —
     // see boot() — and resending ~70KB on every move would be wasteful).
@@ -79,14 +102,27 @@ function connectToServer() {
   render();
 }
 
+const OFFLINE_MSG = "You're offline right now — hang on while it reconnects.";
+// True while messages can actually reach the server and be tied to our seat.
+const live = () => connected && !resuming && !replaced;
+
 function commit(name, args) {
+  if (!live()) return flashError(OFFLINE_MSG);
   net.action(name, args ?? {});
 }
 
+/** Forget the room, the seat and everything drawn for them (not the connection). */
+function resetLocal() {
+  resuming = false; replaced = false;
+  you = null; roomCode = null; seats = []; online = []; state = null; mounted = null; view = null;
+  local = blankLocal(); destPanel = blankDestPanel();
+}
+
 function restart() {
-  you = null; roomCode = null; seats = []; state = null; mounted = null; view = null; local = blankLocal(); destPanel = blankDestPanel();
-  render();
-  connectToServer(); // fresh socket, fresh room — the old one stays live server-side but this device leaves it
+  net.leave();   // give up the seat and close the old socket for good
+  resetLocal();
+  connected = false;
+  connectToServer(); // fresh socket, fresh room
 }
 
 let errorTimer = null;
@@ -101,18 +137,32 @@ function flashError(message) {
 
 // ---------------------------------------------------------------------------
 
+const ifLive = (fn) => (...args) => (live() ? fn(...args) : flashError(OFFLINE_MSG));
+
 function render() {
-  if (!connected) return swap(h("div", { class: "boot" }, "Connecting to the server…"));
+  syncBanner();
+
+  // Another window has this seat: say so, and offer to take it back.
+  if (replaced) return swap(replacedScreen());
+
+  // Not in a room yet. The landing page needs a live socket — and a refresh that
+  // is about to rejoin its game must not flash it on the way.
+  if (roomCode === null) {
+    if (!connected) return swap(h("div", { class: "boot" }, net.hasSession() ? "Reconnecting to your game…" : "Connecting to the server…"));
+    if (resuming) return swap(h("div", { class: "boot" }, "Rejoining your game…"));
+  }
+  // Once a room is known, a dropped connection falls through to the screens
+  // below — the game stays on screen, under the banner, while it reconnects.
 
   if (!state) {
     if (roomCode === null) return swap(landingScreen(
-      (name) => net.createRoom(name),
-      (code, name) => net.joinRoom(code, name),
+      ifLive((name) => net.createRoom(name)),
+      ifLive((code, name) => net.joinRoom(code, name)),
     ));
     return swap(lobbyScreen(board, {
-      code: roomCode, seats, you,
-      onPickCharacter: (id) => net.pickCharacter(id),
-      onStart: () => net.startGame(),
+      code: roomCode, seats, you, online,
+      onPickCharacter: ifLive((id) => net.pickCharacter(id)),
+      onStart: ifLive(() => net.startGame()),
     }));
   }
 
@@ -123,10 +173,31 @@ function render() {
     if (p.id === you) {
       return swap(layCardScreen(state, state.players[you], (id) => commit("layRoadTripCard", { cardId: id })));
     }
-    return swap(waitingScreen("Waiting for the table…", `${p.name} is laying their first road-trip card.`));
+    return swap(waitingScreen("Waiting for the table…",
+      `${p.name} is laying their first road-trip card.` +
+      (online[p.id] === false ? ` ${p.name} appears to be offline — the game carries on when they rejoin.` : "")));
   }
 
   renderPlay();
+}
+
+/** The "reconnecting" strip, shown whenever we hold a seat but can't currently talk to the server. */
+function syncBanner() {
+  let el = document.getElementById("netbanner");
+  const show = roomCode !== null && !replaced && (!connected || resuming);
+  if (!show) { el?.remove(); return; }
+  if (!el) { el = h("div", { id: "netbanner", class: "netbanner", role: "status" }); document.body.append(el); }
+  el.textContent = connected ? "Rejoining your game…" : "Connection lost — reconnecting…";
+}
+
+function replacedScreen() {
+  return h("div", { class: "sheet-wrap centre" },
+    h("div", { class: "sheet narrow" },
+      h("div", { class: "panel", style: "text-align:center;padding:48px 24px" },
+        h("h2", { style: "font:600 26px/1.2 var(--serif)" }, "RAHEE is open in another window"),
+        h("p", { class: "muted", style: "max-width:400px;margin:10px auto 20px" },
+          "Your seat is now being played from another window or device. You can take it back here — that other window will be disconnected."),
+        h("button", { class: "btn primary", onClick: () => { replaced = false; net.reconnect(); render(); } }, "Play here instead"))));
 }
 
 function swap(node) {
@@ -183,7 +254,8 @@ function renderPlay() {
   mounted.topbar.append(...[
     h("div", { class: "turnchip" },
       h("div", { class: "dot", style: `background:${p.colour}` }),
-      h("div", {}, h("b", {}, isMyTurn ? "Your turn" : `${p.name}'s turn`), h("div", { class: "tiny muted" }, ch.name)),
+      h("div", {}, h("b", {}, isMyTurn ? "Your turn" : `${p.name}'s turn`),
+        h("div", { class: "tiny muted" }, ch.name, !isMyTurn && online[p.id] === false ? h("span", { class: "tag offline", style: "margin-left:6px" }, "offline") : null)),
       h("div", { class: "sep" }),
       h("div", { class: "stat" }, "Round", h("b", {}, String(state.round))),
       h("div", { class: "sep" }),
@@ -265,6 +337,7 @@ function renderDest() {
   }
   mounted.destHost.replaceChildren(renderDestinationsPanel(state, {
     viewerId: you,
+    online,
     open: destPanel.open,
     openPlayerId: destPanel.playerId,
     onToggle: () => { destPanel.open = !destPanel.open; renderDest(); },

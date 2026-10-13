@@ -52,6 +52,21 @@ const server = http.createServer(serveStatic);
 const wss = new WebSocketServer({ server });
 wss.on("connection", (ws) => handleConnection(ws, { board, graph }));
 
+// Heartbeat. A phone that walks out of signal or a laptop that goes to sleep
+// often never says goodbye, so without this its seat would read "online" forever.
+// Every tick, any socket that did not answer the previous ping is dropped (which
+// marks its seat offline and lets the owner resume it); the rest are pinged again.
+// The traffic also keeps idle connections from being closed by a host's proxy.
+const HEARTBEAT_MS = Number(process.env.HEARTBEAT_MS || 25000);
+const heartbeat = setInterval(() => {
+  for (const ws of wss.clients) {
+    if (ws.isAlive === false) { ws.terminate(); continue; }
+    ws.isAlive = false;
+    ws.ping();
+  }
+}, HEARTBEAT_MS);
+wss.on("close", () => clearInterval(heartbeat));
+
 async function main() {
   await migrate();
   await loadRooms(board);

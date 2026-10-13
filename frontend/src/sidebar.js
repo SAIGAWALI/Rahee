@@ -183,10 +183,11 @@ export function renderSidebar(state, ui) {
  * — only hands are hidden). Nothing here is secret, so nothing is requested
  * from the server.
  *
- * opts: { viewerId, open, openPlayerId, onToggle(), onTogglePlayer(id), onFocusCity(id) }
+ * opts: { viewerId, online, open, openPlayerId, onToggle(), onTogglePlayer(id), onFocusCity(id) }
+ * (`online` is optional: per seat, whether that player is connected right now.)
  */
 export function renderDestinationsPanel(state, opts) {
-  const { viewerId, open, openPlayerId, onToggle, onTogglePlayer, onFocusCity } = opts;
+  const { viewerId, online = [], open, openPlayerId, onToggle, onTogglePlayer, onFocusCity } = opts;
   const others = state.players.filter((pl) => pl.id !== viewerId);
   const current = currentPlayer(state).id;
 
@@ -218,7 +219,9 @@ export function renderDestinationsPanel(state, opts) {
     },
       h("div", { class: "dot", style: `background:${pl.colour}` }),
       h("div", { class: "dp-who" },
-        h("div", { class: "nm" }, pl.name, pl.id === current ? h("span", { class: "tag" }, "playing") : null),
+        h("div", { class: "nm" }, pl.name,
+          pl.id === current ? h("span", { class: "tag" }, "playing") : null,
+          online[pl.id] === false ? h("span", { class: "tag offline" }, "offline") : null),
         h("div", { class: "sub" }, `${ch.name} · at ${cityOf(state, pl.city).name}`)),
       h("div", { class: "dp-count" }, `${reached.size}/${ch.goals.length}`),
       h("div", { class: "dp-chev" }, isOpen ? "▾" : "▸")));

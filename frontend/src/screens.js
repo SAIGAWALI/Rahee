@@ -55,12 +55,13 @@ function characterGrid(board, seats, you, onPick) {
 }
 
 /** Waiting room: who's here, pick a character, the host starts once everyone has. */
-export function lobbyScreen(board, { code, seats, you, onPickCharacter, onStart }) {
+export function lobbyScreen(board, { code, seats, you, online = [], onPickCharacter, onStart }) {
   const rows = h("div", {});
   seats.forEach((s, i) => {
     rows.append(h("div", { class: "playerrow" },
       h("div", { class: "swatch", style: `background:${PLAYER_COLOURS[i % PLAYER_COLOURS.length]}` }),
-      h("div", { style: "flex:1" }, s.name, i === you ? h("span", { class: "tiny muted" }, "  (you)") : null),
+      h("div", { style: "flex:1" }, s.name, i === you ? h("span", { class: "tiny muted" }, "  (you)") : null,
+        online[i] === false ? h("span", { class: "tag offline", style: "margin-left:8px" }, "offline") : null),
       h("span", { class: "tiny muted" }, s.characterId ? board.characters.find((c) => c.id === s.characterId)?.name : "choosing…")));
   });
 

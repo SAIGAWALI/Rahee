@@ -8,17 +8,39 @@
 // needs the already-loaded in-memory copy.
 //
 //   Room = { code, board, state: <engine state>|null,
-//            seats: [{ name, characterId, ws }] }
+//            seats: [{ name, characterId, tokenHash, ws }] }
 //
 // A seat's index in `seats` IS its engine player id (engine.js's newGame
 // assigns `player.id = i` in array order), so "seatIndex" and "player.id"
 // are the same number throughout the server. `ws` is never persisted — it's
 // a live socket, meaningless once the process restarts; a seat just has no
-// `ws` until that player's browser reconnects and rejoins.
+// `ws` until that player's browser reconnects and resumes it with its token
+// (`tokenHash` is persisted, so that still works after a restart).
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import * as E from "../frontend/src/engine.js";
 import { pool } from "./db.js";
 
 export const rooms = new Map();
+
+// A seat's reconnection token is a random 192-bit secret handed to its owner
+// once (see handlers.js). Only its SHA-256 hash is kept on the seat and written
+// to the database, so a leaked database row cannot be used to take over a seat.
+const newToken = () => randomBytes(24).toString("hex");
+const hashToken = (token) => createHash("sha256").update(token).digest("hex");
+
+/** The seat index this token belongs to, or -1. Constant-time compare. */
+export function seatForToken(room, token) {
+  if (typeof token !== "string" || token.length === 0 || token.length > 200) return -1;
+  const want = Buffer.from(hashToken(token));
+  return room.seats.findIndex((s) => {
+    if (typeof s.tokenHash !== "string") return false; // seats saved before tokens existed can't be resumed
+    const have = Buffer.from(s.tokenHash);
+    return have.length === want.length && timingSafeEqual(have, want);
+  });
+}
+
+/** Which seats currently have a live connection, by seat index. */
+export const presenceOf = (room) => room.seats.map((s) => !!s.ws && s.ws.readyState === s.ws.OPEN);
 
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O, 1/I
 function generateCode() {
@@ -42,7 +64,7 @@ function asObject(value) {
 // storage, so it's stripped before writing and reattached on load instead
 // of duplicating it in every row.
 function seatsForStorage(room) {
-  return room.seats.map((s) => ({ name: s.name, characterId: s.characterId }));
+  return room.seats.map((s) => ({ name: s.name, characterId: s.characterId, tokenHash: s.tokenHash }));
 }
 function stateForStorage(room) {
   if (!room.state) return null;
@@ -81,13 +103,18 @@ export function findRoom(code) {
   return rooms.get(String(code || "").trim().toUpperCase());
 }
 
-/** Adds a seat for a newly-connecting socket; returns its seat index. */
+/**
+ * Adds a seat for a newly-connecting socket. Returns its seat index and the
+ * seat's reconnection token — the one and only time the token exists in the
+ * clear on the server; the caller sends it to that socket and nobody else.
+ */
 export async function addSeat(room, name, ws) {
   if (room.state) throw new Error("that game has already started");
   if (room.seats.length >= room.board.characters.length) throw new Error("room is full");
-  room.seats.push({ name: String(name || "Player").slice(0, 18) || "Player", characterId: null, ws });
+  const token = newToken();
+  room.seats.push({ name: String(name || "Player").slice(0, 18) || "Player", characterId: null, ws, tokenHash: hashToken(token) });
   await persistRoom(room);
-  return room.seats.length - 1;
+  return { seatIndex: room.seats.length - 1, token };
 }
 
 /**
