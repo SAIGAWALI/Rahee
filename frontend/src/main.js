@@ -6,7 +6,7 @@
 import * as E from "./engine.js";
 import * as net from "./net.js";
 import { createBoardView } from "./board-view.js";
-import { renderSidebar, h, money, cardChip } from "./sidebar.js";
+import { renderSidebar, renderDestinationsPanel, h, money, cardChip } from "./sidebar.js";
 import { landingScreen, lobbyScreen, waitingScreen, layCardScreen, scoreboardScreen } from "./screens.js";
 
 const app = document.getElementById("app");
@@ -17,6 +17,13 @@ let connected = false, you = null, roomCode = null, seats = [];
 // The authoritative game state, as last broadcast by the server. Never
 // mutated locally — only ever replaced wholesale by net.js's onState.
 let state = null;
+
+// The left-hand "other players' destinations" panel. Kept apart from `local`
+// because blankLocal() is reset at the end of every turn, and a panel the
+// player opened should stay open while the game moves on around it.
+let destPanel = blankDestPanel();
+// playerId: undefined = pick a default, null = everyone collapsed, number = that player expanded.
+function blankDestPanel() { return { open: false, playerId: undefined }; }
 
 // Per-turn interface state that is not part of the game itself.
 let local = blankLocal();
@@ -77,7 +84,7 @@ function commit(name, args) {
 }
 
 function restart() {
-  you = null; roomCode = null; seats = []; state = null; mounted = null; view = null; local = blankLocal();
+  you = null; roomCode = null; seats = []; state = null; mounted = null; view = null; local = blankLocal(); destPanel = blankDestPanel();
   render();
   connectToServer(); // fresh socket, fresh room — the old one stays live server-side but this device leaves it
 }
@@ -147,8 +154,10 @@ function renderPlay() {
     app.append(wrap);
     const boardHost = h("div", { style: "position:absolute;inset:0" });
     stage.prepend(boardHost);
+    const destHost = h("div", { class: "destwrap" });
+    stage.append(destHost);
     view = createBoardView(boardHost, board, { onCityClick: onCityClick });
-    mounted = { wrap, stage, topbar, hint, boardHost, sidebar: null };
+    mounted = { wrap, stage, topbar, hint, boardHost, destHost, sidebar: null };
     view.focusOn(viewer.city, { zoom: 900 });
   }
 
@@ -239,6 +248,29 @@ function renderPlay() {
   if (mounted.sidebar) mounted.sidebar.replaceWith(sidebar);
   else mounted.wrap.append(sidebar);
   mounted.sidebar = sidebar;
+
+  renderDest();
+}
+
+/** Redraws just the left-hand destinations panel — cheap, and called both on
+ * every state broadcast and when the player opens/closes it. */
+function renderDest() {
+  if (!mounted?.destHost || !state) return;
+  const others = state.players.filter((pl) => pl.id !== you);
+  // Open on a sensible player by default: the one whose turn it is, if that
+  // is somebody else, otherwise the first other player at the table.
+  if (destPanel.playerId === undefined || (destPanel.playerId !== null && !others.some((pl) => pl.id === destPanel.playerId))) {
+    const cur = E.currentPlayer(state);
+    destPanel.playerId = (cur.id !== you ? cur : others[0])?.id ?? null;
+  }
+  mounted.destHost.replaceChildren(renderDestinationsPanel(state, {
+    viewerId: you,
+    open: destPanel.open,
+    openPlayerId: destPanel.playerId,
+    onToggle: () => { destPanel.open = !destPanel.open; renderDest(); },
+    onTogglePlayer: (id) => { destPanel.playerId = destPanel.playerId === id ? null : id; renderDest(); },
+    onFocusCity: (id) => view.focusOn(id, { zoom: 620 }),
+  }));
 }
 
 function currentHint(t, p, isMyTurn, you) {

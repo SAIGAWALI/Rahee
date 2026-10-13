@@ -78,11 +78,17 @@ for (let n = 2; n <= 6; n++) {
   const has = (a, b) => board.routes.some((r) => (r.from === a && r.to === b) || (r.from === b && r.to === a));
   check(!has("bhopal", "lucknow"), "B1: there is no printed Bhopal-Lucknow road (it is Bhopal-Gwalior + Gwalior-Lucknow)");
   check(has("bhopal", "gwalior") && has("gwalior", "lucknow"), "B1: Bhopal-Gwalior and Gwalior-Lucknow roads must exist");
-  // roads that jump over a city the printed board routes through
-  for (const [a, c, m] of [["amritsar","jammu","dharamshala"],["aizwal","imphal","silchar"],["bengaluru","wayanad","madikeri"],["daman","pune","mumbai"],["kochi","madikeri","wayanad"],["madurai","thiruvananthapuram","kanniyakumari"],["badrinath","rishikesh","new-delhi"]]) {
+  // roads that merely run end to end through the city between them (checked against the plate)
+  for (const [a, c, m] of [["kochi","madikeri","wayanad"],["badrinath","rishikesh","new-delhi"],["bengaluru","wayanad","udupi"],["daman","pune","mumbai"],["madurai","thiruvananthapuram","kanniyakumari"],["coimbatore","wayanad","kochi"]]) {
     check(!has(a, c), `B1: ${a}-${c} is not a printed road (it is ${a}-${m} + ${m}-${c})`);
     check(has(a, m) && has(m, c), `B1: ${a}-${m} and ${m}-${c} must exist`);
   }
+  check(!has("dharamshala","jammu"), "no printed Dharamshala-Jammu road");
+  check(!has("kadapa","chitradurga"), "no printed Kadapa-Chitradurga road");
+  { const w = E.shortestPath(graph, "wayanad", "coimbatore", 4); check(w && w.edges.map((e) => e.to).includes("kochi"), "Wayanad -> Coimbatore must pass through Kochi"); }
+  // real printed roads that happen to pass near another city — must stay
+  for (const [a, c] of [["amritsar","jammu"],["aizwal","imphal"],["nagapattinam","madurai"],["kochi","coimbatore"]])
+    check(has(a, c), `printed road ${a}-${c} is missing`);
   const r = E.shortestPath(graph, "sawai-madhopur", "madikeri", 4);
   const stops = r ? r.edges.map((e) => e.to) : [];
   check(stops.includes("gwalior"), `B1: Sawai Madhopur -> Madikeri (4 steps) should pass through Gwalior, got ${stops.join(" > ")}`);

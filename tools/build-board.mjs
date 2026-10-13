@@ -28,21 +28,29 @@ for (const id of ISLAND_AIRPORTS) byId.get(id).airport = true;
 // end to end through the node between them and reported one long edge. Dropping
 // them leaves the real two-road link in place (bhopal-gwalior, gwalior-lucknow),
 // so a path from one end to the other now passes through the middle city.
-// Each is really two printed roads (A-middle + middle-C), both of which exist.
+// Each is two printed roads run end to end through the city between them. Every
+// one was checked against the plate: the removed line lies on the two real roads
+// (or, for Madurai-Thiruvananthapuram, on no printed road at all).
 const SPURIOUS = [
-  ["bhopal", "lucknow"],          // via Gwalior
-  ["amritsar", "jammu"],          // via Dharamshala
-  ["aizwal", "imphal"],           // via Silchar
-  ["bengaluru", "wayanad"],       // via Madikeri
-  ["daman", "pune"],              // via Mumbai
-  ["kochi", "madikeri"],          // via Wayanad
-  ["madurai", "thiruvananthapuram"], // via Kanniyakumari
-  ["badrinath", "rishikesh"],     // via New Delhi
+  ["bhopal", "lucknow"],          // Bhopal-Gwalior + Gwalior-Lucknow
+  ["kochi", "madikeri"],          // Kochi-Wayanad + Wayanad-Madikeri
+  ["badrinath", "rishikesh"],     // Badrinath-New Delhi + New Delhi-Rishikesh
+  ["bengaluru", "wayanad"],       // Bengaluru-Udupi + Udupi-Wayanad
+  ["daman", "pune"],              // Daman-Mumbai + Mumbai-Pune
+  ["madurai", "thiruvananthapuram"], // no printed road between them
+  ["dharamshala", "jammu"],       // no printed road between them
+  ["coimbatore", "wayanad"],      // really Wayanad-Kochi + Kochi-Coimbatore (the road bends through Kochi)
 ];
+// NOT in this list on purpose: Amritsar-Jammu and Aizwal-Imphal. Both pass near
+// Dharamshala / Silchar but are separate printed roads in their own right.
 const isSpurious = (e) => SPURIOUS.some(([a, b]) => (e.from === a && e.to === b) || (e.from === b && e.to === a));
 
-// Real roads whose traced polyline wandered onto a neighbouring road: redraw.
-const PATH_FIXES = new Map([["bhopal|indore", [[716, 1100], [650, 1100], [583, 1100]]]]);
+// Real roads whose drawn line is wrong, and printed roads the tracer missed
+// (usually hidden behind a bus or tree). tools/route-fixes.json holds polylines
+// that were traced along the printed ribbon; see tools/test-engine.mjs for the
+// checks that keep them honest.
+const FIXES = JSON.parse(fs.readFileSync(path.join(root, "tools/route-fixes.json"), "utf8"));
+const PATH_FIXES = new Map(Object.entries({ "bhopal|indore": [[716, 1100], [650, 1100], [583, 1100]], ...FIXES.fixes }));
 const fixPath = (e) => PATH_FIXES.get(`${e.from}|${e.to}`) || PATH_FIXES.get(`${e.to}|${e.from}`)?.slice().reverse() || e.path;
 
 const routes = traced.routes.filter((e) => !isSpurious(e)).map((e) => ({
@@ -73,8 +81,8 @@ const EXTRA_ROADS = [
   // decorative houseboat icon.
   ["siliguri", "guwahati", [[1447, 865], [1500, 862], [1560, 870], [1610, 878], [1662, 881]]],
 ];
-for (const [from, to, path] of EXTRA_ROADS)
-  routes.push({ from, to, type: "road", steps: 1, surcharge: 0, path });
+for (const [from, to, pth] of [...EXTRA_ROADS, ...FIXES.add])
+  routes.push({ from, to, type: "road", steps: 1, surcharge: 0, path: fixPath({ from, to, path: pth }) });
 
 // Routes the tracer cannot see, because they are drawn as dotted flight paths or
 // blue water lines rather than the brown road ribbon.

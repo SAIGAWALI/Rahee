@@ -1,6 +1,6 @@
 // The travel journal beside the board: what the current player is carrying,
 // what they have collected, and where they still have to get to.
-import { SUIT_SYMBOL, SUIT_IS_RED, SUITS, characterOf, cityOf, cardValue, scorePlayer } from "./engine.js";
+import { SUIT_SYMBOL, SUIT_IS_RED, SUITS, characterOf, cityOf, cardValue, scorePlayer, currentPlayer } from "./engine.js";
 
 const h = (tag, props = {}, ...kids) => {
   const n = document.createElement(tag);
@@ -173,6 +173,75 @@ export function renderSidebar(state, ui) {
   }
 
   return h("aside", { class: "sidebar" }, head, body, ui.actions ?? null);
+}
+
+/**
+ * The click-to-open panel on the left of the map: every *other* player's
+ * destination goals, so you can see where the rest of the table is heading
+ * and how far along each of them is. Goals come from the board data every
+ * browser already holds; `reached` is public game state (see backend/redact.js
+ * — only hands are hidden). Nothing here is secret, so nothing is requested
+ * from the server.
+ *
+ * opts: { viewerId, open, openPlayerId, onToggle(), onTogglePlayer(id), onFocusCity(id) }
+ */
+export function renderDestinationsPanel(state, opts) {
+  const { viewerId, open, openPlayerId, onToggle, onTogglePlayer, onFocusCity } = opts;
+  const others = state.players.filter((pl) => pl.id !== viewerId);
+  const current = currentPlayer(state).id;
+
+  const tab = h("button", {
+    class: `dest-tab${open ? " is-open" : ""}`,
+    "aria-expanded": open ? "true" : "false",
+    title: open ? "Hide the other players' destinations" : "See where the other players are heading",
+    onClick: onToggle,
+  }, open ? "‹" : "›", h("span", {}, "Destinations"));
+
+  const wrap = h("div", { class: "destwrap-inner" }, tab);
+  if (!open) return wrap;
+
+  const panel = h("div", { class: "destpanel", role: "region", "aria-label": "Other players' destinations" },
+    h("div", { class: "dp-head" },
+      h("h3", {}, "Where everyone is heading"),
+      h("div", { class: "tiny muted" }, "Each traveller's six destinations. Tap a place to find it on the map.")));
+
+  if (!others.length) panel.append(h("div", { class: "empty" }, "There are no other travellers in this game."));
+
+  for (const pl of others) {
+    const ch = characterOf(state, pl);
+    const reached = new Set(pl.reached);
+    const isOpen = pl.id === openPlayerId;
+    const card = h("div", { class: `dp-player${isOpen ? " is-open" : ""}` });
+    card.append(h("button", {
+      class: "dp-row", "aria-expanded": isOpen ? "true" : "false",
+      onClick: () => onTogglePlayer(pl.id),
+    },
+      h("div", { class: "dot", style: `background:${pl.colour}` }),
+      h("div", { class: "dp-who" },
+        h("div", { class: "nm" }, pl.name, pl.id === current ? h("span", { class: "tag" }, "playing") : null),
+        h("div", { class: "sub" }, `${ch.name} · at ${cityOf(state, pl.city).name}`)),
+      h("div", { class: "dp-count" }, `${reached.size}/${ch.goals.length}`),
+      h("div", { class: "dp-chev" }, isOpen ? "▾" : "▸")));
+    if (isOpen) {
+      const list = h("div", { class: "places" });
+      for (const g of ch.goals) {
+        const c = cityOf(state, g.city);
+        const done = reached.has(g.city);
+        list.append(h("button", {
+          class: `place${done ? " is-goal" : " pending"}`,
+          onClick: () => onFocusCity(c.id),
+          title: `Show ${c.name} on the map`,
+        },
+          h("div", { class: "num" }, done ? "✓" : String(c.tourist ?? "•")),
+          h("div", {}, h("div", { class: "nm" }, c.name), h("div", { class: "sub" }, g.blurb)),
+          done ? h("span", { class: "tag done" }, "reached") : null));
+      }
+      card.append(list);
+    }
+    panel.append(card);
+  }
+  wrap.append(panel);
+  return wrap;
 }
 
 export { h, money };
