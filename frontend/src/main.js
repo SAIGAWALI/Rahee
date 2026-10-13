@@ -309,6 +309,7 @@ function renderPlay() {
   // regardless of whose turn it is — everyone else's device just watches.
   const sidebar = renderSidebar(state, {
     viewPlayer: viewer,
+    roomCode: you === 0 ? roomCode : null, // only the host sees it, so they can tell someone who left
     showHand: true,
     canPlay: isMyTurn && !t,
     selectedCardId: local.selectedCardId,

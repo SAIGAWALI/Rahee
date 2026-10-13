@@ -3,9 +3,8 @@
 // `action(name, args)` message, mirroring backend/protocol.js's envelope.
 //
 // Staying in the game when the connection goes away:
-//  - On creating or joining a room the server hands this browser a secret seat
-//    token. It is kept in sessionStorage (this tab only, and it survives a page
-//    refresh) and never reaches main.js.
+//  - On creating or joining a room the server hands this page a secret seat
+//    token. It is kept in sessionStorage (a reload keeps it, closing the tab forgets it) and never reaches main.js.
 //  - Every time a socket opens and a saved seat exists, the first thing sent is
 //    {type:"resume"}; the server answers "resumed" (with the lobby or the current
 //    game, exactly as that seat should see it) or "resume_failed".
@@ -13,8 +12,6 @@
 //    window, it is reopened by itself with a growing delay — and straight away
 //    when the network returns or the tab is shown again.
 //
-// sessionStorage rather than localStorage on purpose: two tabs on one machine
-// (the README's way of trying the game alone) must each keep their own seat.
 import { SERVER_URL } from "./config.js";
 
 const SESSION_KEY = "rahee.session"; // {code, token}
@@ -26,8 +23,13 @@ let wantOpen = false; // false once the player has left on purpose, or been repl
 let attempt = 0;
 let timer = null;
 
-// sessionStorage can throw (privacy modes, blocked storage) — the game still
-// works without it, a refresh just can't rejoin.
+// The seat token is kept in sessionStorage: it survives a page reload (so a
+// refresh puts the player straight back in their seat) but is forgotten when the
+// tab or browser is closed. Someone who closes the page and comes back lands on
+// the start page and gets their seat back deliberately, by typing the room code
+// and the same name again (see "join_room" in backend/handlers.js).
+// sessionStorage can throw (privacy modes) - the game still works without it,
+// a reload just can't rejoin by itself.
 function readSession() {
   try {
     const s = JSON.parse(sessionStorage.getItem(SESSION_KEY));
@@ -90,7 +92,7 @@ function open() {
     const { token, ...msg } = JSON.parse(ev.data); // the token stays in here
     if (msg.type === "room_created") { writeSession({ code: msg.code, token }); handlers.onRoomCreated?.(msg); }
     else if (msg.type === "joined") { writeSession({ code: msg.code, token }); handlers.onJoined?.(msg); }
-    else if (msg.type === "resumed") handlers.onResumed?.(msg);
+    else if (msg.type === "resumed") { if (token) writeSession({ code: msg.code, token }); handlers.onResumed?.(msg); }
     else if (msg.type === "resume_failed") { clearSession(); handlers.onResumeFailed?.(msg); }
     else if (msg.type === "presence") handlers.onPresence?.(msg.online);
     else if (msg.type === "lobby_update") handlers.onLobby?.(msg);

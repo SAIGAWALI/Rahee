@@ -117,6 +117,25 @@ export async function addSeat(room, name, ws) {
   return { seatIndex: room.seats.length - 1, token };
 }
 
+const sameName = (a, b) => String(a ?? "").trim().toLowerCase() === String(b ?? "").trim().toLowerCase();
+
+/**
+ * Hands an already-existing seat back to a player who left (closed the page,
+ * refreshed, lost signal) and has now typed the room code and their name again.
+ * Only a seat with NO live connection can be reclaimed this way, so nobody can
+ * knock a connected player out of their seat. Returns {seatIndex, token} with a
+ * fresh token (the old one stops working), or null when no such seat exists.
+ */
+export async function reclaimSeat(room, name, ws) {
+  const i = room.seats.findIndex((s) => sameName(s.name, String(name ?? "").slice(0, 18)) && !(s.ws && s.ws.readyState === s.ws.OPEN));
+  if (i === -1) return null;
+  const token = newToken();
+  room.seats[i].tokenHash = hashToken(token);
+  room.seats[i].ws = ws;
+  await persistRoom(room);
+  return { seatIndex: i, token };
+}
+
 /**
  * Picking a character is not turn-ordered online (unlike the printed board's
  * face-to-face setup) — seats join asynchronously over time, so there is no

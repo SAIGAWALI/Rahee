@@ -5,7 +5,7 @@
 // only adds the one check engine.js has no way to make on its own: which
 // *seat* is allowed to act as the current player.
 import * as E from "../frontend/src/engine.js";
-import { createRoom, findRoom, addSeat, pickCharacter, startGame, persistRoom, seatForToken, presenceOf } from "./rooms.js";
+import { createRoom, findRoom, addSeat, pickCharacter, startGame, persistRoom, seatForToken, presenceOf, reclaimSeat } from "./rooms.js";
 import { redact } from "./redact.js";
 import * as T from "./protocol.js";
 
@@ -113,6 +113,20 @@ export function handleConnection(ws, { board, graph }) {
         case T.JOIN_ROOM: {
           const room = findRoom(msg.code);
           if (!room) throw new Error("no room with that code");
+          // Typing the room code and the SAME name again gives a disconnected
+          // player their old seat back (and a new token); see reclaimSeat().
+          const back = await reclaimSeat(room, msg.name, ws);
+          if (back) {
+            detach();
+            ws._identity = { code: room.code, seatIndex: back.seatIndex };
+            send(ws, T.RESUMED, {
+              code: room.code, seatIndex: back.seatIndex, seats: lobbySeats(room),
+              state: redact(room.state, back.seatIndex), online: presenceOf(room), token: back.token,
+            });
+            broadcastPresence(room);
+            break;
+          }
+          if (room.state) throw new Error("that game has already started — to rejoin, enter the room code and exactly the name you played under (and that seat must be disconnected)");
           const { seatIndex, token } = await addSeat(room, msg.name, ws);
           detach();
           ws._identity = { code: room.code, seatIndex };

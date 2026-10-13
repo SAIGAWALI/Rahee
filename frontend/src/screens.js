@@ -25,7 +25,8 @@ export function landingScreen(onCreate, onJoin) {
         h("button", { class: "btn primary", onClick: () => onCreate(name) }, "Create a room"),
         h("div", { style: "display:flex;gap:8px;align-items:center" },
           codeInput,
-          h("button", { class: "btn", style: "flex:1", onClick: () => onJoin(code, name) }, "Join with a code")))));
+          h("button", { class: "btn", style: "flex:1", onClick: () => onJoin(code, name) }, "Join with a code")),
+        h("p", { class: "tiny muted", style: "margin:2px 0 0" }, "Left a game by accident? Enter its room code and the same name you played under to get your seat back."))));
   return h("div", { class: "sheet-wrap centre" }, sheet);
 }
 
