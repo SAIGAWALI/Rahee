@@ -12,12 +12,22 @@ const games = +(process.argv[3] || 40);
 const board = JSON.parse(fs.readFileSync(path.join(root, "frontend/data/board.json"), "utf8"));
 const E = await import(pathToFileURL(path.join(root, "frontend/src/engine.js")).href);
 
-let failures = 0;
-const check = (cond, msg) => { if (!cond) { failures++; console.log("  FAIL:", msg); } };
+let failures = 0, total = 0;
+// Every check is counted per section, so the summary printed at the end shows
+// exactly how many checks ran and where.
+const sections = [];
+const section = (name) => sections.push({ name, checks: 0, failed: 0 });
+const check = (cond, msg) => {
+  total++;
+  const cur = sections[sections.length - 1];
+  if (cur) cur.checks++;
+  if (!cond) { failures++; if (cur) cur.failed++; console.log("  FAIL:", msg); }
+};
 
 const graph = E.buildGraph(board);
 
 // --- board sanity -----------------------------------------------------------
+section("Board data sanity");
 {
   const ids = new Set(board.cities.map((c) => c.id));
   check(ids.size === board.cities.length, "duplicate city ids");
@@ -34,6 +44,7 @@ const graph = E.buildGraph(board);
 }
 
 // --- deals ------------------------------------------------------------------
+section("Deals for 2 to 6 players");
 for (let n = 2; n <= 6; n++) {
   const spec = E.dealSpec(board, n);
   const { hands, leftover, setAside } = E.deal(board, n, 12345 + n);
@@ -52,15 +63,19 @@ for (let n = 2; n <= 6; n++) {
 }
 
 // --- B3 across many seeds ---------------------------------------------------
+section("B3: one high card per hand, 200 shuffles x 5 player counts");
 for (let n = 2; n <= 6; n++) {
   const spec = E.dealSpec(board, n);
   for (let seed = 1; seed <= 200; seed++) {
     const { hands } = E.deal(board, n, seed);
-    if (!hands.every((h) => h.filter((c) => spec.guaranteed.includes(c.rank)).length === 1)) { check(false, `${n}p seed ${seed}: hand with !=1 high card`); break; }
+    const ok = hands.every((h) => h.filter((c) => spec.guaranteed.includes(c.rank)).length === 1);
+    check(ok, `${n}p seed ${seed}: hand with !=1 high card`);
+    if (!ok) break;
   }
 }
 
 // --- B2: roads before flights ------------------------------------------------
+section("B2: roads before flights");
 {
   const route = E.shortestPath(graph, "new-delhi", "mumbai", 99);
   check(route && route.edges.every((e) => e.route.type !== "flight"), "B2: New Delhi -> Mumbai should be by road, not a flight");
@@ -74,6 +89,7 @@ for (let n = 2; n <= 6; n++) {
 }
 
 // --- B1: no road may jump over a city that the printed board links through ----
+section("B1/B4: no road jumps over a city");
 {
   const has = (a, b) => board.routes.some((r) => (r.from === a && r.to === b) || (r.from === b && r.to === a));
   check(!has("bhopal", "lucknow"), "B1: there is no printed Bhopal-Lucknow road (it is Bhopal-Gwalior + Gwalior-Lucknow)");
@@ -95,6 +111,7 @@ for (let n = 2; n <= 6; n++) {
 }
 
 // --- scoring worked example from the manual --------------------------------
+section("Scoring examples from the manual");
 {
   const fake = {
     board,
@@ -111,6 +128,7 @@ for (let n = 2; n <= 6; n++) {
 }
 
 // --- full random games ------------------------------------------------------
+section("Random complete games");
 function randomGame(seed) {
   const rand = E.rng(seed);
   const pick = (arr) => arr[Math.floor(rand() * arr.length)];
@@ -234,5 +252,9 @@ for (let i = 0; i < games; i++) {
   best = Math.max(best, r.top);
 }
 console.log(`${games} random games, average ${(rounds / games).toFixed(1)} rounds, best score ${best}`);
-console.log(failures ? `${failures} FAILURES` : "all checks passed");
+console.log("\nChecks by section:");
+for (const sec of sections)
+  console.log(`  ${sec.name.padEnd(62, ".")} ${String(sec.checks.toLocaleString("en-US")).padStart(6)}${sec.failed ? `  (${sec.failed} FAILED)` : ""}`);
+console.log(`  ${"Total".padEnd(62, ".")} ${String(total.toLocaleString("en-US")).padStart(6)}`);
+console.log(failures ? `\n${failures} of ${total.toLocaleString("en-US")} checks FAILED` : `\nall ${total.toLocaleString("en-US")} checks passed`);
 process.exit(failures ? 1 : 0);

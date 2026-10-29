@@ -219,6 +219,7 @@ const md = [
 fs.writeFileSync(path.join(outDir, "report.md"), md + "\n");
 
 console.log(`${results.length}/${games} games completed in ${f1(secs)}s — avg ${f1(summary.perGame.rounds)} rounds, avg score ${f1(summary.perPlayer.score)}`);
+console.log(`${results.reduce((t, r) => t + r.actions, 0).toLocaleString("en-US")} moves checked, ${allP.length.toLocaleString("en-US")} player seats, ${results.reduce((t, r) => t + r.refused, 0)} moves refused`);
 console.log(problems.length ? `${problems.length} PROBLEMS:\n  ${problems.slice(0, 15).join("\n  ")}` : "no rule violations, stalls or refused moves");
 console.log(`report: ${path.relative(process.cwd(), path.join(outDir, "report.md"))}`);
 process.exit(problems.length ? 1 : 0);

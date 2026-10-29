@@ -54,7 +54,11 @@ for _ in range(6):
             src.append((cs[i1]["x"], cs[i1]["y"])); dst.append(tuple(N[j1])); err[cs[i1]["id"]] = C[i1, j1]
     M = fit(src, dst)
 worst = sorted(err.items(), key=lambda kv: -kv[1])[:5]
-print("worst residuals (px):", [(c, round(e, 1)) for c, e in worst])
+TOL = 15.0  # px on the full-size image (a node is about 40-60 px across)
+ok = sum(1 for e in err.values() if e <= TOL)
+print(f"cities matched to a node: {ok} of {len(cities)} within {TOL:.0f} px (largest offset {max(err.values()):.1f} px)")
+print("largest offsets (px):", ", ".join(f"{c} {float(e):.1f}" for c, e in worst))
+print("PASS" if ok == len(cities) else f"FAIL: {len(cities) - ok} cities not matched")
 s = out_w / a.shape[1]
 print("fromPlate (SVG a,b,c,d,e,f) for a", out_w, "px wide copy:",
-      [round(v, 6) for v in (M[0, 0] * s, M[0, 1] * s, M[1, 0] * s, M[1, 1] * s, M[2, 0] * s, M[2, 1] * s)])
+      [round(float(v), 6) for v in (M[0, 0] * s, M[0, 1] * s, M[1, 0] * s, M[1, 1] * s, M[2, 0] * s, M[2, 1] * s)])
