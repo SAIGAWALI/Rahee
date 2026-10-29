@@ -379,9 +379,15 @@ function renderPlay() {
     onShowCard: (ch) => showModal(h("img", { class: "bigcard", src: ch.card, alt: `${ch.name}'s character card` })),
     actions: awaitingMyResponse ? respondActions(t) : isMyTurn ? buildActions() : waitingActionsPanel(p, t),
   });
+  // Keep the journal where the player had scrolled it — every move redraws it,
+  // and it must not jump back to the top while someone else is playing.
+  const oldBody = mounted.sidebar?.querySelector(".sb-body");
+  const keepScroll = oldBody ? oldBody.scrollTop : 0;
   if (mounted.sidebar) mounted.sidebar.replaceWith(sidebar);
   else mounted.wrap.append(sidebar);
   mounted.sidebar = sidebar;
+  const newBody = sidebar.querySelector(".sb-body");
+  if (newBody && keepScroll) newBody.scrollTop = keepScroll;
 
   renderDest();
 }
@@ -693,7 +699,10 @@ function movingActions(box, p, t) {
   }
 
   box.append(h("div", { class: "row", style: "margin-top:10px" },
-    !rt ? h("button", { class: "btn", disabled: used === 0, onClick: () => { local.autoWalk = null; commit("undoStep"); } }, "Undo step") : null,
+    h("button", { class: "btn", disabled: used === 0, onClick: () => { local.autoWalk = null; commit("undoStep"); } }, "Undo step"),
+    rt && used === 0
+      ? h("button", { class: "btn ghost", title: "Turn the card face-up again and go back", onClick: () => { local.autoWalk = null; commit("cancelRoadTrip"); } }, "Call off the trip")
+      : null,
     h("button", {
       class: "btn primary", style: "margin-left:auto", disabled: used === 0,
       onClick: () => { local.autoWalk = null; commit(rt ? "endRoadTrip" : "endMovement"); },

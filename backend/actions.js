@@ -26,6 +26,7 @@ export const ACTIONS = {
     return E.dropOff(s, a.riderId);
   },
   endRoadTrip: (s) => E.endRoadTrip(s),
+  cancelRoadTrip: (s) => E.cancelRoadTrip(s),
   endTurn: (s) => E.endTurn(s),
   // A seat may pay for its own visit, and the active player may also click
   // "visit" on behalf of a road-trip companion (the shared-price button on the

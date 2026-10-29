@@ -46,7 +46,7 @@ export const REPLACED_CLOSE_CODE = 4001;
 // engine.js itself performs every other legality check and throws on misuse.
 export const TURN_GATED_ACTIONS = new Set([
   "layRoadTripCard", "playCard", "stepTo", "undoStep", "endMovement",
-  "offerRoadTrip", "proposeRoadTrip", "cancelRoadTripInvite", "confirmRoadTrip", "endRoadTrip", "endTurn",
+  "offerRoadTrip", "proposeRoadTrip", "cancelRoadTripInvite", "confirmRoadTrip", "endRoadTrip", "cancelRoadTrip", "endTurn",
 ]);
 // visitTourist, dropOff and respondRoadTrip are actions any seated player may
 // send for themselves — engine.js validates the target itself (touristHere,

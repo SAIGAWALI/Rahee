@@ -9,7 +9,21 @@ import { applyAction } from "./actions.js";
 import { redact } from "./redact.js";
 import { persistRoom } from "./rooms.js";
 
-const DELAY = Number(process.env.BOT_DELAY_MS ?? 750);
+// How long a computer player "thinks" before each kind of move, in ms — slow
+// enough that people can follow what it did. BOT_DELAY_MS scales all of them
+// (it is the pause for an ordinary decision; the tests set it to a few ms).
+const BASE = Number(process.env.BOT_DELAY_MS ?? 1500);
+const PAUSE = {
+  playCard: 2.0,            // a beat before a bot starts its turn
+  layRoadTripCard: 1.2,
+  stepTo: 0.65,             // each step along the route, so you can watch it travel
+  endMovement: 1.0,
+  visitTourist: 1.2,
+  offerRoadTrip: 1.2, proposeRoadTrip: 1.2, respondRoadTrip: 1.2, confirmRoadTrip: 1.0,
+  endRoadTrip: 1.0,
+  endTurn: 1.6,             // time to read what happened before the next player goes
+};
+const delayFor = (name) => BASE * (PAUSE[name] ?? 1);
 
 export async function addBot(room, level = "greedy") {
   if (room.state) throw new Error("that game has already started");
@@ -56,7 +70,7 @@ export function scheduleBots(room, graph, broadcast) {
     try { await persistRoom(room); } catch (err) { console.error("persist failed after a bot move:", err.message); }
     broadcast();
     scheduleBots(room, graph, broadcast);
-  }, next.action.name === "stepTo" ? DELAY * 0.6 : DELAY);
+  }, delayFor(next.action.name));
 }
 
 function nextBotMove(room, graph) {

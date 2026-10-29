@@ -177,6 +177,48 @@ test("a rider who got off partway forfeits the shared price", () => {
   assert(!E.visitOptions(s).some((o) => o.playerId === 1), "dropped rider still offered the shared price");
 });
 
+test("undo on a road trip refunds everyone exactly and brings riders back", () => {
+  const s = tripSetup();
+  E.offerRoadTrip(s);
+  E.proposeRoadTrip(s, graph, { companions: [1], owner: 1, cardId: "4♦", destination: "gwalior" });
+  E.respondRoadTrip(s, graph, 1, { type: "accept", stop: "gwalior" });
+  E.confirmRoadTrip(s);
+  const before = s.players.map((p) => ({ spent: p.spent, city: p.city }));
+  E.stepTo(s, graph, "gwalior"); // rider auto-drops here (their stop)
+  assert(s.turn.roadTrip.riders[0].droppedAt === "gwalior", "rider should have got off at their stop");
+  E.undoStep(s);
+  const after = s.players.map((p) => ({ spent: p.spent, city: p.city }));
+  assert(JSON.stringify(before) === JSON.stringify(after), `undo did not restore money/positions: ${JSON.stringify(before)} vs ${JSON.stringify(after)}`);
+  assert(s.turn.roadTrip.riders[0].droppedAt === null && s.turn.roadTrip.stepsUsed === 0, "rider not back on board after undo");
+});
+test("a confirmed road trip that hasn't moved can be called off; the card goes face-up again", () => {
+  const s = tripSetup();
+  E.offerRoadTrip(s);
+  E.proposeRoadTrip(s, graph, { companions: [1], owner: 1, cardId: "4♦", destination: "gwalior" });
+  E.respondRoadTrip(s, graph, 1, { type: "accept", stop: "gwalior" });
+  E.confirmRoadTrip(s);
+  E.stepTo(s, graph, "gwalior");
+  throws(() => E.cancelRoadTrip(s), "called off after moving");
+  E.undoStep(s);
+  E.cancelRoadTrip(s);
+  assert(s.turn.stage === "resolve" && !s.turn.roadTrip, "trip not called off");
+  assert(!s.players[1].faceUp[0].flipped, "card still face-down");
+});
+test("log lines name the player they are about", () => {
+  const s = tripSetup();
+  E.offerRoadTrip(s);
+  E.proposeRoadTrip(s, graph, { companions: [1], owner: 1, cardId: "4♦", destination: "gwalior" });
+  E.respondRoadTrip(s, graph, 1, { type: "accept", stop: "gwalior" });
+  E.confirmRoadTrip(s);
+  E.stepTo(s, graph, "gwalior");
+  E.endRoadTrip(s);
+  E.visitTourist(s, 1);
+  const visit = s.log.find((l) => /visits Gwalior/.test(l.text));
+  assert(visit.player === "P1" && !visit.text.includes("P1"), `visit line: ${visit.player} | ${visit.text}`);
+  const mem = s.log.filter((l) => /memory \(road trip\)/.test(l.text)).map((l) => l.player).sort();
+  assert(JSON.stringify(mem) === JSON.stringify(["P0", "P1"]), `memory lines name ${mem}`);
+});
+
 console.log("Aces");
 test("two Aces: swap one for a card from the undealt pile", () => {
   const s = E.newGame({ board, seed: 3, players: [{ name: "A", characterId: "pilgrim" }, { name: "B", characterId: "musician" }] });

@@ -187,8 +187,9 @@ export const cityOf = (s, id) => s.board.cities.find((c) => c.id === id);
 export const playersAt = (s, cityId, exceptId) =>
   s.players.filter((p) => p.city === cityId && p.id !== exceptId);
 
-function log(s, text) {
-  s.log.push({ round: s.round, player: currentPlayer(s)?.name ?? null, text });
+/** Adds a line to the game log. `who` is the player the line is about (default: whoever's turn it is). */
+function log(s, text, who) {
+  s.log.push({ round: s.round, player: (who ?? currentPlayer(s))?.name ?? null, text });
   if (s.log.length > 240) s.log.shift();
 }
 
@@ -277,6 +278,8 @@ export function stepTo(s, graph, cityId) {
     rt.path.push(cityId);
     rt.legs.push(opt.route);
     rt.stepsUsed += opt.route.steps;
+    // Who rode this leg (and so paid for it) — needed to undo the step exactly.
+    (rt.legRiders ??= []).push(rt.riders.filter((c) => c.droppedAt === null).map((c) => c.id));
     // The driver pays the travel cost for the leg; companions still aboard pay
     // their own flight and ferry surcharge and owe the driver per step.
     p.spent += cost;
@@ -294,7 +297,7 @@ export function stepTo(s, graph, cityId) {
       // somewhere the drive doesn't end up passing through, or earlier.
       if (c.stopAt === cityId) {
         c.droppedAt = cityId;
-        log(s, `${rider.name} gets off at ${cityOf(s, cityId).name} as planned`);
+        log(s, `gets off at ${cityOf(s, cityId).name} as planned`, rider);
       }
     }
     p.city = cityId;
@@ -302,17 +305,68 @@ export function stepTo(s, graph, cityId) {
   return s;
 }
 
+/**
+ * Takes back the last step — of your own move, or of a road trip under way.
+ * On a road trip every rider who travelled that leg goes back with the group:
+ * their ₹100 a step and any surcharge are refunded (and the driver gives back
+ * what they received), and a rider who got off at the city being left is
+ * back on board.
+ */
 export function undoStep(s) {
   const t = s.turn;
-  if (!t || t.stage !== "moving" || t.path.length < 2) return s;
+  if (!t) return s;
   const p = currentPlayer(s);
-  const route = t.legs.pop();
-  t.path.pop();
-  t.stepsUsed -= route.steps;
+  if (t.stage === "moving") {
+    if (t.path.length < 2) return s;
+    const route = t.legs.pop();
+    t.path.pop();
+    t.stepsUsed -= route.steps;
+    const cost = routeCost(s.board, route);
+    t.spent -= cost;
+    p.spent -= cost;
+    p.city = t.path[t.path.length - 1];
+    return s;
+  }
+  if (t.stage !== "roadtrip-moving") return s;
+  const rt = t.roadTrip;
+  if (rt.path.length < 2) return s;
+  const leaving = rt.path.pop();
+  const route = rt.legs.pop();
+  const aboard = rt.legRiders?.pop() ?? [];
+  const back = rt.path[rt.path.length - 1];
   const cost = routeCost(s.board, route);
-  t.spent -= cost;
+  const share = s.board.economy.roadTripSharePerStep * route.steps;
+  rt.stepsUsed -= route.steps;
   p.spent -= cost;
-  p.city = t.path[t.path.length - 1];
+  rt.driverPaid -= cost;
+  for (const c of rt.riders) {
+    if (!aboard.includes(c.id)) continue;
+    const rider = s.players[c.id];
+    rider.spent -= (route.surcharge || 0) + share;
+    p.spent += share;
+    c.stepsTravelled -= route.steps;
+    if (c.droppedAt === leaving) c.droppedAt = null;
+    rider.city = back;
+  }
+  p.city = back;
+  return s;
+}
+
+/**
+ * Calls off a road trip that has been confirmed but not yet moved: the card is
+ * turned face-up again and the turn goes back to where it was before the trip.
+ */
+export function cancelRoadTrip(s) {
+  const t = s.turn;
+  if (t?.stage !== "roadtrip-moving") throw new Error("there is no road trip to call off");
+  const rt = t.roadTrip;
+  if (rt.stepsUsed > 0) throw new Error("undo the steps first — the road trip has already moved");
+  const entry = s.players[rt.owner].faceUp.find((f) => f.card.id === rt.card.id);
+  if (entry) entry.flipped = false;
+  t.roadTrip = null;
+  t.stage = "resolve";
+  t.tripsCalledOff = (t.tripsCalledOff || 0) + 1;
+  log(s, `calls off the road trip — ${rt.card.id} is face-up again`);
   return s;
 }
 
@@ -335,7 +389,7 @@ export function endMovement(s) {
 function award(s, p, suit, why) {
   p.memories[suit]++;
   s.turn.gained.push({ player: p.id, suit, why });
-  log(s, `${p.name} makes a ${memoryName(s.board, suit)} memory (${why})`);
+  log(s, `makes a ${memoryName(s.board, suit)} memory (${why})`, p);
 }
 
 export const memoryName = (board, suit) => board.suits.find((x) => x.id === suit).memory;
@@ -373,14 +427,14 @@ export function visitTourist(s, playerId, _discounted) {
   const city = cityOf(s, p.city);
   p.spent += opt.price;
   p.visited.push(city.id);
-  log(s, `${p.name} visits ${city.name} — ${city.attraction} (₹${opt.price.toLocaleString("en-IN")})`);
+  log(s, `visits ${city.name} — ${city.attraction} (₹${opt.price.toLocaleString("en-IN")})`, p);
   if (noteDestination(s, p, city.id)) {
-    log(s, `${p.name} completes a destination goal — ${city.name} (${p.reached.length} of ${characterOf(s, p).goals.length})`);
+    log(s, `completes a destination goal — ${city.name} (${p.reached.length} of ${characterOf(s, p).goals.length})`, p);
     const need = s.board.scoring.destinationsForBonus;
     if (s.endTriggeredBy === null && p.reached.length >= need) {
       s.endTriggeredBy = p.id;
       s.endTriggerRound = s.round;
-      log(s, `${p.name} triggers the end of the game (${need} destinations completed) — the round is played out`);
+      log(s, `triggers the end of the game (${need} destinations completed) — the round is played out`, p);
     }
   }
   return s;
@@ -485,14 +539,14 @@ export function respondRoadTrip(s, graph, playerId, response) {
     const stop = response.stop ?? pt.destination;
     if (!shortestPath(graph, driver.city, stop, allowance)) throw new Error("that stop is out of reach on this card");
     pt.responses[playerId] = { type: "accept", stop };
-    log(s, `${s.players[playerId].name} joins the road trip, getting off at ${cityOf(s, stop).name}`);
+    log(s, `joins the road trip, getting off at ${cityOf(s, stop).name}`, s.players[playerId]);
   } else if (response.type === "counter") {
     if (!shortestPath(graph, driver.city, response.destination, allowance)) throw new Error("that destination is out of reach on this card");
     pt.responses[playerId] = { type: "counter", destination: response.destination };
-    log(s, `${s.players[playerId].name} would rather go to ${cityOf(s, response.destination).name}`);
+    log(s, `would rather go to ${cityOf(s, response.destination).name}`, s.players[playerId]);
   } else {
     pt.responses[playerId] = { type: "decline" };
-    log(s, `${s.players[playerId].name} declines the road trip`);
+    log(s, "declines the road trip", s.players[playerId]);
   }
 
   if (!pt.companions.every((id) => id in pt.responses)) return s; // still waiting on others
@@ -507,7 +561,7 @@ export function respondRoadTrip(s, graph, playerId, response) {
   }
   // The flipped card has to belong to a participant: if its owner isn't coming, it can't be used.
   if (!accepted.includes(pt.owner)) {
-    log(s, `${s.players[pt.owner].name} isn't coming, so their card can't be flipped — the road trip is off`);
+    log(s, "isn't coming, so their card can't be flipped — the road trip is off", s.players[pt.owner]);
     t.pendingTrip = null;
     t.stage = "resolve";
     t.tripsCalledOff = (t.tripsCalledOff || 0) + 1;
@@ -558,7 +612,7 @@ export function dropOff(s, riderId) {
   const rider = rt.riders.find((r) => r.id === riderId);
   if (!rider || rider.droppedAt !== null) return s;
   rider.droppedAt = rt.path[rt.path.length - 1];
-  log(s, `${s.players[riderId].name} is dropped off at ${cityOf(s, rider.droppedAt).name}`);
+  log(s, `gets off at ${cityOf(s, rider.droppedAt).name}`, s.players[riderId]);
   return s;
 }
 
@@ -614,7 +668,7 @@ export function endTurn(s) {
   if (s.endTriggeredBy === null && p.hand.length === 0) {
     s.endTriggeredBy = p.id;
     s.endTriggerRound = s.round;
-    log(s, `${p.name} triggers the end of the game (last card played) — the round is played out`);
+    log(s, "triggers the end of the game (last card played) — the round is played out", p);
   }
 
   s.turn = null;

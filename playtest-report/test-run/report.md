@@ -1,6 +1,6 @@
 # RAHEE — AI play-test report
 
-300 of 300 games completed in 16.6 s · 2–6 players · bots: greedy, goals, easy · budget ₹20,000 · seed 1
+300 of 300 games completed in 21.3 s · 2–6 players · bots: greedy, goals, easy · budget ₹20,000 · seed 1
 
 **No rule violations, stalls or refused moves.** Every move of every game was checked.
 

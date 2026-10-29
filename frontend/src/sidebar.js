@@ -172,7 +172,7 @@ export function renderSidebar(state, ui) {
   // ---- log ----------------------------------------------------------------
   if (state.log.length) {
     const log = h("div", { class: "log" });
-    for (const e of state.log.slice(-9).reverse())
+    for (const e of state.log.slice(-15).reverse())
       log.append(h("div", { html: `${e.player ? `<b>${e.player}</b> ` : ""}${e.text}` }));
     body.append(h("section", { class: "sect" }, h("h3", {}, "Recent"), log));
   }
