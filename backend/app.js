@@ -17,9 +17,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocketServer } from "ws";
 import * as E from "../frontend/src/engine.js";
-import { handleConnection } from "./handlers.js";
+import { handleConnection, kickBots } from "./handlers.js";
 import { migrate, pool } from "./db.js";
-import { loadRooms } from "./rooms.js";
+import { loadRooms, rooms } from "./rooms.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, ".."); // project root, one level up from backend/
@@ -33,7 +33,7 @@ const MIME = {
   ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
   ".css": "text/css; charset=utf-8", ".json": "application/json; charset=utf-8",
   ".png": "image/png", ".svg": "image/svg+xml", ".pdf": "application/pdf",
-  ".ico": "image/x-icon",
+  ".ico": "image/x-icon", ".webp": "image/webp", ".ttf": "font/ttf", ".md": "text/markdown; charset=utf-8",
 };
 
 function serveStatic(req, res) {
@@ -70,6 +70,8 @@ wss.on("close", () => clearInterval(heartbeat));
 async function main() {
   await migrate();
   await loadRooms(board);
+  // Games restored mid-way may be waiting on a computer player.
+  for (const room of rooms.values()) kickBots(room, graph);
 
   server.listen(PORT, "0.0.0.0", () => {
     const lanIps = Object.values(os.networkInterfaces())

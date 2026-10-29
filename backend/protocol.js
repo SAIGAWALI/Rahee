@@ -8,6 +8,9 @@ export const JOIN_ROOM = "join_room";
 export const PICK_CHARACTER = "pick_character";
 export const START_GAME = "start_game";
 export const ACTION = "action";
+// {type:"add_bot", level:"greedy"|"easy"} / {type:"remove_bot", seatIndex} — host only, lobby only.
+export const ADD_BOT = "add_bot";
+export const REMOVE_BOT = "remove_bot";
 // {type:"resume", code, token} — a browser that already holds a seat (it was
 // given a token when it created or joined the room) asks to be re-attached to it
 // after a refresh, a dropped connection, or a server restart.
@@ -48,4 +51,4 @@ export const TURN_GATED_ACTIONS = new Set([
 // visitTourist, dropOff and respondRoadTrip are actions any seated player may
 // send for themselves — engine.js validates the target itself (touristHere,
 // rider lookup, or that the responder was actually invited).
-export const OPEN_ACTIONS = new Set(["visitTourist", "dropOff", "respondRoadTrip"]);
+export const OPEN_ACTIONS = new Set(["visitTourist", "dropOff", "respondRoadTrip", "swapAce", "requestReshuffle"]);

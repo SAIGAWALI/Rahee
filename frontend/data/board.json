@@ -28,32 +28,36 @@
    "symbol": "♠",
    "memory": "Bazaar",
    "blurb": "shopping at a bazaar",
-   "colour": "#2f3640"
+   "colour": "#2f3640",
+   "card": "assets/memories/spades.webp"
   },
   {
    "id": "hearts",
    "symbol": "♥",
    "memory": "Food",
    "blurb": "eating something new",
-   "colour": "#c0392b"
+   "colour": "#c0392b",
+   "card": "assets/memories/hearts.webp"
   },
   {
    "id": "clubs",
    "symbol": "♣",
    "memory": "Language",
    "blurb": "hearing a language",
-   "colour": "#2f3640"
+   "colour": "#2f3640",
+   "card": "assets/memories/clubs.webp"
   },
   {
    "id": "diamonds",
    "symbol": "♦",
    "memory": "Festival",
    "blurb": "celebrating a festival",
-   "colour": "#c0392b"
+   "colour": "#c0392b",
+   "card": "assets/memories/diamonds.webp"
   }
  ],
  "economy": {
-  "startingBudget": 25000,
+  "startingBudget": 20000,
   "costPerStep": 200,
   "flightSurcharge": 4000,
   "shipSurcharge": 1000,
@@ -160,7 +164,8 @@
    "y": 718,
    "tourist": 1,
    "attraction": "Qutb Minar",
-   "airport": true
+   "airport": true,
+   "stamp": "assets/stamps/1.webp"
   },
   {
    "id": "rishikesh",
@@ -169,7 +174,8 @@
    "x": 795,
    "y": 603,
    "tourist": 2,
-   "attraction": "Ganga rafting"
+   "attraction": "Ganga rafting",
+   "stamp": "assets/stamps/2.webp"
   },
   {
    "id": "leh",
@@ -178,7 +184,8 @@
    "x": 756,
    "y": 329,
    "tourist": 3,
-   "attraction": "Thiksey Monastery"
+   "attraction": "Thiksey Monastery",
+   "stamp": "assets/stamps/3.webp"
   },
   {
    "id": "srinagar",
@@ -187,7 +194,8 @@
    "x": 594,
    "y": 300,
    "tourist": 4,
-   "attraction": "Hazrat Bal"
+   "attraction": "Hazrat Bal",
+   "stamp": "assets/stamps/4.webp"
   },
   {
    "id": "amritsar",
@@ -196,7 +204,8 @@
    "x": 569,
    "y": 516,
    "tourist": 5,
-   "attraction": "Golden Temple"
+   "attraction": "Golden Temple",
+   "stamp": "assets/stamps/5.webp"
   },
   {
    "id": "jaisalmer",
@@ -205,7 +214,8 @@
    "x": 294,
    "y": 814,
    "tourist": 6,
-   "attraction": "Junnagarh Fort"
+   "attraction": "Junnagarh Fort",
+   "stamp": "assets/stamps/6.webp"
   },
   {
    "id": "jodhpur",
@@ -214,7 +224,8 @@
    "x": 426,
    "y": 861,
    "tourist": 7,
-   "attraction": "Ghoomar"
+   "attraction": "Ghoomar",
+   "stamp": "assets/stamps/7.webp"
   },
   {
    "id": "jaipur",
@@ -223,7 +234,8 @@
    "x": 612,
    "y": 850,
    "tourist": 8,
-   "attraction": "Hawa Mahal"
+   "attraction": "Hawa Mahal",
+   "stamp": "assets/stamps/8.webp"
   },
   {
    "id": "agra",
@@ -232,7 +244,8 @@
    "x": 754,
    "y": 836,
    "tourist": 9,
-   "attraction": "Taj Mahal"
+   "attraction": "Taj Mahal",
+   "stamp": "assets/stamps/9.webp"
   },
   {
    "id": "lucknow",
@@ -242,7 +255,8 @@
    "y": 847,
    "tourist": 10,
    "attraction": "Kathak",
-   "airport": true
+   "airport": true,
+   "stamp": "assets/stamps/10.webp"
   },
   {
    "id": "gwalior",
@@ -251,7 +265,8 @@
    "x": 744,
    "y": 907,
    "tourist": 11,
-   "attraction": "Gwalior Fort"
+   "attraction": "Gwalior Fort",
+   "stamp": "assets/stamps/11.webp"
   },
   {
    "id": "sawai-madhopur",
@@ -260,7 +275,8 @@
    "x": 592,
    "y": 962,
    "tourist": 12,
-   "attraction": "Ranthambore tiger reserve"
+   "attraction": "Ranthambore tiger reserve",
+   "stamp": "assets/stamps/12.webp"
   },
   {
    "id": "gandhinagar",
@@ -270,7 +286,8 @@
    "y": 1069,
    "tourist": 13,
    "attraction": "Adalaj Stepwell",
-   "airport": true
+   "airport": true,
+   "stamp": "assets/stamps/13.webp"
   },
   {
    "id": "bhuj",
@@ -279,7 +296,8 @@
    "x": 160,
    "y": 1074,
    "tourist": 14,
-   "attraction": "Rann of Kutch"
+   "attraction": "Rann of Kutch",
+   "stamp": "assets/stamps/14.webp"
   },
   {
    "id": "veraval",
@@ -288,7 +306,8 @@
    "x": 241,
    "y": 1204,
    "tourist": 15,
-   "attraction": "Gir National Park"
+   "attraction": "Gir National Park",
+   "stamp": "assets/stamps/15.webp"
   },
   {
    "id": "vadodara",
@@ -297,7 +316,8 @@
    "x": 391,
    "y": 1213,
    "tourist": 16,
-   "attraction": "Garba"
+   "attraction": "Garba",
+   "stamp": "assets/stamps/16.webp"
   },
   {
    "id": "daman",
@@ -306,7 +326,8 @@
    "x": 393,
    "y": 1289,
    "tourist": 17,
-   "attraction": "Atash Behram, Iranshah"
+   "attraction": "Atash Behram, Iranshah",
+   "stamp": "assets/stamps/17.webp"
   },
   {
    "id": "mumbai",
@@ -316,7 +337,8 @@
    "y": 1404,
    "tourist": 18,
    "attraction": "Gateway of India",
-   "airport": true
+   "airport": true,
+   "stamp": "assets/stamps/18.webp"
   },
   {
    "id": "aurangabad",
@@ -325,7 +347,8 @@
    "x": 548,
    "y": 1344,
    "tourist": 19,
-   "attraction": "Ajanta Caves"
+   "attraction": "Ajanta Caves",
+   "stamp": "assets/stamps/19.webp"
   },
   {
    "id": "nagpur",
@@ -334,7 +357,8 @@
    "x": 775,
    "y": 1271,
    "tourist": 20,
-   "attraction": "Dikshabhoomi"
+   "attraction": "Dikshabhoomi",
+   "stamp": "assets/stamps/20.webp"
   },
   {
    "id": "bhopal",
@@ -343,7 +367,8 @@
    "x": 716,
    "y": 1100,
    "tourist": 21,
-   "attraction": "Bhimbetka Caves"
+   "attraction": "Bhimbetka Caves",
+   "stamp": "assets/stamps/21.webp"
   },
   {
    "id": "jabalpur",
@@ -352,7 +377,8 @@
    "x": 879,
    "y": 1085,
    "tourist": 22,
-   "attraction": "Nidan Falls"
+   "attraction": "Nidan Falls",
+   "stamp": "assets/stamps/22.webp"
   },
   {
    "id": "varanasi",
@@ -361,7 +387,8 @@
    "x": 1080,
    "y": 983,
    "tourist": 23,
-   "attraction": "Ghats of Varanasi"
+   "attraction": "Ghats of Varanasi",
+   "stamp": "assets/stamps/23.webp"
   },
   {
    "id": "ranchi",
@@ -370,7 +397,8 @@
    "x": 1221,
    "y": 1111,
    "tourist": 24,
-   "attraction": "Sal Forest"
+   "attraction": "Sal Forest",
+   "stamp": "assets/stamps/24.webp"
   },
   {
    "id": "giridih",
@@ -379,7 +407,8 @@
    "x": 1289,
    "y": 1058,
    "tourist": 25,
-   "attraction": "Sammed Shikarji"
+   "attraction": "Sammed Shikarji",
+   "stamp": "assets/stamps/25.webp"
   },
   {
    "id": "patna",
@@ -388,7 +417,8 @@
    "x": 1216,
    "y": 970,
    "tourist": 26,
-   "attraction": "Bodh Gaya"
+   "attraction": "Bodh Gaya",
+   "stamp": "assets/stamps/26.webp"
   },
   {
    "id": "madhubani",
@@ -397,7 +427,8 @@
    "x": 1353,
    "y": 930,
    "tourist": 27,
-   "attraction": "Madhubani Art"
+   "attraction": "Madhubani Art",
+   "stamp": "assets/stamps/27.webp"
   },
   {
    "id": "gangtok",
@@ -406,7 +437,8 @@
    "x": 1431,
    "y": 815,
    "tourist": 28,
-   "attraction": "Khangchendzonga"
+   "attraction": "Khangchendzonga",
+   "stamp": "assets/stamps/28.webp"
   },
   {
    "id": "guwahati",
@@ -416,7 +448,8 @@
    "y": 881,
    "tourist": 29,
    "attraction": "Sattriya",
-   "airport": true
+   "airport": true,
+   "stamp": "assets/stamps/29.webp"
   },
   {
    "id": "shillong",
@@ -425,7 +458,8 @@
    "x": 1675,
    "y": 932,
    "tourist": 30,
-   "attraction": "Root Bridges"
+   "attraction": "Root Bridges",
+   "stamp": "assets/stamps/30.webp"
   },
   {
    "id": "ziro",
@@ -434,7 +468,8 @@
    "x": 1763,
    "y": 752,
    "tourist": 31,
-   "attraction": "Dree Festival"
+   "attraction": "Dree Festival",
+   "stamp": "assets/stamps/31.webp"
   },
   {
    "id": "charaideo",
@@ -443,7 +478,8 @@
    "x": 1848,
    "y": 819,
    "tourist": 32,
-   "attraction": "Moidams"
+   "attraction": "Moidams",
+   "stamp": "assets/stamps/32.webp"
   },
   {
    "id": "agartala",
@@ -452,7 +488,8 @@
    "x": 1654,
    "y": 1067,
    "tourist": 33,
-   "attraction": "Chaturdash Devta Temple"
+   "attraction": "Chaturdash Devta Temple",
+   "stamp": "assets/stamps/33.webp"
   },
   {
    "id": "kolkata",
@@ -462,7 +499,8 @@
    "y": 1169,
    "tourist": 34,
    "attraction": "Sundarbans",
-   "airport": true
+   "airport": true,
+   "stamp": "assets/stamps/34.webp"
   },
   {
    "id": "bhubaneshwar",
@@ -471,7 +509,8 @@
    "x": 1318,
    "y": 1303,
    "tourist": 35,
-   "attraction": "Turtle Nesting"
+   "attraction": "Turtle Nesting",
+   "stamp": "assets/stamps/35.webp"
   },
   {
    "id": "sambalpur",
@@ -480,7 +519,8 @@
    "x": 1149,
    "y": 1266,
    "tourist": 36,
-   "attraction": "Odissi"
+   "attraction": "Odissi",
+   "stamp": "assets/stamps/36.webp"
   },
   {
    "id": "bastar",
@@ -489,7 +529,8 @@
    "x": 948,
    "y": 1393,
    "tourist": 37,
-   "attraction": "Gond Art"
+   "attraction": "Gond Art",
+   "stamp": "assets/stamps/37.webp"
   },
   {
    "id": "hyderabad",
@@ -499,7 +540,8 @@
    "y": 1503,
    "tourist": 38,
    "attraction": "Char Minar",
-   "airport": true
+   "airport": true,
+   "stamp": "assets/stamps/38.webp"
   },
   {
    "id": "amaravati",
@@ -508,7 +550,8 @@
    "x": 937,
    "y": 1586,
    "tourist": 39,
-   "attraction": "Tapetta Gulla"
+   "attraction": "Tapetta Gulla",
+   "stamp": "assets/stamps/39.webp"
   },
   {
    "id": "chennai",
@@ -518,7 +561,8 @@
    "y": 1851,
    "tourist": 40,
    "attraction": "Carnatic Music",
-   "airport": true
+   "airport": true,
+   "stamp": "assets/stamps/40.webp"
   },
   {
    "id": "nagapattinam",
@@ -527,7 +571,8 @@
    "x": 810,
    "y": 2038,
    "tourist": 41,
-   "attraction": "Velankanni Church"
+   "attraction": "Velankanni Church",
+   "stamp": "assets/stamps/41.webp"
   },
   {
    "id": "thanjavur",
@@ -536,7 +581,8 @@
    "x": 766,
    "y": 2031,
    "tourist": 42,
-   "attraction": "Brihadisvara Temple"
+   "attraction": "Brihadisvara Temple",
+   "stamp": "assets/stamps/42.webp"
   },
   {
    "id": "kanniyakumari",
@@ -545,7 +591,8 @@
    "x": 653,
    "y": 2196,
    "tourist": 43,
-   "attraction": "Land's End"
+   "attraction": "Land's End",
+   "stamp": "assets/stamps/43.webp"
   },
   {
    "id": "kochi",
@@ -555,7 +602,8 @@
    "y": 2100,
    "tourist": 44,
    "attraction": "Kathakali",
-   "airport": true
+   "airport": true,
+   "stamp": "assets/stamps/44.webp"
   },
   {
    "id": "wayanad",
@@ -564,7 +612,8 @@
    "x": 530,
    "y": 1951,
    "tourist": 45,
-   "attraction": "Elephants Reserve"
+   "attraction": "Elephants Reserve",
+   "stamp": "assets/stamps/45.webp"
   },
   {
    "id": "madikeri",
@@ -573,7 +622,8 @@
    "x": 594,
    "y": 1915,
    "tourist": 46,
-   "attraction": "Kumara Parvata"
+   "attraction": "Kumara Parvata",
+   "stamp": "assets/stamps/46.webp"
   },
   {
    "id": "udupi",
@@ -582,7 +632,8 @@
    "x": 477,
    "y": 1830,
    "tourist": 47,
-   "attraction": "Yakshagana"
+   "attraction": "Yakshagana",
+   "stamp": "assets/stamps/47.webp"
   },
   {
    "id": "hampi",
@@ -591,7 +642,8 @@
    "x": 556,
    "y": 1667,
    "tourist": 48,
-   "attraction": "Stone Chariot"
+   "attraction": "Stone Chariot",
+   "stamp": "assets/stamps/48.webp"
   },
   {
    "id": "kavaratti",
@@ -600,7 +652,8 @@
    "x": 274,
    "y": 1977,
    "tourist": 49,
-   "attraction": "Snorkelling"
+   "attraction": "Snorkelling",
+   "stamp": "assets/stamps/49.webp"
   },
   {
    "id": "sri-vijayapuram",
@@ -609,7 +662,8 @@
    "x": 1777,
    "y": 1943,
    "tourist": 50,
-   "attraction": "Coral Island"
+   "attraction": "Coral Island",
+   "stamp": "assets/stamps/50.webp"
   },
   {
    "id": "great-nicobar",
@@ -618,7 +672,8 @@
    "x": 1900,
    "y": 2346,
    "tourist": 51,
-   "attraction": "Dugong"
+   "attraction": "Dugong",
+   "stamp": "assets/stamps/51.webp"
   },
   {
    "id": "kargil",
@@ -6236,8 +6291,8 @@
    "id": "pilgrim",
    "name": "Pilgrim",
    "start": "varanasi",
-   "startBlurb": "Kashi Vishwanath",
-   "card": "assets/cards/pilgrim.png",
+   "startBlurb": "Kashi Vishwanath Temple",
+   "card": "assets/cards/pilgrim.webp",
    "goals": [
     {
      "city": "nagapattinam",
@@ -6270,7 +6325,7 @@
    "name": "Conservationist",
    "start": "sawai-madhopur",
    "startBlurb": "Tigers of Ranthambore",
-   "card": "assets/cards/conservationist.png",
+   "card": "assets/cards/conservationist.webp",
    "goals": [
     {
      "city": "veraval",
@@ -6303,7 +6358,7 @@
    "name": "Riverkeeper",
    "start": "agra",
    "startBlurb": "Yamuna",
-   "card": "assets/cards/riverkeeper.png",
+   "card": "assets/cards/riverkeeper.webp",
    "goals": [
     {
      "city": "jabalpur",
@@ -6336,7 +6391,7 @@
    "name": "Musician",
    "start": "gwalior",
    "startBlurb": "Dhrupad tradition",
-   "card": "assets/cards/musician.png",
+   "card": "assets/cards/musician.webp",
    "goals": [
     {
      "city": "ziro",
@@ -6369,7 +6424,7 @@
    "name": "Historian",
    "start": "new-delhi",
    "startBlurb": "Mughal capital",
-   "card": "assets/cards/historian.png",
+   "card": "assets/cards/historian.webp",
    "goals": [
     {
      "city": "patna",
@@ -6402,7 +6457,7 @@
    "name": "Explorer",
    "start": "rishikesh",
    "startBlurb": "Ganga rafting",
-   "card": "assets/cards/explorer.png",
+   "card": "assets/cards/explorer.webp",
    "goals": [
     {
      "city": "gangtok",
@@ -6430,5 +6485,53 @@
     }
    ]
   }
+ ],
+ "maps": [
+  {
+   "id": "names",
+   "label": "With names",
+   "image": "assets/maps/names.webp",
+   "width": 2200,
+   "height": 2199,
+   "fromPlate": [
+    0.947579,
+    -0.152541,
+    0.1527,
+    0.947605,
+    -193.73,
+    97.36
+   ]
+  },
+  {
+   "id": "nodes",
+   "label": "Nodes only",
+   "image": "assets/maps/nodes.webp",
+   "width": 2200,
+   "height": 2194,
+   "fromPlate": [
+    0.951364,
+    -0.153151,
+    0.15331,
+    0.951391,
+    -209.77,
+    92.19
+   ]
+  }
+ ],
+ "pawn": {
+  "d": "M33.34,16.81C33.1,7.6,25.45.33,16.25.57,7.04.8-.23,8.45,0,17.66c.2,7.86,5.82,14.31,13.19,15.88l-7.72,16.29,20.83-.53-6.83-15.63c8.05-1.36,14.08-8.46,13.86-16.86Z",
+  "width": 34,
+  "height": 50,
+  "footX": 16.7,
+  "footY": 49.8,
+  "outline": "#20444c"
+ },
+ "playerColours": [
+  "#f0563e",
+  "#3fb8dc",
+  "#f5b800",
+  "#4fae4d",
+  "#d472ac",
+  "#8e4c20"
  ]
 }

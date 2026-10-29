@@ -6,8 +6,10 @@
 import * as E from "./engine.js";
 import * as net from "./net.js";
 import { createBoardView } from "./board-view.js";
-import { renderSidebar, renderDestinationsPanel, h, money, cardChip } from "./sidebar.js";
-import { landingScreen, lobbyScreen, waitingScreen, layCardScreen, scoreboardScreen } from "./screens.js";
+import { renderSidebar, h, money, cardChip } from "./sidebar.js";
+import { createMapPanel } from "./map-panel.js";
+import { chooseAction } from "./ai.js";
+import { landingScreen, lobbyScreen, waitingScreen, layCardScreen, scoreboardScreen, rulesSheet, showModal } from "./screens.js";
 
 const app = document.getElementById("app");
 let board, graph, view = null, mounted = null;
@@ -22,12 +24,21 @@ let you = null, roomCode = null, seats = [], online = [];
 // mutated locally — only ever replaced wholesale by net.js's onState.
 let state = null;
 
-// The left-hand "other players' destinations" panel. Kept apart from `local`
-// because blankLocal() is reset at the end of every turn, and a panel the
-// player opened should stay open while the game moves on around it.
-let destPanel = blankDestPanel();
-// playerId: undefined = pick a default, null = everyone collapsed, number = that player expanded.
-function blankDestPanel() { return { open: false, playerId: undefined }; }
+// The left-hand map + destinations panel (map-panel.js) keeps its own open/closed
+// state, so it stays as the player left it while the game moves on around it.
+let mapPanel = null;
+
+// "Auto": the computer plays this seat (the same planner the computer players
+// use) — for play-testing a game alone, or stepping away for a few turns.
+let autoplay = false, autoTimer = null;
+function autoStep() {
+  clearTimeout(autoTimer);
+  if (!autoplay || !state || state.phase === "over" || !live()) return;
+  autoTimer = setTimeout(() => {
+    const a = chooseAction(state, graph, you, { level: "greedy" });
+    if (a) commit(a.name, a.args);
+  }, 650);
+}
 
 // Per-turn interface state that is not part of the game itself.
 let local = blankLocal();
@@ -89,15 +100,15 @@ function connectToServer() {
     },
     onPresence: (o) => { online = o; render(); },
     onReplaced: () => { replaced = true; render(); },
-    onLobby: (msg) => { if (msg.code === roomCode) { seats = msg.seats; render(); } },
+    onLobby: (msg) => { if (msg.code === roomCode) { seats = msg.seats; if (Number.isInteger(msg.seatIndex)) you = msg.seatIndex; render(); } },
     // The server never sends `board` (the client already has its own copy —
     // see boot() — and resending ~70KB on every move would be wasteful).
     // engine.js's read-only accessors (characterOf, cityOf, ...) and
     // sidebar.js's cardChip all expect it on the state object, exactly as
     // it was in the old single-device build, so it's reattached here from
     // the client's own copy before anything renders.
-    onState: (s) => { state = { ...s, board }; render(); },
-    onError: (msg) => flashError(msg.message),
+    onState: (s) => { noticeNews(state, s); state = { ...s, board }; render(); autoStep(); },
+    onError: (msg) => { flashError(msg.message); if (autoplay) setTimeout(autoStep, 400); },
   });
   render();
 }
@@ -113,9 +124,9 @@ function commit(name, args) {
 
 /** Forget the room, the seat and everything drawn for them (not the connection). */
 function resetLocal() {
-  resuming = false; replaced = false;
-  you = null; roomCode = null; seats = []; online = []; state = null; mounted = null; view = null;
-  local = blankLocal(); destPanel = blankDestPanel();
+  resuming = false; replaced = false; autoplay = false; clearTimeout(autoTimer);
+  you = null; roomCode = null; seats = []; online = []; state = null; mounted = null; view = null; mapPanel = null;
+  local = blankLocal();
 }
 
 function restart() {
@@ -158,11 +169,14 @@ function render() {
     if (roomCode === null) return swap(landingScreen(
       ifLive((name) => net.createRoom(name)),
       ifLive((code, name) => net.joinRoom(code, name)),
+      board,
     ));
     return swap(lobbyScreen(board, {
       code: roomCode, seats, you, online,
       onPickCharacter: ifLive((id) => net.pickCharacter(id)),
       onStart: ifLive(() => net.startGame()),
+      onAddBot: ifLive((level) => net.addBot(level)),
+      onRemoveBot: ifLive((seatIndex) => net.removeBot(seatIndex)),
     }));
   }
 
@@ -170,12 +184,14 @@ function render() {
 
   if (state.phase === "setup-roadtrip-card") {
     const p = E.currentPlayer(state);
-    if (p.id === you) {
-      return swap(layCardScreen(state, state.players[you], (id) => commit("layRoadTripCard", { cardId: id })));
-    }
-    return swap(waitingScreen("Waiting for the table…",
-      `${p.name} is laying their first road-trip card.` +
-      (online[p.id] === false ? ` ${p.name} appears to be offline — the game carries on when they rejoin.` : "")));
+    const offline = online[p.id] === false && !p.isBot ? ` (${p.name} appears to be offline — the game carries on when they rejoin)` : "";
+    return swap(layCardScreen(state, state.players[you], {
+      canLay: p.id === you,
+      waitingFor: p.id === you ? "the others" : `${p.name}${offline}`,
+      onLay: (id) => commit("layRoadTripCard", { cardId: id }),
+      onSwapAce: (id) => commit("swapAce", { cardId: id }),
+      onReshuffle: () => commit("requestReshuffle"),
+    }));
   }
 
   renderPlay();
@@ -205,6 +221,32 @@ function swap(node) {
   app.append(node);
   mounted = null;
   view = null;
+  mapPanel = null;
+}
+
+/** A small celebratory card when *you* collect a stamp or complete a destination. */
+function noticeNews(prev, next) {
+  if (!prev || you === null) return;
+  const before = prev.players?.[you], after = next.players?.[you];
+  if (!before || !after) return;
+  const fresh = after.visited.filter((id) => !before.visited.includes(id));
+  for (const id of fresh) {
+    const c = board.cities.find((x) => x.id === id);
+    const goal = after.reached.includes(id) && !before.reached.includes(id);
+    toast(h("div", { class: "stamptoast" },
+      c.stamp ? h("img", { src: c.stamp, alt: "", width: "120", height: "96" }) : null,
+      h("div", {}, h("b", {}, goal ? "Destination completed!" : "Stamp collected"),
+        h("div", { class: "tiny" }, `${c.tourist}. ${c.name} — ${c.attraction}`),
+        h("div", { class: "tiny muted" }, goal ? `+${board.scoring.touristPlace} for the stamp, +${board.scoring.destination} for the destination` : `+${board.scoring.touristPlace} points`))));
+  }
+}
+let toastTimer = null;
+function toast(node, ms = 4200) {
+  document.getElementById("toast")?.remove();
+  const el = h("div", { id: "toast", class: "toast", role: "status" }, node);
+  document.body.append(el);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.remove(), ms);
 }
 
 // ---------------------------------------------------------------------------
@@ -227,7 +269,17 @@ function renderPlay() {
     stage.prepend(boardHost);
     const destHost = h("div", { class: "destwrap" });
     stage.append(destHost);
-    view = createBoardView(boardHost, board, { onCityClick: onCityClick });
+    view = createBoardView(boardHost, board, {
+      onCityClick: onCityClick,
+      // The map panel covers the left of the board, so the box it draws is only the uncovered part.
+      onViewChange: () => mapPanel?.setViewport(view.visibleRect(mapPanel.coveredWidth())),
+    });
+    mapPanel = createMapPanel(destHost, board, {
+      onPickCity: (id) => { view.focusOn(id, { zoom: 620 }); view.flashCity(id); },
+      onPanTo: (pt) => view.centreOn(pt),
+      // after the panel's width transition has finished
+      onToggle: () => setTimeout(() => mapPanel?.setViewport(view.visibleRect(mapPanel.coveredWidth())), 260),
+    });
     mounted = { wrap, stage, topbar, hint, boardHost, destHost, sidebar: null };
     view.focusOn(viewer.city, { zoom: 900 });
   }
@@ -270,6 +322,12 @@ function renderPlay() {
       h("button", { title: "Zoom out", onClick: () => view.zoomOut() }, "−"),
       h("button", { class: "wide", title: "Fit the whole board", onClick: () => view.fitAll() }, "Fit"),
       h("button", { class: "wide", title: "Centre on your traveller", onClick: () => view.focusOn(viewer.city, { zoom: 800 }) }, "Me"),
+      h("button", { class: "wide", title: "The rules on one page", onClick: () => showModal(rulesSheet(board), { wide: true }) }, "Rules"),
+      h("button", {
+        class: `wide${autoplay ? " on" : ""}`, "aria-pressed": autoplay ? "true" : "false",
+        title: autoplay ? "The computer is playing for you — click to take over again" : "Let the computer play your turns (for play-testing)",
+        onClick: () => { autoplay = !autoplay; renderPlay(); autoStep(); },
+      }, autoplay ? "Auto: on" : "Auto"),
       h("button", { class: "wide", title: "Leave and start a new game", onClick: () => { if (confirm("Leave this game and start a new one?")) restart(); } }, "New")),
   ].filter(Boolean));
 
@@ -293,12 +351,14 @@ function renderPlay() {
     visited: new Set(viewer.visited),
     reached: new Set(viewer.reached),
     tokens: state.players.map((pl) => ({ city: pl.city, colour: pl.colour, active: pl.id === p.id })),
+    visitedColour: viewer.colour,
     hover: (cityId) => {
       const here = state.players.filter((pl) => pl.city === cityId).map((pl) => pl.name);
       const opt = options.find((o) => o.to === cityId);
       const bits = [];
-      if (opt) bits.push(`${opt.route.type} · ${money(E.routeCost(board, opt.route))}`);
-      if (goalCities.has(cityId)) bits.push(viewer.reached.includes(cityId) ? "your destination ✓" : "your destination");
+      if (opt) bits.push(`next step: ${opt.route.type} · ${money(E.routeCost(board, opt.route))}`);
+      if (goalCities.has(cityId)) bits.push(viewer.reached.includes(cityId) ? "your destination ✓ completed" : "★ your destination — visit to complete");
+      if (viewer.visited.includes(cityId)) bits.push("stamp collected");
       if (here.length) bits.push(`here: ${here.join(", ")}`);
       return bits.join(" · ");
     },
@@ -315,7 +375,8 @@ function renderPlay() {
     selectedCardId: local.selectedCardId,
     selectedAceId: local.aceId,
     onPickCard: pickCard,
-    onFocusCity: (id) => view.focusOn(id, { zoom: 620 }),
+    onFocusCity: (id) => { view.focusOn(id, { zoom: 620 }); view.flashCity(id); },
+    onShowCard: (ch) => showModal(h("img", { class: "bigcard", src: ch.card, alt: `${ch.name}'s character card` })),
     actions: awaitingMyResponse ? respondActions(t) : isMyTurn ? buildActions() : waitingActionsPanel(p, t),
   });
   if (mounted.sidebar) mounted.sidebar.replaceWith(sidebar);
@@ -325,26 +386,11 @@ function renderPlay() {
   renderDest();
 }
 
-/** Redraws just the left-hand destinations panel — cheap, and called both on
- * every state broadcast and when the player opens/closes it. */
+/** Redraws the left-hand map + destinations panel from the latest state. */
 function renderDest() {
-  if (!mounted?.destHost || !state) return;
-  const others = state.players.filter((pl) => pl.id !== you);
-  // Open on a sensible player by default: the one whose turn it is, if that
-  // is somebody else, otherwise the first other player at the table.
-  if (destPanel.playerId === undefined || (destPanel.playerId !== null && !others.some((pl) => pl.id === destPanel.playerId))) {
-    const cur = E.currentPlayer(state);
-    destPanel.playerId = (cur.id !== you ? cur : others[0])?.id ?? null;
-  }
-  mounted.destHost.replaceChildren(renderDestinationsPanel(state, {
-    viewerId: you,
-    online,
-    open: destPanel.open,
-    openPlayerId: destPanel.playerId,
-    onToggle: () => { destPanel.open = !destPanel.open; renderDest(); },
-    onTogglePlayer: (id) => { destPanel.playerId = destPanel.playerId === id ? null : id; renderDest(); },
-    onFocusCity: (id) => view.focusOn(id, { zoom: 620 }),
-  }));
+  if (!mapPanel || !state) return;
+  mapPanel.update(state, { viewerId: you, online });
+  mapPanel.setViewport(view.visibleRect(mapPanel.coveredWidth()));
 }
 
 function currentHint(t, p, isMyTurn, you) {
@@ -675,11 +721,11 @@ function inviteActions(box, p, t) {
   }
   box.append(who);
 
-  const participants = [p.id, ...local.invite.companions];
-  const cards = E.roadTripCards(state, participants);
+  // The card flipped must be a companion's — never your own (RULES.md §7).
+  const cards = E.roadTripCards(state, local.invite.companions);
   if (local.invite.companions.length) {
     box.append(h("div", { class: "row", style: "margin-top:10px" },
-      h("span", { class: "tiny muted" }, "Flip one face-up card — its value is how far you all travel, its suit is the memory.")));
+      h("span", { class: "tiny muted" }, "Flip one of your companions' face-up cards — its value is how far you all travel, its suit is the memory.")));
     const row = h("div", { class: "hand", style: "margin-top:6px" });
     for (const c of cards) {
       row.append(cardChip(state, c.card, {
@@ -693,7 +739,7 @@ function inviteActions(box, p, t) {
         title: `${c.card.id} — ${state.players[c.owner].name}'s card, ${E.cardValue(board, c.card)} steps`,
       }));
     }
-    if (!cards.length) row.append(h("div", { class: "empty" }, "Nobody here has an unflipped road-trip card."));
+    if (!cards.length) row.append(h("div", { class: "empty" }, "None of the people you picked has an unflipped road-trip card. Pick someone who does."));
     box.append(row);
   }
 
@@ -778,42 +824,50 @@ function reviewActions(box, t) {
 function resolveActions(box, p, t) {
   const gained = t.gained.filter((g) => g.player === p.id);
   if (t.gained.length) {
-    const bits = t.gained.map((g) => {
-      const who = g.player === p.id ? "" : `${state.players[g.player].name}: `;
-      return `${who}${E.SUIT_SYMBOL[g.suit]} ${E.memoryName(board, g.suit)} (${g.why})`;
-    });
-    box.append(h("div", { class: "row" }, h("span", { class: "tiny" }, h("b", {}, "Memories: "), bits.join(" · "))));
+    const strip = h("div", { class: "memgain" });
+    for (const g of t.gained) {
+      const meta = board.suits.find((x) => x.id === g.suit);
+      strip.append(h("div", { class: "mg", title: `${E.memoryName(board, g.suit)} — ${g.why}` },
+        meta.card ? h("img", { src: meta.card, alt: "", width: "40", height: "51" }) : h("b", {}, E.SUIT_SYMBOL[g.suit]),
+        h("div", { class: "tiny" }, h("b", {}, `${g.player === p.id ? "" : `${state.players[g.player].name}: `}${E.memoryName(board, g.suit)}`), h("div", { class: "muted" }, g.why))));
+    }
+    box.append(h("div", { class: "row" }, h("span", { class: "tiny" }, h("b", {}, "Memories made"))), strip);
   } else {
     box.append(h("div", { class: "row" }, h("span", { class: "tiny muted" }, "No memories from that move.")));
   }
 
-  // Tourism — discounted when a road trip has just finished here.
+  // Tourism — the engine says who may visit and at what price (shared after a road trip).
   const didTrip = !!t.roadTrip;
-  const price = didTrip ? board.economy.sharedTouristVisit : board.economy.touristVisit;
-  const candidates = didTrip
-    ? E.sharedVisitors(state)
-    : (E.touristHere(state, p) ? [p.id] : []);
-  if (candidates.length) {
+  const visits = E.visitOptions(state);
+  if (visits.length) {
     const city = E.cityOf(state, p.city);
-    box.append(h("div", { class: "row", style: "margin-top:9px" },
-      h("span", { class: "tiny" }, `Stay at `, h("b", {}, city.name), ` — ${city.attraction} · `, h("b", {}, money(price)), " each")));
+    const price = visits[0].price;
+    const forGoal = visits.filter((v) => E.isOpenGoal(state, state.players[v.playerId], city.id));
+    box.append(h("div", { class: "visitrow" },
+      city.stamp ? h("img", { class: "visitstamp", src: city.stamp, alt: `Stamp ${city.tourist}: ${city.name}`, width: "96", height: "77" }) : null,
+      h("div", {},
+        h("div", { class: "tiny" }, "Stay at ", h("b", {}, city.name), ` — ${city.attraction}`),
+        h("div", { class: "tiny muted" }, `${money(price)}${didTrip ? " each (shared road-trip price)" : ""} · +${board.scoring.touristPlace} points for the stamp`),
+        forGoal.length ? h("div", { class: "tiny goalnote" }, `★ completes a destination for ${forGoal.map((v) => v.playerId === p.id ? "you" : state.players[v.playerId].name).join(" & ")} (+${board.scoring.destination})`) : null)));
     const row = h("div", { class: "row", style: "flex-wrap:wrap;gap:6px;margin-top:6px" });
-    for (const id of candidates)
+    for (const v of visits)
       row.append(h("button", {
         class: "btn small primary",
-        onClick: () => commit("visitTourist", { playerId: id, discounted: didTrip }),
-      }, `${id === p.id ? "Visit" : `${state.players[id].name} visits`} · ${money(price)}`));
+        onClick: () => commit("visitTourist", { playerId: v.playerId }),
+      }, `${v.playerId === p.id ? "Visit" : `${state.players[v.playerId].name} visits`} · ${money(v.price)}`));
     box.append(row);
   }
 
   const others = E.playersAt(state, p.city, p.id);
-  const canTrip = !didTrip && others.length > 0 && E.roadTripCards(state, [p.id, ...others.map((o) => o.id)]).length > 0;
+  const canTrip = !didTrip && others.length > 0 && E.roadTripCards(state, others.map((o) => o.id)).length > 0;
 
   box.append(h("div", { class: "row", style: "margin-top:10px" },
     canTrip
       ? h("button", { class: "btn", onClick: () => { local.invite = null; local.picking = null; commit("offerRoadTrip"); } },
           `Offer a road trip (${others.map((o) => o.name).join(", ")})`)
-      : null,
+      : !didTrip && others.length
+        ? h("span", { class: "tiny muted" }, "No road trip: nobody here has a face-up card to flip.")
+        : null,
     h("button", {
       class: "btn primary", style: "margin-left:auto",
       onClick: () => { commit("endTurn"); local = blankLocal(); },

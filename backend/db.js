@@ -18,7 +18,26 @@ const {
   DB_SSL, // "true" for TiDB Cloud and most other managed hosts, which require TLS
 } = process.env;
 
-export const pool = mysql.createPool({
+// DB_DRIVER=memory keeps rooms in this process only — for local play without a
+// database, the automated tests and the AI play-test runner. Rooms are lost on
+// restart in this mode, so never use it in production.
+const memory = process.env.DB_DRIVER === "memory";
+const memRows = new Map();
+const memoryPool = {
+  async query(sql, params = []) {
+    if (/^\s*INSERT INTO rooms/i.test(sql)) {
+      const [code, seats, state] = params;
+      memRows.set(code, { code, seats, state });
+      return [{ affectedRows: 1 }];
+    }
+    if (/^\s*SELECT .* FROM rooms/i.test(sql)) return [[...memRows.values()]];
+    if (/^\s*DELETE FROM rooms/i.test(sql)) { memRows.delete(params[0]); return [{ affectedRows: 1 }]; }
+    return [[]]; // CREATE TABLE and anything else: nothing to do
+  },
+  async end() {},
+};
+
+export const pool = memory ? memoryPool : mysql.createPool({
   host: DB_HOST,
   port: Number(DB_PORT),
   user: DB_USER,

@@ -127,3 +127,5 @@ export const joinRoom = (code, name) => send({ type: "join_room", code, name });
 export const pickCharacter = (characterId) => send({ type: "pick_character", characterId });
 export const startGame = () => send({ type: "start_game" });
 export const action = (name, args) => send({ type: "action", name, args });
+export const addBot = (level) => send({ type: "add_bot", level });
+export const removeBot = (seatIndex) => send({ type: "remove_bot", seatIndex });

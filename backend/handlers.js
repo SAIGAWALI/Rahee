@@ -7,40 +7,29 @@
 import * as E from "../frontend/src/engine.js";
 import { createRoom, findRoom, addSeat, pickCharacter, startGame, persistRoom, seatForToken, presenceOf, reclaimSeat } from "./rooms.js";
 import { redact } from "./redact.js";
+import { applyAction } from "./actions.js";
+import { scheduleBots, addBot, removeBot } from "./bots.js";
 import * as T from "./protocol.js";
-
-// name -> (state, graph, seatIndex, args) => void — mutates state in place.
-const ACTIONS = {
-  layRoadTripCard: (s, g, seatIndex, a) => E.layRoadTripCard(s, seatIndex, a.cardId),
-  playCard: (s, g, seatIndex, a) => E.playCard(s, { cardId: a.cardId, ace: a.ace ?? null }),
-  stepTo: (s, g, seatIndex, a) => E.stepTo(s, g, a.cityId),
-  undoStep: (s) => E.undoStep(s),
-  endMovement: (s) => E.endMovement(s),
-  offerRoadTrip: (s) => E.offerRoadTrip(s),
-  proposeRoadTrip: (s, g, seatIndex, a) => E.proposeRoadTrip(s, g, { companions: a.companions, owner: a.owner, cardId: a.cardId, destination: a.destination }),
-  // The responder is always the sending seat's own id, never a client-supplied
-  // one — a player may only accept, counter, or decline for themselves. `a`
-  // is passed through as-is: {type:"accept", stop} | {type:"counter", destination} | {type:"decline"}.
-  respondRoadTrip: (s, g, seatIndex, a) => E.respondRoadTrip(s, g, seatIndex, a),
-  confirmRoadTrip: (s) => E.confirmRoadTrip(s),
-  cancelRoadTripInvite: (s) => E.cancelRoadTripInvite(s),
-  dropOff: (s, g, seatIndex, a) => E.dropOff(s, a.riderId),
-  endRoadTrip: (s) => E.endRoadTrip(s),
-  endTurn: (s) => E.endTurn(s),
-  visitTourist: (s, g, seatIndex, a) => E.visitTourist(s, a.playerId, !!a.discounted),
-};
 
 function send(ws, type, data) {
   if (ws.readyState === ws.OPEN) ws.send(JSON.stringify({ type, ...data }));
 }
 
 function lobbySeats(room) {
-  return room.seats.map((s) => ({ name: s.name, characterId: s.characterId }));
+  return room.seats.map((s) => ({ name: s.name, characterId: s.characterId, isBot: !!s.isBot, botLevel: s.botLevel }));
 }
 
+// Each seat is also told its own index, because removing a computer player
+// from the lobby moves the seats after it up by one.
 function broadcastLobby(room) {
   const seats = lobbySeats(room);
-  for (const seat of room.seats) if (seat.ws) send(seat.ws, T.LOBBY_UPDATE, { code: room.code, seats });
+  room.seats.forEach((seat, seatIndex) => { if (seat.ws) send(seat.ws, T.LOBBY_UPDATE, { code: room.code, seats, seatIndex }); });
+  broadcastPresence(room);
+}
+
+/** Lets any computer players at this table take their next move (see bots.js). */
+export function kickBots(room, graph) {
+  scheduleBots(room, graph, () => broadcastState(room));
 }
 
 function broadcastState(room) {
@@ -174,18 +163,30 @@ export function handleConnection(ws, { board, graph }) {
           if (seatIndex !== 0) throw new Error("only the player who created the room can start it");
           await startGame(room);
           broadcastState(room);
+          kickBots(room, graph);
+          break;
+        }
+        case T.ADD_BOT: {
+          const { room, seatIndex } = requireSeat();
+          if (seatIndex !== 0) throw new Error("only the player who created the room can add computer players");
+          await addBot(room, msg.level);
+          broadcastLobby(room);
+          break;
+        }
+        case T.REMOVE_BOT: {
+          const { room, seatIndex } = requireSeat();
+          if (seatIndex !== 0) throw new Error("only the player who created the room can remove computer players");
+          await removeBot(room, Number(msg.seatIndex));
+          broadcastLobby(room);
           break;
         }
         case T.ACTION: {
           const { room, seatIndex } = requireSeat();
           if (!room.state) throw new Error("the game hasn't started yet");
-          const fn = ACTIONS[msg.name];
-          if (!fn) throw new Error(`unknown action "${msg.name}"`);
-          if (T.TURN_GATED_ACTIONS.has(msg.name) && E.currentPlayer(room.state).id !== seatIndex)
-            throw new Error("it isn't your turn");
-          fn(room.state, graph, seatIndex, msg.args ?? {});
+          applyAction(room.state, graph, seatIndex, msg.name, msg.args);
           await persistRoom(room); // durable before the table hears about it — a crash right after still remembers this move
           broadcastState(room);
+          kickBots(room, graph);
           break;
         }
         default:

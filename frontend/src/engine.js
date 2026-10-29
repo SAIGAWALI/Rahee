@@ -9,7 +9,9 @@ export const SUITS = ["spades", "hearts", "clubs", "diamonds"];
 export const SUIT_SYMBOL = { spades: "♠", hearts: "♥", clubs: "♣", diamonds: "♦" };
 export const SUIT_IS_RED = { spades: false, hearts: true, clubs: false, diamonds: true };
 
-export const PLAYER_COLOURS = ["#2f6fd0", "#4d7038", "#c0392b", "#d99a1e", "#8e44ad", "#16a085"];
+// Fallback only — a board may define its own token colours (board.playerColours).
+export const PLAYER_COLOURS = ["#f0563e", "#3fb8dc", "#f5b800", "#4fae4d", "#d472ac", "#8e4c20"];
+export const playerColours = (board) => board?.playerColours?.length ? board.playerColours : PLAYER_COLOURS;
 
 /** Small seeded PRNG so a game can be replayed from its seed. */
 export function rng(seed) {
@@ -144,6 +146,7 @@ export function deal(board, playerCount, seed) {
 
 export function newGame({ board, players, firstPlayer = 0, seed = Date.now() & 0xffffffff }) {
   const { hands, leftover } = deal(board, players.length, seed);
+  const colours = playerColours(board);
   const state = {
     board,
     seed,
@@ -153,7 +156,7 @@ export function newGame({ board, players, firstPlayer = 0, seed = Date.now() & 0
       return {
         id: i,
         name: p.name,
-        colour: PLAYER_COLOURS[i % PLAYER_COLOURS.length],
+        colour: colours[i % colours.length],
         characterId: p.characterId,
         city: character.start,
         spent: 0,
@@ -161,7 +164,9 @@ export function newGame({ board, players, firstPlayer = 0, seed = Date.now() & 0
         faceUp: [],            // played cards, available as road-trip cards
         memories: { spades: 0, hearts: 0, clubs: 0, diamonds: 0 },
         visited: [],           // tourist city ids this player has paid to visit
-        reached: [],           // destination-goal city ids this player has stood on
+        reached: [],           // destination goals completed (visited and paid for)
+        aceSwapped: false,     // the one-time "two Aces" swap at setup has been used
+        isBot: !!p.isBot,      // a computer player (see ai.js) — purely informational
       };
     }),
     firstPlayer,
@@ -173,9 +178,6 @@ export function newGame({ board, players, firstPlayer = 0, seed = Date.now() & 0
     turn: null,
     log: [],
   };
-  // Standing on your character's start city already counts as reaching it if it
-  // happens to be one of that character's goals.
-  for (const p of state.players) noteArrival(state, p);
   return state;
 }
 
@@ -190,15 +192,24 @@ function log(s, text) {
   if (s.log.length > 240) s.log.shift();
 }
 
-/** Records a destination goal when a player stands on one of their goal cities. */
-function noteArrival(s, p) {
+/**
+ * Records a completed destination goal. Per the rules, a destination counts
+ * only once the player has *visited* it — ended there and paid the tourist
+ * visit (₹2,000, or ₹1,000 shared on a road trip). Just passing through or
+ * stopping there does not complete it. Called from visitTourist only.
+ */
+function noteDestination(s, p, cityId) {
   const ch = characterOf(s, p);
-  if (ch.goals.some((g) => g.city === p.city) && !p.reached.includes(p.city)) {
-    p.reached.push(p.city);
+  if (ch.goals.some((g) => g.city === cityId) && !p.reached.includes(cityId)) {
+    p.reached.push(cityId);
     return true;
   }
   return false;
 }
+
+/** True when this city is one of the player's destination goals not yet completed. */
+export const isOpenGoal = (s, p, cityId) =>
+  characterOf(s, p).goals.some((g) => g.city === cityId) && !p.reached.includes(cityId);
 
 // ---------------------------------------------------------------------------
 // Turn: playing a card and moving
@@ -317,8 +328,6 @@ export function endMovement(s) {
   if (others.length) award(s, p, suit, `meeting ${others.map((o) => o.name).join(" & ")}`);
   if (t.ace?.mode === "memory") award(s, p, t.ace.suit, `Ace ${t.ace.card.id}`);
 
-  if (noteArrival(s, p)) log(s, `reaches a destination goal — ${cityOf(s, p.city).name}`);
-
   t.stage = "resolve";
   return s;
 }
@@ -342,14 +351,38 @@ export function touristHere(s, player) {
   return city;
 }
 
-export function visitTourist(s, playerId, discounted = false) {
+/**
+ * Who may pay for a tourist visit right now, and at what price. Only after a
+ * move has finished (stage "resolve"): the active player at the full price —
+ * or, once a road trip has ended, every traveller still aboard at the shared
+ * price. The price is always decided here, never taken from the caller.
+ */
+export function visitOptions(s) {
+  const t = s.turn;
+  if (!t || t.stage !== "resolve") return [];
+  if (t.roadTrip) return sharedVisitors(s).map((id) => ({ playerId: id, price: s.board.economy.sharedTouristVisit, shared: true }));
+  const p = currentPlayer(s);
+  return touristHere(s, p) ? [{ playerId: p.id, price: s.board.economy.touristVisit, shared: false }] : [];
+}
+
+/** `_discounted` is accepted for backward compatibility and ignored — see visitOptions. */
+export function visitTourist(s, playerId, _discounted) {
+  const opt = visitOptions(s).find((o) => o.playerId === playerId);
+  if (!opt) throw new Error("nothing to visit here right now");
   const p = s.players[playerId];
-  const city = touristHere(s, p);
-  if (!city) throw new Error("nothing to visit here");
-  const price = discounted ? s.board.economy.sharedTouristVisit : s.board.economy.touristVisit;
-  p.spent += price;
+  const city = cityOf(s, p.city);
+  p.spent += opt.price;
   p.visited.push(city.id);
-  log(s, `${p.name} visits ${city.name} — ${city.attraction} (₹${price.toLocaleString("en-IN")})`);
+  log(s, `${p.name} visits ${city.name} — ${city.attraction} (₹${opt.price.toLocaleString("en-IN")})`);
+  if (noteDestination(s, p, city.id)) {
+    log(s, `${p.name} completes a destination goal — ${city.name} (${p.reached.length} of ${characterOf(s, p).goals.length})`);
+    const need = s.board.scoring.destinationsForBonus;
+    if (s.endTriggeredBy === null && p.reached.length >= need) {
+      s.endTriggeredBy = p.id;
+      s.endTriggerRound = s.round;
+      log(s, `${p.name} triggers the end of the game (${need} destinations completed) — the round is played out`);
+    }
+  }
   return s;
 }
 
@@ -357,12 +390,19 @@ export function visitTourist(s, playerId, discounted = false) {
 // Road trips
 // ---------------------------------------------------------------------------
 
-/** Face-up cards that could be flipped for a road trip by these participants. */
+/**
+ * Face-up cards that could be flipped for a road trip. The road-trip card must
+ * belong to another participating player — never the active player (the
+ * driver) — so the driver's own id is always left out, even if passed in.
+ */
 export function roadTripCards(s, participantIds) {
+  const driver = s.turn ? currentPlayer(s).id : null;
   const out = [];
-  for (const id of participantIds)
+  for (const id of participantIds) {
+    if (id === driver) continue;
     for (const f of s.players[id].faceUp)
       if (!f.flipped) out.push({ owner: id, card: f.card });
+  }
   return out;
 }
 
@@ -373,7 +413,7 @@ export function offerRoadTrip(s) {
   const p = currentPlayer(s);
   const others = playersAt(s, p.city, p.id);
   if (!others.length) throw new Error("nobody here to invite");
-  if (!roadTripCards(s, [p.id, ...others.map((o) => o.id)]).length) throw new Error("no face-up card available to flip");
+  if (!roadTripCards(s, others.map((o) => o.id)).length) throw new Error("nobody here has a face-up road-trip card to flip");
   t.stage = "roadtrip-invite";
   return s;
 }
@@ -385,6 +425,7 @@ export function cancelRoadTripInvite(s) {
   if (!t || !cancellableStages.includes(t.stage)) throw new Error("not offering a road trip");
   t.pendingTrip = null;
   t.stage = "resolve";
+  t.tripsCalledOff = (t.tripsCalledOff || 0) + 1;
   return s;
 }
 
@@ -399,6 +440,14 @@ export function proposeRoadTrip(s, graph, { companions, owner, cardId: rtCardId,
   const t = s.turn;
   if (!t || t.stage !== "roadtrip-invite") throw new Error("not offering a road trip");
   if (!companions.length) throw new Error("invite at least one companion");
+  const p0 = currentPlayer(s);
+  if (new Set(companions).size !== companions.length) throw new Error("a companion was listed twice");
+  for (const id of companions) {
+    if (!s.players[id] || id === p0.id) throw new Error("not a valid companion");
+    if (s.players[id].city !== p0.city) throw new Error(`${s.players[id].name} is not in your city`);
+  }
+  if (owner === p0.id) throw new Error("the road-trip card must belong to one of your companions, not to you");
+  if (!companions.includes(owner)) throw new Error("the road-trip card must belong to someone coming on the trip");
   const holder = s.players[owner];
   const entry = holder.faceUp.find((f) => f.card.id === rtCardId && !f.flipped);
   if (!entry) throw new Error("that road-trip card is not available");
@@ -453,6 +502,15 @@ export function respondRoadTrip(s, graph, playerId, response) {
     log(s, "nobody wanted to come along — the road trip is off");
     t.pendingTrip = null;
     t.stage = "resolve";
+    t.tripsCalledOff = (t.tripsCalledOff || 0) + 1;
+    return s;
+  }
+  // The flipped card has to belong to a participant: if its owner isn't coming, it can't be used.
+  if (!accepted.includes(pt.owner)) {
+    log(s, `${s.players[pt.owner].name} isn't coming, so their card can't be flipped — the road trip is off`);
+    t.pendingTrip = null;
+    t.stage = "resolve";
+    t.tripsCalledOff = (t.tripsCalledOff || 0) + 1;
     return s;
   }
   t.stage = "roadtrip-review"; // the driver confirms or cancels next — see confirmRoadTrip
@@ -483,6 +541,7 @@ export function confirmRoadTrip(s) {
     stepsUsed: 0,
     driverPaid: 0,
     start: p.city,
+    destination: pt.destination, // the proposed destination (the driver may still stop sooner)
     path: [p.city],
     legs: [],
     riders: accepted.map((id) => ({ id, stopAt: pt.responses[id].stop, stepsTravelled: 0, droppedAt: null })),
@@ -494,6 +553,7 @@ export function confirmRoadTrip(s) {
 }
 
 export function dropOff(s, riderId) {
+  if (s.turn?.stage !== "roadtrip-moving") throw new Error("nobody can get off — the road trip is not under way");
   const rt = s.turn.roadTrip;
   const rider = rt.riders.find((r) => r.id === riderId);
   if (!rider || rider.droppedAt !== null) return s;
@@ -513,12 +573,8 @@ export function endRoadTrip(s) {
   for (const r of rt.riders) award(s, s.players[r.id], suit, "road trip");
   if (rt.stepsUsed === rt.allowance) award(s, p, suit, "efficient travel");
 
-  // Anyone standing where the trip ends, who was not on it, also makes a memory.
-  const aboard = new Set([p.id, ...rt.riders.filter((r) => r.droppedAt === null).map((r) => r.id)]);
-  for (const other of s.players)
-    if (other.city === p.city && !aboard.has(other.id)) award(s, other, suit, "the road trip arrives");
-
-  for (const pl of s.players) if (pl.city === p.city || rt.riders.some((r) => r.id === pl.id)) noteArrival(s, pl);
+  // A player already standing where the trip ends, who was not on it, does
+  // NOT get the road-trip memory — only the travellers who took part do.
 
   t.stage = "resolve";
   return s;
@@ -529,7 +585,12 @@ export function sharedVisitors(s) {
   const rt = s.turn?.roadTrip;
   if (!rt) return [];
   const p = currentPlayer(s);
-  return [p.id, ...rt.riders.filter((r) => r.droppedAt === null).map((r) => r.id)]
+  // A rider whose chosen stop *is* the place the trip ends was aboard for the
+  // whole trip (stepTo marks them "dropped" on arrival) and keeps the discount;
+  // anyone who got off earlier forfeits it.
+  const end = rt.path[rt.path.length - 1];
+  const rodeToEnd = (r) => r.droppedAt === null || (r.droppedAt === end && r.stepsTravelled === rt.stepsUsed);
+  return [p.id, ...rt.riders.filter(rodeToEnd).map((r) => r.id)]
     .filter((id) => s.players[id].city === p.city && touristHere(s, s.players[id]));
 }
 
@@ -549,12 +610,11 @@ export function endTurn(s) {
     p.faceUp.push({ card: c, flipped: false });
   }
 
-  const goalCount = p.reached.length;
-  const need = s.board.scoring.destinationsForBonus;
-  if (s.endTriggeredBy === null && (p.hand.length === 0 || goalCount >= need)) {
+  // (Completing the fifth destination triggers the end straight away, in visitTourist.)
+  if (s.endTriggeredBy === null && p.hand.length === 0) {
     s.endTriggeredBy = p.id;
     s.endTriggerRound = s.round;
-    log(s, `${p.name} triggers the end of the game (${p.hand.length === 0 ? "last card played" : `${goalCount} destinations reached`}) — the round is played out`);
+    log(s, `${p.name} triggers the end of the game (last card played) — the round is played out`);
   }
 
   s.turn = null;
@@ -575,6 +635,47 @@ export function endTurn(s) {
   }
   if (s.players.every((pl) => pl.hand.length === 0)) s.phase = "over";
   else s.phase = "handover";
+  return s;
+}
+
+/**
+ * The Ace setup rule: a player dealt two or more Aces may, once, discard one
+ * of them from the game and draw a replacement from the undealt cards. Only
+ * before they have laid their first road-trip card.
+ */
+export function swapAce(s, playerId, aceId) {
+  if (s.phase !== "setup-roadtrip-card") throw new Error("Aces can only be swapped during setup");
+  const p = s.players[playerId];
+  if (p.aceSwapped) throw new Error("you have already swapped an Ace");
+  if (p.faceUp.length) throw new Error("swap before laying your road-trip card");
+  if (p.hand.filter(isAce).length < 2) throw new Error("you need two or more Aces to swap one");
+  const ace = p.hand.find((c) => c.id === aceId && isAce(c));
+  if (!ace) throw new Error("that Ace is not in your hand");
+  if (!s.leftover?.length) throw new Error("no cards are left to draw — ask for a reshuffle instead");
+  const drawn = s.leftover.pop();
+  p.hand = p.hand.filter((c) => c.id !== aceId).concat({ ...drawn, id: cardId(drawn) });
+  p.aceSwapped = true;
+  (s.discarded ??= []).push(ace);
+  s.log.push({ round: s.round, player: p.name, text: `discards ${ace.id} (two Aces) and draws a replacement` });
+  return s;
+}
+
+/**
+ * When a player holds two or more Aces and there is nothing left to draw from,
+ * they may ask for a reshuffle: every hand is dealt again from a fresh shuffle.
+ * Only allowed before anyone has laid a road-trip card, so nothing is undone.
+ */
+export function requestReshuffle(s, playerId) {
+  if (s.phase !== "setup-roadtrip-card") throw new Error("a reshuffle can only be asked for during setup");
+  const p = s.players[playerId];
+  if (p.hand.filter(isAce).length < 2) throw new Error("only a player holding two or more Aces can ask for a reshuffle");
+  if (s.leftover?.length) throw new Error("there are still cards to draw — swap an Ace instead");
+  if (s.players.some((pl) => pl.faceUp.length)) throw new Error("too late — a road-trip card has already been laid");
+  s.seed = (Math.imul(s.seed >>> 0 || 1, 1103515245) + 12345) >>> 0;
+  const { hands, leftover } = deal(s.board, s.players.length, s.seed);
+  s.players.forEach((pl, i) => { pl.hand = hands[i].map((c) => ({ ...c, id: cardId(c) })); pl.aceSwapped = false; });
+  s.leftover = leftover;
+  s.log.push({ round: s.round, player: p.name, text: "holds two Aces with nothing left to draw — asks for a reshuffle; every hand is dealt again" });
   return s;
 }
 

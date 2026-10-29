@@ -15,6 +15,9 @@ export function redact(state, forSeatIndex) {
   const { board, seed, leftover, ...rest } = state;
   return {
     ...rest,
+    // How many undealt cards remain is public (it decides whether a player with
+    // two Aces can swap one or must ask for a reshuffle); which cards they are is not.
+    leftoverCount: leftover?.length ?? 0,
     players: state.players.map((p, i) => (
       i === forSeatIndex ? p : { ...p, hand: undefined, handCount: p.hand.length }
     )),

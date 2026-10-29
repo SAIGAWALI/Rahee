@@ -11,6 +11,24 @@ const el = (name, attrs = {}) => {
   return n;
 };
 
+/** Darkens a #rrggbb colour by factor k (0..1). */
+export function shade(hex, k) {
+  const n = parseInt(hex.slice(1), 16);
+  const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => Math.round(v * k));
+  return `#${c.map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+}
+
+/** The marker cube from the printed set, drawn isometrically in a player's colour. */
+export function cube(x, y, colour, s = 9) {
+  const g = el("g", { transform: `translate(${x},${y})` });
+  const h = s * 0.58, d = s * 1.15;
+  const face = (pts, fill) => el("path", { d: `M${pts.join(" L")} Z`, fill, stroke: "#20444c", "stroke-width": 1.1, "stroke-linejoin": "round" });
+  g.append(face([`0,${-2 * h}`, `${s},${-h}`, "0,0", `${-s},${-h}`], colour));
+  g.append(face([`${-s},${-h}`, "0,0", `0,${d}`, `${-s},${d - h}`], shade(colour, 0.5)));
+  g.append(face([`${s},${-h}`, "0,0", `0,${d}`, `${s},${d - h}`], shade(colour, 0.78)));
+  return g;
+}
+
 export function createBoardView(host, board, handlers = {}) {
   host.innerHTML = "";
   const { width: W, height: H } = board.plate;
@@ -74,24 +92,51 @@ export function createBoardView(host, board, handlers = {}) {
   }
 
   let hoverInfo = () => null;
+  // Hovering a tourist place shows its stamp (the artwork from the printed
+  // stamp column) above the usual facts. Stamps are preloaded once the board
+  // is idle so the first hover doesn't pop in empty.
   function showTip(c) {
     const extra = hoverInfo(c.id);
+    tip.className = `tipbox${c.stamp ? " has-stamp" : ""}`;
     tip.innerHTML =
-      `${c.tourist ? `<span class="n">${c.tourist}</span> ` : ""}<b>${c.name}</b>` +
+      `${c.stamp ? `<img class="stamp" src="${c.stamp}" alt="Stamp ${c.tourist}: ${c.name}" width="200" height="160">` : ""}` +
+      `<div class="tipbody">${c.tourist ? `<span class="n">${c.tourist}</span> ` : ""}<b>${c.name}</b>` +
       `${c.attraction ? `<div class="sub">${c.attraction}</div>` : ""}` +
       `${c.airport ? `<div class="sub">✈ airport</div>` : ""}` +
-      `${extra ? `<div class="sub">${extra}</div>` : ""}`;
+      `${extra ? `<div class="sub extra">${extra}</div>` : ""}</div>`;
     tip.hidden = false;
     const p = toScreen(c.x, c.y);
-    tip.style.left = `${p.x}px`;
-    tip.style.top = `${p.y - 14}px`;
-    tip.style.transform = "translate(-50%,-100%)";
+    const hostBox = host.getBoundingClientRect();
+    const tipH = c.stamp ? 250 : 90;
+    const below = p.y - 14 - tipH < 56; // too close to the top bar: open below the city instead
+    const half = (c.stamp ? 216 : 140) / 2;
+    tip.style.left = `${Math.max(half + 6, Math.min(hostBox.width - half - 6, p.x))}px`;
+    tip.style.top = below ? `${p.y + 18}px` : `${p.y - 14}px`;
+    tip.style.transform = below ? "translate(-50%,0)" : "translate(-50%,-100%)";
   }
+  const preload = () => { for (const c of board.cities) if (c.stamp) { const i = new Image(); i.src = c.stamp; } };
+  (window.requestIdleCallback || ((f) => setTimeout(f, 1500)))(preload);
 
   // --- pan and zoom -------------------------------------------------------
   const view = { x: 0, y: 0, w: W, h: H };
   const MIN_W = 380, MAX_W = W * 1.15;
-  const applyView = () => svg.setAttribute("viewBox", `${view.x} ${view.y} ${view.w} ${view.h}`);
+  let viewQueued = false;
+  const applyView = () => {
+    svg.setAttribute("viewBox", `${view.x} ${view.y} ${view.w} ${view.h}`);
+    // Tell whoever is listening (the left map panel's viewport box), at most once a frame.
+    if (handlers.onViewChange && !viewQueued) {
+      viewQueued = true;
+      requestAnimationFrame(() => { viewQueued = false; handlers.onViewChange(visibleRect()); });
+    }
+  };
+  /** The part of the board actually on screen, in board coordinates (the viewBox letterboxes). */
+  function visibleRect(coveredLeftPx = 0) {
+    const b = box(), s = fit();
+    if (!b.width || !s) return { x: view.x, y: view.y, w: view.w, h: view.h };
+    const w = b.width / s, h = b.height / s;
+    const cut = Math.min(coveredLeftPx, b.width * 0.8) / s;
+    return { x: view.x - (w - view.w) / 2 + cut, y: view.y - (h - view.h) / 2, w: w - cut, h };
+  }
 
   function box() { return svg.getBoundingClientRect(); }
   // The viewBox letterboxes inside the element, so screen<->world needs the scale.
@@ -208,6 +253,10 @@ export function createBoardView(host, board, handlers = {}) {
     };
     requestAnimationFrame(tick);
   }
+  /** Centres the board on a board-coordinate point without changing the zoom. */
+  function centreOn({ x, y }) {
+    view.x = x - view.w / 2; view.y = y - view.h / 2; clamp(); applyView();
+  }
   function fitAll() { Object.assign(view, { x: 0, y: 0, w: W, h: W * (H / W) }); clamp(); applyView(); }
   fitAll();
 
@@ -215,7 +264,7 @@ export function createBoardView(host, board, handlers = {}) {
   function render(model) {
     const {
       legalRoutes = [], walked = [], preview = [], tokens = [], goals = new Set(),
-      visited = new Set(), reached = new Set(), pulse = new Set(), hover,
+      visited = new Set(), reached = new Set(), pulse = new Set(), hover, visitedColour = "#4d7038", flash = null,
     } = model;
     hoverInfo = hover ?? (() => null);
     gLive.innerHTML = "";
@@ -277,12 +326,7 @@ export function createBoardView(host, board, handlers = {}) {
           "stroke-dasharray": isReached ? "none" : "7 5", filter: "url(#softGlow)",
         }));
       }
-      if (isVisited) {
-        const g = el("g", { transform: `translate(${c.x + 15},${c.y - 15})` });
-        g.append(el("circle", { r: 9, fill: "#4d7038", stroke: "#fff", "stroke-width": 2.5 }));
-        g.append(el("path", { d: "M-4.2,0.2 L-1.3,3.2 L4.3,-3.2", fill: "none", stroke: "#fff", "stroke-width": 2.4, "stroke-linecap": "round", "stroke-linejoin": "round" }));
-        gRings.append(g);
-      }
+      if (isVisited) gRings.append(cube(c.x + 17, c.y - 14, visitedColour));
       if (canStep) {
         const ring = el("circle", { cx: c.x, cy: c.y, r: 17, fill: "#2f6fd0", "fill-opacity": ".18", stroke: "#2f6fd0", "stroke-width": 3.5, "data-step": c.id });
         ring.append(el("animate", { attributeName: "r", values: "16;21;16", dur: "1.7s", repeatCount: "indefinite" }));
@@ -290,7 +334,8 @@ export function createBoardView(host, board, handlers = {}) {
       }
     }
 
-    // traveller tokens, fanned out when several share a city
+    // traveller tokens — the pawn from the printed set — fanned out when several share a city
+    const pawn = board.pawn;
     const byCity = new Map();
     for (const t of tokens) {
       if (!byCity.has(t.city)) byCity.set(t.city, []);
@@ -300,14 +345,26 @@ export function createBoardView(host, board, handlers = {}) {
       const c = cityById.get(cityId);
       if (!c) continue;
       list.forEach((t, i) => {
-        const a = (-Math.PI / 2) + (i - (list.length - 1) / 2) * 0.62;
-        const spread = list.length > 1 ? 20 : 0;
-        const x = c.x + Math.cos(a) * spread, y = c.y + Math.sin(a) * spread - 15;
+        const spread = list.length > 1 ? 17 : 0;
+        const x = c.x + (i - (list.length - 1) / 2) * spread, y = c.y + 4;
         const g = el("g", { transform: `translate(${x},${y})`, filter: "url(#tokenShadow)" });
-        g.append(el("path", { d: "M0,7 C-9,-3 -12,-8 -12,-13 A12,12 0 1 1 12,-13 C12,-8 9,-3 0,7 Z", fill: t.colour, stroke: "#fff", "stroke-width": 2.6 }));
-        g.append(el("circle", { cx: 0, cy: -13, r: 4.6, fill: "#fff", "fill-opacity": t.active ? 1 : .62 }));
+        if (pawn) {
+          // Foot of the pawn on the city; ~38 board px tall.
+          const k = 0.76;
+          g.append(el("path", {
+            d: pawn.d, fill: t.colour, stroke: pawn.outline || "#20444c", "stroke-width": 2.2 / k, "stroke-linejoin": "round",
+            transform: `scale(${k}) translate(${-pawn.footX},${-pawn.footY})`,
+          }));
+          if (t.label) {
+            const tx = el("text", { x: 0, y: -26.5, "text-anchor": "middle", "font-size": 11, "font-weight": 700, fill: "#20444c" });
+            tx.textContent = t.label;
+            g.append(tx);
+          }
+        } else {
+          g.append(el("path", { d: "M0,7 C-9,-3 -12,-8 -12,-13 A12,12 0 1 1 12,-13 C12,-8 9,-3 0,7 Z", fill: t.colour, stroke: "#fff", "stroke-width": 2.6 }));
+        }
         if (t.active) {
-          const halo = el("circle", { cx: 0, cy: -13, r: 17, fill: "none", stroke: t.colour, "stroke-width": 2.5, "stroke-opacity": ".8" });
+          const halo = el("circle", { cx: 0, cy: -26, r: 17, fill: "none", stroke: t.colour, "stroke-width": 3, "stroke-opacity": ".85" });
           halo.append(el("animate", { attributeName: "r", values: "16;22;16", dur: "2s", repeatCount: "indefinite" }));
           halo.append(el("animate", { attributeName: "stroke-opacity", values: ".8;0;.8", dur: "2s", repeatCount: "indefinite" }));
           g.append(halo);
@@ -317,5 +374,20 @@ export function createBoardView(host, board, handlers = {}) {
     }
   }
 
-  return { render, focusOn, fitAll, zoomIn: () => zoomBy(1.35), zoomOut: () => zoomBy(1 / 1.35), svg };
+  /** Briefly rings a city — used when it is picked from the left map panel. */
+  function flashCity(cityId) {
+    const c = cityById.get(cityId);
+    if (!c) return;
+    const ring = el("circle", { cx: c.x, cy: c.y, r: 26, fill: "none", stroke: "#20444c", "stroke-width": 4 });
+    ring.append(el("animate", { attributeName: "r", values: "18;44", dur: "0.9s", repeatCount: "3" }));
+    ring.append(el("animate", { attributeName: "stroke-opacity", values: "1;0", dur: "0.9s", repeatCount: "3" }));
+    gTokens.append(ring);
+    setTimeout(() => ring.remove(), 2800);
+  }
+
+  return {
+    render, focusOn, centreOn, fitAll, flashCity, visibleRect, showTipFor: (id) => { const c = cityById.get(id); if (c) showTip(c); },
+    hideTip: () => { tip.hidden = true; },
+    zoomIn: () => zoomBy(1.35), zoomOut: () => zoomBy(1 / 1.35), svg,
+  };
 }

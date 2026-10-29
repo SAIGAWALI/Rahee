@@ -104,7 +104,7 @@ for (let n = 2; n <= 6; n++) {
   check(sc.memories === 35, `manual example: 3 Bazaar + one of each should score 35, got ${sc.memories}`);
 }
 {
-  const fake = { board, players: [{ memories: { spades: 0, diamonds: 0, clubs: 0, hearts: 0 }, visited: [], reached: [], spent: 26100, characterId: "pilgrim" }] };
+  const fake = { board, players: [{ memories: { spades: 0, diamonds: 0, clubs: 0, hearts: 0 }, visited: [], reached: [], spent: board.economy.startingBudget + 1100, characterId: "pilgrim" }] };
   const sc = E.scorePlayer(fake, fake.players[0]);
   // 1100 over budget = 3 blocks of 500 (part counts) = -15
   check(sc.penalty === -15, `budget penalty for 1100 over should be -15, got ${sc.penalty}`);
@@ -155,10 +155,11 @@ function randomGame(seed) {
     check(p.spent >= before, "movement reduced the amount spent");
     E.endMovement(s);
 
-    if (E.touristHere(s, p) && rand() < 0.6) E.visitTourist(s, p.id, false);
+    if (E.visitOptions(s).length && rand() < 0.6) E.visitTourist(s, p.id);
 
     const others = E.playersAt(s, p.city, p.id);
-    const cards = others.length ? E.roadTripCards(s, [p.id, ...others.map((o) => o.id)]) : [];
+    const cards = others.length ? E.roadTripCards(s, others.map((o) => o.id)) : [];
+    check(cards.every((c) => c.owner !== p.id), "the driver's own card was offered for a road trip");
     if (cards.length && rand() < 0.7) {
       const chosen = pick(cards);
       const allowance = E.cardValue(board, chosen.card);
@@ -193,7 +194,7 @@ function randomGame(seed) {
             if (rtMoved >= 1) {
               if (rand() < 0.25 && s.turn.roadTrip.riders.length) E.dropOff(s, pick(s.turn.roadTrip.riders).id);
               E.endRoadTrip(s);
-              for (const id of E.sharedVisitors(s)) if (rand() < 0.5) E.visitTourist(s, id, true);
+              for (const o of E.visitOptions(s)) if (rand() < 0.5) { check(o.price === board.economy.sharedTouristVisit, "shared visit not discounted"); E.visitTourist(s, o.playerId); }
             } else {
               s.turn.stage = "resolve";
             }
@@ -215,7 +216,8 @@ function randomGame(seed) {
     check(p.spent >= 0, "negative spend");
     const ch = E.characterOf(s, p);
     const goals = new Set(ch.goals.map((g) => g.city));
-    check(p.reached.every((c) => goals.has(c) || c === ch.start), "recorded a goal that is not on the character card");
+    check(p.reached.every((c) => goals.has(c)), "recorded a goal that is not on the character card");
+    check(p.reached.every((c) => p.visited.includes(c)), "a destination was completed without paying to visit it");
   }
   const scores = E.finalScores(s);
   for (const r of scores) {

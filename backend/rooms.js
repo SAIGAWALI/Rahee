@@ -40,7 +40,7 @@ export function seatForToken(room, token) {
 }
 
 /** Which seats currently have a live connection, by seat index. */
-export const presenceOf = (room) => room.seats.map((s) => !!s.ws && s.ws.readyState === s.ws.OPEN);
+export const presenceOf = (room) => room.seats.map((s) => s.isBot || (!!s.ws && s.ws.readyState === s.ws.OPEN));
 
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O, 1/I
 function generateCode() {
@@ -64,7 +64,7 @@ function asObject(value) {
 // storage, so it's stripped before writing and reattached on load instead
 // of duplicating it in every row.
 function seatsForStorage(room) {
-  return room.seats.map((s) => ({ name: s.name, characterId: s.characterId, tokenHash: s.tokenHash }));
+  return room.seats.map((s) => ({ name: s.name, characterId: s.characterId, tokenHash: s.tokenHash, ...(s.isBot ? { isBot: true, botLevel: s.botLevel } : {}) }));
 }
 function stateForStorage(room) {
   if (!room.state) return null;
@@ -127,7 +127,7 @@ const sameName = (a, b) => String(a ?? "").trim().toLowerCase() === String(b ?? 
  * fresh token (the old one stops working), or null when no such seat exists.
  */
 export async function reclaimSeat(room, name, ws) {
-  const i = room.seats.findIndex((s) => sameName(s.name, String(name ?? "").slice(0, 18)) && !(s.ws && s.ws.readyState === s.ws.OPEN));
+  const i = room.seats.findIndex((s) => !s.isBot && sameName(s.name, String(name ?? "").slice(0, 18)) && !(s.ws && s.ws.readyState === s.ws.OPEN));
   if (i === -1) return null;
   const token = newToken();
   room.seats[i].tokenHash = hashToken(token);
@@ -154,11 +154,11 @@ export async function pickCharacter(room, seatIndex, characterId) {
 
 export async function startGame(room, seed = Date.now() & 0xffffffff) {
   if (room.state) throw new Error("that game has already started");
-  if (room.seats.length < 2) throw new Error("need at least 2 players");
+  if (room.seats.length < 2) throw new Error("need at least 2 players — add a computer player if you're short");
   if (room.seats.some((s) => !s.characterId)) throw new Error("everyone needs a character first");
   room.state = E.newGame({
     board: room.board,
-    players: room.seats.map((s) => ({ name: s.name, characterId: s.characterId })),
+    players: room.seats.map((s) => ({ name: s.name, characterId: s.characterId, isBot: !!s.isBot })),
     firstPlayer: 0,
     seed,
   });

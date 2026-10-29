@@ -4,6 +4,8 @@ A web version of **RAHEE**, the travel board game by Jyothi Krishnan & the CCL t
 
 The project is a plain three-tier split, each piece independently deployable: **`frontend/`** (static files — e.g. Netlify) talks over WebSocket to **`backend/`** (the Node API/rules server — e.g. Render), which is the only thing that talks to the **database** (e.g. TiDB Cloud). See [Deploying it](#deploying-it) below.
 
+> **New this week:** Prof. Parvathy's artwork is in the game (stamps on hover, clickable map panel, new character and memory cards, pawns, font, one-page rules), the engine now follows every rule in RULES.md, and there are **computer players**, an **AI play-test runner** and a full **`npm test`** suite. See [docs/WEEK5-CHANGES.md](docs/WEEK5-CHANGES.md) and [docs/AI-PLAYTESTING.md](docs/AI-PLAYTESTING.md).
+
 **[PROJECT-UNDERSTANDING.md](PROJECT-UNDERSTANDING.md)** is the course deliverable: our understanding of the project, the input/output, and the methodology.
 
 The rules I implemented are written up in **[RULES.md](RULES.md)**, taken from the official 8-page manual ([manual.pdf](manual.pdf)) and the printed board. The assumptions I had to make are listed at the end of that file and are still awaiting your confirmation.
@@ -14,6 +16,8 @@ A MySQL-compatible database first — any of these work unmodified, since `backe
 
 - **Local MySQL or MariaDB** — point `backend/.env` at it (see below).
 - **TiDB**, including a free **TiDB Cloud** cluster — the intended production target; TiDB *is* the MySQL protocol, so nothing in the code is TiDB-specific.
+
+**No database handy?** `DB_DRIVER=memory node app.js` (or `npm run dev` from the project root) keeps rooms in memory — fine for local play and testing, but rooms are lost on restart, so never in production.
 
 Copy `backend/.env.example` to `backend/.env` and fill in the connection details (`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_SSL`). The backend creates the one table it needs on its own the first time it starts (`backend/schema.sql` has the same statement, for setting it up by hand instead).
 
@@ -45,7 +49,7 @@ The three tiers deploy independently, each to its own host:
 2. **Backend (Render, or any Node host).** Root directory: `backend/`. Build command: `npm install`. Start command: `npm start`. Set the `DB_*` environment variables from `backend/.env.example` in the host's dashboard (never commit a real `.env`) — Render sets `PORT` itself, which `app.js` already reads. Note the backend's public URL once deployed; the WebSocket URL is the same host with `wss://` in place of `https://`.
 3. **Frontend (Netlify, or any static host).** Base/publish directory: `frontend/`. No build command needed — it's static files as-is. Before deploying, set `window.RAHEE_SERVER_URL` in `frontend/index.html` to the backend's `wss://` URL from step 2 (there's a commented example line already in the file).
 
-This is a deliberately minimal slice of the fuller design in [DESIGN-PLAN.md](DESIGN-PLAN.md) — chat and reconnection tokens are sketched there but not built here; a dropped connection can't yet rejoin its seat mid-game (the room and its state survive just fine in the database — only the live socket is gone).
+A dropped player rejoins their seat automatically (or by typing the room code and the same name). Computer players can fill empty seats from the lobby.
 
 ## What is here
 
@@ -54,6 +58,8 @@ frontend/
   index.html            the app
   src/
     engine.js           rules and mechanisms only — no board knowledge — runs unmodified on the backend too
+    ai.js               computer players: picks a seat's next move from what that seat can see
+    map-panel.js        the clickable left panel: clean map overview + other players' destinations
     config.js           the backend's WebSocket URL — same-origin by default, overridable for separate deploys
     net.js              the one WebSocket connection to the backend
     board-view.js       the map: pan/zoom, legal steps, tokens, goal rings
@@ -63,7 +69,10 @@ frontend/
     styles.css
   data/board.json       the whole board as data (see below) — fetched once by the client, never sent over the socket
   assets/board-plate.png  the map plate, rendered from the printed artwork
-  assets/cards/<id>.png  each character's printed card, shown when choosing or playing them
+  assets/cards/<id>.webp each character's card (new artwork), shown in the lobby, setup and sidebar
+  assets/stamps/<n>.webp the 51 stamps — shown on hover, in the stamp album and on the scoreboard
+  assets/memories/       the four memory cards;  assets/maps/  the two clean maps for the left panel
+  assets/fonts/          Old Newspaper Types, the display face from the cards
 backend/
   app.js               WebSocket/API server; also serves frontend/ locally as a dev convenience
   db.js                the MySQL-compatible connection pool + one-table schema bootstrap
@@ -71,8 +80,12 @@ backend/
   rooms.js             room creation/joining, seat assignment, DB persistence; imports engine.js as-is
   redact.js             strips what each player must not see before every broadcast
   handlers.js           the one dispatcher: inbound message → engine.js → persist → broadcast
+  actions.js            every gameplay action + who may send it (shared by handlers, bots and tests)
+  bots.js               computer-player seats: add/remove in the lobby, play their turns
   protocol.js           message type names and the gameplay action allowlist
-tools/                the pipeline that produced frontend/data/board.json, plus tests
+tools/                the pipeline that produced frontend/data/board.json, plus tests and the play-test runner
+docs/                 this week's changes, and the computer players / play-testing write-up
+playtest-report/      the latest 1000-game AI play-test (report.md, report.json)
 RULES.md              my reading of the ruleset, with open questions
 manual.pdf            the official rulebook
 ```
@@ -81,7 +94,7 @@ manual.pdf            the official rulebook
 
 The backend is the sole authority on the rules: `backend/handlers.js` receives a message, calls straight into `frontend/src/engine.js` (imported completely unmodified — it has no browser dependency in its gameplay/query functions, and it's the same single copy of the file the frontend ships to the browser, so the rules never have a second, drifting implementation), persists the result, and broadcasts it. `backend/rooms.js` keeps one authoritative game `state` object per room in memory for fast synchronous access on the hot path, but every change is written through to the database before the new state reaches any client — and every room still in progress is reloaded from the database the moment the backend process starts, so a crash or a restart never loses a game. `backend/redact.js` is the one place secrecy is enforced: it runs once per outgoing message, per recipient, and strips the board (the client already has its own copy), the undealt deck, and every *other* player's hand (replaced with just a count) before anything leaves the backend. `frontend/src/main.js` never calls any engine function to change state directly — every action becomes a `{type:"action", name, args}` WebSocket message, and the screen only ever updates when the backend's own `state` broadcast comes back.
 
-This is a deliberately minimal slice of the fuller design in [DESIGN-PLAN.md](DESIGN-PLAN.md) — chat and reconnection tokens are sketched there but not built here.
+Computer players (`backend/bots.js`) are seats the server plays itself: each decides with `frontend/src/ai.js` from its own redacted view, and its move goes through `backend/actions.js` — the same path and checks as a human's message.
 
 ## The data-driven part
 
@@ -106,6 +119,8 @@ node tools/make-cards.mjs   <dirWithMupdf> Rahee-A-fincurve.pdf frontend/assets/
 node tools/detect-cities.mjs frontend/assets --tiles                      # find city markers on the plate
 node tools/trace-routes.mjs  frontend/assets tools/cities.tsv --debug     # walk the printed roads into a graph
 node tools/build-board.mjs   .                                           # assemble and validate frontend/data/board.json
+node tools/add-artwork.mjs   .                                           # add stamps, cards, memory cards, clean maps, pawns (online-version art)
+python3 tools/align-maps.py "Raheemap-only nodes.png" frontend/data/board.json   # (only if the clean maps change) refit maps[].fromPlate
 node tools/test-engine.mjs   . 80                                        # play random games against the rules
 ```
 
@@ -137,21 +152,34 @@ Regenerating the plate against the corrected print also surfaced two pre-existin
 
 ## Testing
 
-`tools/test-engine.mjs` plays 80 complete random games and checks the deck composition for every player count, that no move exceeds its card, that spending only ever increases, that no tourist place is visited twice by one player, that the end trigger fires and every player ends with the same number of turns, and that each final score adds up. It also checks the two worked examples in the manual: 3 Bazaar + one of each suit scores 35, and ₹1,100 over budget costs 15 points.
+One command runs everything (after `npm install` in `backend/` once):
 
-`tools/shot.mjs` drives headless Chrome over the DevTools protocol to click through the interface and screenshot it; moves on the map are sent as **real mouse press/release events** rather than synthetic `element.click()` calls, because only real input exercises pointer capture and hit testing. It was written for the single-device build's setup screen and needs updating for the lobby flow before it drives a full game again — `tools/walkthrough.mjs` is in the same position. Screenshots land in `shots/`.
+```bash
+npm test
+```
 
-Multiplayer correctness (room join, redaction, turn gating) was verified with a small two-client WebSocket script exercising the server protocol directly, rather than a checked-in tool.
+| Suite | What it checks |
+|---|---|
+| `tools/test-engine.mjs` | board sanity, deals for every player count (200 shuffles each), route-search regressions B1–B4, the manual's worked examples, 80 random complete games checked rule by rule |
+| `tools/test-rules.mjs` | 20 hand-built scenarios, one per rule clarified in RULES.md |
+| `tools/playtest.mjs` | 300 complete games between computer players, every move checked (`node tools/playtest.mjs 1000` for a full report in `playtest-report/`) |
+| `tools/test-server.mjs` | the real backend over WebSockets with an in-memory database: two clients and computer players play whole 3- and 6-player games — privacy, turn order, host-only bots, reconnection, scores |
+
+GitHub Actions (`.github/workflows/test.yml`) runs the same on every push. See [docs/AI-PLAYTESTING.md](docs/AI-PLAYTESTING.md).
+
+`tools/shot.mjs` and `tools/walkthrough.mjs` are the older single-device screenshot scripts and still need updating for the lobby flow.
 
 ## Status against the requirements sheet
 
-**Done (v1 must-haves).** Data-driven engine; cities, routes and tokens rendered over the supplied plate from that data; editing the data changes the game with no engine change; full rule enforcement for 2–6 players, each on their own device, server-authoritative; movement with step costs and flight/ship surcharges; cards, hidden hands and per-player-count deck composition; memories across the four suits; tourist visits with one-time per-player marking; road trips with invitation, route choice, cost sharing, the shared-tourism discount and intermediate drop-off; Aces in all three uses; character starting cities and destination goals, shown with each character's own printed card; end-game trigger, final round, budget penalty and a transparent final score breakdown; tests.
+**Done.** Data-driven engine; the board drawn from data over the printed plate; full rules for 2–6 players on their own devices, server-authoritative and matching RULES.md; road trips with invitations, companion-chosen stops, cost sharing and shared tourism; Aces (including the two-Aces swap); destinations completed by visiting; end trigger and transparent score breakdown; reconnection; persistence; the online-version artwork (stamps on hover, clickable map panel, cards, pawns, font, one-page rules); computer players (stretch goal "greedy AI"); route hints via click-to-route; play-test statistics (stretch); automated tests.
 
-**Not done (stretch).** Visual map editor, greedy AI opponent, route hints, undo of a whole action (only the last movement step can be undone), movement animation, playtest statistics, chat, reconnecting to a seat mid-game after a dropped connection (the room's state survives in the database just fine — only the live socket is gone, see [The multiplayer architecture](#the-multiplayer-architecture)).
+**Not done.** Visual map editor; undo of a whole turn; movement animation; road-trip discussion between two players (dropped — no chat, as agreed with the POC).
 
-## Two things to check before this is final
+## Confirmed with CCL
 
-1. **The rule assumptions in [RULES.md](RULES.md)** — in particular whether reaching a destination goal requires paying the ₹2,000 tourist visit. I assumed it does not.
-2. **Step counts.** The manual implies one printed road segment = one step, so every route in the data has `steps: 1`. The requirements sheet says routes carry an explicit step count, which suggests some may be worth more. If CCL supplies the real connection data, drop it into `frontend/data/board.json` and nothing else needs to change.
+1. **Budget** is ₹20,000 (`economy.startingBudget` in board.json). RULES.md is final: it was written with the POC from the printed manual, so where the two differ, RULES.md wins.
+2. **No city between Siliguri and Guwahati.** The dot on the new clean map there is part of the image only and is not in the game data.
+3. **Spellings** stay as they are in the board data.
+4. **The one-page rules PNG** has not arrived yet. When it does, set `"rulesImage"` in board.json.
 
 Board artwork © CCL, IITGN, representative and for educational purposes.

@@ -1,6 +1,6 @@
 // The travel journal beside the board: what the current player is carrying,
 // what they have collected, and where they still have to get to.
-import { SUIT_SYMBOL, SUIT_IS_RED, SUITS, characterOf, cityOf, cardValue, scorePlayer, currentPlayer } from "./engine.js";
+import { SUIT_SYMBOL, SUIT_IS_RED, SUITS, characterOf, cityOf, cardValue, scorePlayer } from "./engine.js";
 
 const h = (tag, props = {}, ...kids) => {
   const n = document.createElement(tag);
@@ -43,7 +43,11 @@ export function renderSidebar(state, ui) {
 
   const head = h("div", { class: "sb-head" },
     h("div", { class: "who" },
-      h("div", { class: "dot", style: `background:${p.colour}` }),
+      ch.card
+        ? h("button", { class: "mycard", title: `Your character card — ${ch.name}`, onClick: () => ui.onShowCard?.(ch) },
+            h("img", { src: ch.card, alt: `${ch.name} card`, width: "44", height: "51" }),
+            h("i", { style: `background:${p.colour}` }))
+        : h("div", { class: "dot", style: `background:${p.colour}` }),
       h("div", {},
         h("div", { class: "nmrow" },
           h("h2", {}, p.name),
@@ -95,10 +99,10 @@ export function renderSidebar(state, ui) {
   for (const suit of SUITS) {
     const meta = board.suits.find((x) => x.id === suit);
     const n = p.memories[suit];
-    grid.append(h("div", { class: `memtile${SUIT_IS_RED[suit] ? " red" : ""}${n ? "" : " zero"}`, title: meta.blurb },
-      h("div", { class: "sym" }, SUIT_SYMBOL[suit]),
+    grid.append(h("div", { class: `memtile${SUIT_IS_RED[suit] ? " red" : ""}${n ? "" : " zero"}${meta.card ? " art" : ""}`, title: `${meta.memory} — ${meta.blurb}` },
+      meta.card ? h("img", { src: meta.card, alt: `${meta.memory} memory card`, width: "90", height: "115", loading: "lazy" }) : h("div", { class: "sym" }, SUIT_SYMBOL[suit]),
       h("div", { class: "n" }, String(n)),
-      h("div", { class: "lbl" }, meta.memory)));
+      meta.card ? null : h("div", { class: "lbl" }, meta.memory)));
   }
   const memTotal = SUITS.reduce((t, s) => t + p.memories[s], 0);
   const setBits = [];
@@ -115,23 +119,22 @@ export function renderSidebar(state, ui) {
   const visited = p.visited
     .map((id) => cityOf(state, id))
     .sort((a, b) => a.tourist - b.tourist);
-  const places = h("div", { class: "places" });
+  // A stamp album: the actual stamp artwork for every place visited.
+  const places = h("div", { class: "album" });
   for (const c of visited) {
     const isGoal = goalCities.has(c.id);
     places.append(h("button", {
-      class: `place${isGoal ? " is-goal" : ""}`,
+      class: `stampbtn${isGoal ? " is-goal" : ""}`,
       onClick: () => ui.onFocusCity(c.id),
-      title: `Show ${c.name} on the map`,
+      title: `${c.tourist}. ${c.name} — ${c.attraction}${isGoal ? " (destination ★)" : ""}. Show on the map.`,
     },
-      h("div", { class: "num" }, String(c.tourist)),
-      h("div", {},
-        h("div", { class: "nm" }, c.name),
-        h("div", { class: "sub" }, c.attraction)),
-      isGoal ? h("span", { class: "tag goal" }, "★ goal") : h("span", { class: "tag" }, "10 pts")));
+      c.stamp ? h("img", { src: c.stamp, alt: `Stamp ${c.tourist}: ${c.name}`, width: "160", height: "128", loading: "lazy" })
+        : h("div", { class: "nostamp" }, `${c.tourist} ${c.name}`),
+      isGoal ? h("span", { class: "star" }, "★") : null));
   }
-  if (!visited.length) places.append(h("div", { class: "empty" }, "No stamps yet. Finish a move on a numbered city and pay the stay cost to collect one."));
+  if (!visited.length) places.append(h("div", { class: "empty" }, "No stamps yet. End a move on a numbered city and pay the stay cost to collect its stamp."));
   body.append(h("section", { class: "sect" },
-    h("h3", {}, "Places visited", h("span", { class: "count" }, `${visited.length} of 51`)),
+    h("h3", {}, "Stamps collected", h("span", { class: "count" }, `${visited.length} of ${board.cities.filter((c) => c.tourist).length} · ${visited.length * board.scoring.touristPlace} pts`)),
     places));
 
   // ---- destination goals --------------------------------------------------
@@ -149,7 +152,7 @@ export function renderSidebar(state, ui) {
       h("div", {},
         h("div", { class: "nm" }, c.name),
         h("div", { class: "sub" }, g.blurb)),
-      done ? h("span", { class: "tag done" }, "✓ reached") : h("span", { class: "tag" }, "5 pts")));
+      done ? h("span", { class: "tag done" }, "✓ completed") : h("span", { class: "tag" }, "5 pts")));
   }
   const need = board.scoring.destinationsForBonus;
   body.append(h("section", { class: "sect" },
@@ -157,13 +160,13 @@ export function renderSidebar(state, ui) {
     dest,
     h("div", { class: "setline", html: sc.reachedCount >= need
       ? `<b>Bonus earned.</b> Reaching ${need} destinations is worth an extra ${board.scoring.allDestinationsBonus} points.`
-      : `Reach <b>${need - sc.reachedCount}</b> more to earn the ${board.scoring.allDestinationsBonus}-point bonus — and to trigger the end of the game.` })));
+      : `A destination counts once you <b>visit</b> it (end there and pay the stay). ${need - sc.reachedCount} more earns the ${board.scoring.allDestinationsBonus}-point bonus — and ends the game.` })));
 
   // ---- running score ------------------------------------------------------
   body.append(h("section", { class: "sect" },
     h("h3", {}, "If the game ended now"),
     h("div", { class: "setline", html:
-      `<b>${sc.total}</b> points — ${sc.tourist} tourism, ${sc.destinations + sc.bonus} destinations, ` +
+      `<b>${sc.total}</b> points — ${sc.tourist} stamps, ${sc.destinations + sc.bonus} destinations, ` +
       `${sc.memories} memories${sc.penalty ? `, <span style="color:var(--red)">${sc.penalty} budget</span>` : ""}` })));
 
   // ---- log ----------------------------------------------------------------
@@ -175,78 +178,6 @@ export function renderSidebar(state, ui) {
   }
 
   return h("aside", { class: "sidebar" }, head, body, ui.actions ?? null);
-}
-
-/**
- * The click-to-open panel on the left of the map: every *other* player's
- * destination goals, so you can see where the rest of the table is heading
- * and how far along each of them is. Goals come from the board data every
- * browser already holds; `reached` is public game state (see backend/redact.js
- * — only hands are hidden). Nothing here is secret, so nothing is requested
- * from the server.
- *
- * opts: { viewerId, online, open, openPlayerId, onToggle(), onTogglePlayer(id), onFocusCity(id) }
- * (`online` is optional: per seat, whether that player is connected right now.)
- */
-export function renderDestinationsPanel(state, opts) {
-  const { viewerId, online = [], open, openPlayerId, onToggle, onTogglePlayer, onFocusCity } = opts;
-  const others = state.players.filter((pl) => pl.id !== viewerId);
-  const current = currentPlayer(state).id;
-
-  const tab = h("button", {
-    class: `dest-tab${open ? " is-open" : ""}`,
-    "aria-expanded": open ? "true" : "false",
-    title: open ? "Hide the other players' destinations" : "See where the other players are heading",
-    onClick: onToggle,
-  }, open ? "‹" : "›", h("span", {}, "Destinations"));
-
-  const wrap = h("div", { class: "destwrap-inner" }, tab);
-  if (!open) return wrap;
-
-  const panel = h("div", { class: "destpanel", role: "region", "aria-label": "Other players' destinations" },
-    h("div", { class: "dp-head" },
-      h("h3", {}, "Where everyone is heading"),
-      h("div", { class: "tiny muted" }, "Each traveller's six destinations. Tap a place to find it on the map.")));
-
-  if (!others.length) panel.append(h("div", { class: "empty" }, "There are no other travellers in this game."));
-
-  for (const pl of others) {
-    const ch = characterOf(state, pl);
-    const reached = new Set(pl.reached);
-    const isOpen = pl.id === openPlayerId;
-    const card = h("div", { class: `dp-player${isOpen ? " is-open" : ""}` });
-    card.append(h("button", {
-      class: "dp-row", "aria-expanded": isOpen ? "true" : "false",
-      onClick: () => onTogglePlayer(pl.id),
-    },
-      h("div", { class: "dot", style: `background:${pl.colour}` }),
-      h("div", { class: "dp-who" },
-        h("div", { class: "nm" }, pl.name,
-          pl.id === current ? h("span", { class: "tag" }, "playing") : null,
-          online[pl.id] === false ? h("span", { class: "tag offline" }, "offline") : null),
-        h("div", { class: "sub" }, `${ch.name} · at ${cityOf(state, pl.city).name}`)),
-      h("div", { class: "dp-count" }, `${reached.size}/${ch.goals.length}`),
-      h("div", { class: "dp-chev" }, isOpen ? "▾" : "▸")));
-    if (isOpen) {
-      const list = h("div", { class: "places" });
-      for (const g of ch.goals) {
-        const c = cityOf(state, g.city);
-        const done = reached.has(g.city);
-        list.append(h("button", {
-          class: `place${done ? " is-goal" : " pending"}`,
-          onClick: () => onFocusCity(c.id),
-          title: `Show ${c.name} on the map`,
-        },
-          h("div", { class: "num" }, done ? "✓" : String(c.tourist ?? "•")),
-          h("div", {}, h("div", { class: "nm" }, c.name), h("div", { class: "sub" }, g.blurb)),
-          done ? h("span", { class: "tag done" }, "reached") : null));
-      }
-      card.append(list);
-    }
-    panel.append(card);
-  }
-  wrap.append(panel);
-  return wrap;
 }
 
 export { h, money };

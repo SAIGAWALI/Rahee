@@ -142,7 +142,7 @@ const board = {
     { id: "diamonds", symbol: "♦", memory: "Festival", blurb: "celebrating a festival", colour: "#c0392b" },
   ],
   economy: {
-    startingBudget: 25000,
+    startingBudget: 20000, // RULES.md (POC-confirmed); the printed manual says 25,000
     costPerStep: 200,
     flightSurcharge: 4000,
     shipSurcharge: 1000,

@@ -1,0 +1,15 @@
+{
+  "name": "rahee",
+  "private": true,
+  "type": "module",
+  "description": "RAHEE — online version of the CCL, IIT Gandhinagar travel board game. See Readme.md.",
+  "scripts": {
+    "start": "cd backend && node app.js",
+    "dev": "cd backend && DB_DRIVER=memory node app.js",
+    "test": "node tools/run-tests.mjs",
+    "test:engine": "node tools/test-engine.mjs . 80",
+    "test:rules": "node tools/test-rules.mjs .",
+    "test:server": "node tools/test-server.mjs 4",
+    "playtest": "node tools/playtest.mjs 500"
+  }
+}
