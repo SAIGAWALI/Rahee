@@ -245,79 +245,78 @@ test("a road-trip companion can take or turn down the shared stamp themselves", 
   assert(E.visitOptions(s).some((o) => o.playerId === 0), "the driver lost their own visit");
 });
 
-console.log("Start-of-turn road trips");
-function startSetup() {
-  // It's P0's turn; P1 is in the same city (Agra) with a face-up 4♦.
+console.log("Travelling together");
+function togetherSetup() {
+  // It's P0's turn in Agra with P1 (who has a face-up 4♦); P0 holds 2♥, 4♣, A♠.
   const s = game(["pilgrim", "musician", "historian"], {
-    hands: [[["2", "hearts"], ["3", "clubs"]], [["2", "spades"]], [["3", "spades"]]],
+    hands: [[["2", "hearts"], ["4", "clubs"], ["A", "spades"]], [["2", "spades"]], [["3", "spades"]]],
     at: ["agra", "agra", "bhopal"],
   });
   s.players[1].faceUp = [{ card: card("4", "diamonds"), flipped: false }];
-  s.players[2].faceUp = [{ card: card("5", "clubs"), flipped: false }];
   return s;
 }
-const fourStepRoad = (from) => board.cities.map((c) => c.id).find((id) => { const r = E.shortestPath(graph, from, id, 4); return r && r.totalSteps === 4 && r.edges.every((e) => e.route.type === "road"); });
-test("offered only when someone here has a face-up card", () => {
-  const s = startSetup();
-  assert(E.canStartRoadTrip(s), "should be offered with P1 here");
-  s.players[1].city = "bhopal";
-  assert(!E.canStartRoadTrip(s), "offered with nobody in the city");
-});
-test("no road-trip memory; driver gets efficient travel only; costs as normal", () => {
-  const s = startSetup();
-  const dest = fourStepRoad("agra");
-  E.offerStartRoadTrip(s);
-  E.proposeRoadTrip(s, graph, { companions: [1], owner: 1, cardId: "4♦", destination: dest });
+const exactRoad = (from, n) => board.cities.map((c) => c.id).find((id) => { const r = E.shortestPath(graph, from, id, n); return r && r.totalSteps === n && r.edges.every((e) => e.route.type === "road"); });
+function together(s, cardId, dest, ace = null) {
+  E.offerTravelTogether(s, { cardId, ace });
+  E.proposeRoadTrip(s, graph, { companions: [1], destination: dest });
   E.respondRoadTrip(s, graph, 1, { type: "accept", stop: dest });
   E.confirmRoadTrip(s);
-  const d0 = s.players[0].spent, d1 = s.players[1].spent;
-  for (const e of E.shortestPath(graph, "agra", dest, 4).edges) E.stepTo(s, graph, e.to);
+  const before = { d: s.players[0].spent, r: s.players[1].spent };
+  for (const e of E.shortestPath(graph, "agra", dest, s.turn.allowance).edges) E.stepTo(s, graph, e.to);
   E.endRoadTrip(s);
+  return before;
+}
+test("offered whenever someone is in your city — no face-up card needed", () => {
+  const s = togetherSetup();
+  s.players[1].faceUp = [];
+  assert(E.canTravelTogether(s), "not offered");
+  s.players[1].city = "bhopal";
+  assert(!E.canTravelTogether(s), "offered with nobody here");
+});
+test("uses the mover's own card: nothing flipped, no road-trip memory, rider gets nothing", () => {
+  const s = togetherSetup();
+  const dest = exactRoad("agra", 4);
+  const before = together(s, "4♣", dest);
+  assert(!s.players[1].faceUp[0].flipped, "the companion's card was flipped");
   const g = s.turn.gained.map((x) => `${x.player}:${x.why}`);
   assert(JSON.stringify(g) === JSON.stringify(["0:efficient travel"]), `memories ${JSON.stringify(g)}`);
-  assert(s.players[0].spent - d0 === 4 * econ.costPerStep - 4 * econ.roadTripSharePerStep, "driver cost not as a normal trip");
-  assert(s.players[1].spent - d1 === 4 * econ.roadTripSharePerStep, "rider cost not as a normal trip");
+  assert(s.players[0].spent - before.d === 4 * econ.costPerStep - 4 * econ.roadTripSharePerStep, "mover's cost wrong");
+  assert(s.players[1].spent - before.r === 4 * econ.roadTripSharePerStep, "companion did not pay ₹100 a step");
 });
-test("not exact value: no memory at all", () => {
-  const s = startSetup();
-  E.offerStartRoadTrip(s);
-  E.proposeRoadTrip(s, graph, { companions: [1], owner: 1, cardId: "4♦", destination: "gwalior" });
-  E.respondRoadTrip(s, graph, 1, { type: "accept", stop: "gwalior" });
-  E.confirmRoadTrip(s);
-  E.stepTo(s, graph, "gwalior");
-  E.endRoadTrip(s);
-  assert(s.turn.gained.length === 0, `memories given: ${JSON.stringify(s.turn.gained)}`);
+test("an Ace works as usual (memory mode gives the mover one more)", () => {
+  const s = togetherSetup();
+  together(s, "2♥", "gwalior", { cardId: "A♠", mode: "memory", suit: "spades" });
+  const g = s.turn.gained.map((x) => `${x.player}:${x.why}`).sort();
+  assert(g.length === 1 && g[0].startsWith("0:Ace"), `memories ${JSON.stringify(g)}`); // 1 step of 2: not efficient
 });
-test("then the driver plays a card and moves; no second road trip that turn", () => {
-  const s = startSetup();
-  E.offerStartRoadTrip(s);
-  E.proposeRoadTrip(s, graph, { companions: [1], owner: 1, cardId: "4♦", destination: "gwalior" });
-  E.respondRoadTrip(s, graph, 1, { type: "accept", stop: "gwalior" });
-  E.confirmRoadTrip(s);
-  E.stepTo(s, graph, "gwalior");
-  E.endRoadTrip(s);
-  assert(E.visitOptions(s).every((o) => o.price === econ.sharedTouristVisit) && E.visitOptions(s).length === 2, "shared ₹1,000 stamp not offered to both");
-  E.finishStartTrip(s);
-  assert(!s.turn, "turn should be back at 'play a card'");
-  E.playCard(s, { cardId: "2♥" });
-  E.stepTo(s, graph, E.movementOptions(s, graph)[0].to);
-  E.endMovement(s);
-  s.players[2].city = s.players[0].city; // someone with a card is here now
-  throws(() => E.offerRoadTrip(s), "a second road trip was allowed in the same turn");
+test("shared ₹1,000 stamp; then the turn ends — no road trip after", () => {
+  const s = togetherSetup();
+  together(s, "2♥", "gwalior");
+  assert(E.visitOptions(s).length === 2 && E.visitOptions(s).every((o) => o.price === econ.sharedTouristVisit), "shared stamp not offered to both");
+  throws(() => E.offerRoadTrip(s), "a road trip was allowed after travelling together");
   E.endTurn(s);
-  assert(!s.turnFlags, "turn flags not cleared for the next player");
+  assert(s.players[0].hand.length === 2 && s.players[0].faceUp.some((f) => f.card.id === "2♥"), "played card not laid face-up");
 });
-test("declined or called off: back to the start of the turn, card still to play", () => {
-  const s = startSetup();
-  E.offerStartRoadTrip(s);
-  E.proposeRoadTrip(s, graph, { companions: [1], owner: 1, cardId: "4♦", destination: "gwalior" });
+test("nobody comes: back to the start of the turn, card still in hand", () => {
+  const s = togetherSetup();
+  E.offerTravelTogether(s, { cardId: "2♥" });
+  E.proposeRoadTrip(s, graph, { companions: [1], destination: "gwalior" });
   E.respondRoadTrip(s, graph, 1, { type: "decline" });
-  assert(!s.turn && !s.players[1].faceUp[0].flipped, "not back at the start of the turn");
-  E.offerStartRoadTrip(s);
+  assert(!s.turn && s.players[0].hand.some((c) => c.id === "2♥"), "not back at the start");
+  E.offerTravelTogether(s, { cardId: "2♥" });
   E.cancelRoadTripInvite(s);
-  assert(!s.turn, "cancel did not return to the start");
+  assert(!s.turn, "Never mind did not return to the start");
   E.playCard(s, { cardId: "2♥" });
-  assert(s.turn.stage === "moving", "could not play a card afterwards");
+  assert(s.turn.stage === "moving", "could not play the card normally afterwards");
+});
+test("called off before moving returns to the start too", () => {
+  const s = togetherSetup();
+  E.offerTravelTogether(s, { cardId: "2♥" });
+  E.proposeRoadTrip(s, graph, { companions: [1], destination: "gwalior" });
+  E.respondRoadTrip(s, graph, 1, { type: "accept", stop: "gwalior" });
+  E.confirmRoadTrip(s);
+  E.cancelRoadTrip(s);
+  assert(!s.turn && s.players[0].hand.length === 3, "not back at the start with the full hand");
 });
 
 console.log("Aces");

@@ -85,7 +85,7 @@ function playGame(g) {
       if (new Set(p.visited).size !== p.visited.length) problem(g, `${p.name} visited a place twice`);
     });
     if (s.turn?.stage === "moving" && s.turn.stepsUsed > s.turn.allowance) problem(g, "moved further than the card allows");
-    if (s.turn?.roadTrip && s.turn.roadTrip.owner === E.currentPlayer(s).id) problem(g, "the driver flipped their own card");
+    if (s.turn?.roadTrip && !s.turn.together && s.turn.roadTrip.owner === E.currentPlayer(s).id) problem(g, "the driver flipped their own card");
   }
 
   const scores = E.finalScores(s);

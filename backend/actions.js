@@ -13,8 +13,7 @@ export const ACTIONS = {
   undoStep: (s) => E.undoStep(s),
   endMovement: (s) => E.endMovement(s),
   offerRoadTrip: (s) => E.offerRoadTrip(s),
-  offerStartRoadTrip: (s) => E.offerStartRoadTrip(s),
-  finishStartTrip: (s) => E.finishStartTrip(s),
+  offerTravelTogether: (s, g, seatIndex, a) => E.offerTravelTogether(s, { cardId: a.cardId, ace: a.ace ?? null }),
   proposeRoadTrip: (s, g, seatIndex, a) => E.proposeRoadTrip(s, g, { companions: a.companions, owner: a.owner, cardId: a.cardId, destination: a.destination }),
   // The responder is always the sending seat's own id, never a client-supplied
   // one — a player may only accept, counter, or decline for themselves. `a`
