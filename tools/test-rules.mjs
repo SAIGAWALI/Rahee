@@ -66,6 +66,16 @@ test("the fifth completed destination triggers the end at once", () => {
   assert(s.endTriggeredBy === 0, "end not triggered by the fifth destination");
 });
 
+test("ending where another traveller already is gives no memory", () => {
+  const s = game(["pilgrim", "musician"], { hands: [[["2", "hearts"], ["3", "clubs"]], [["2", "spades"]]], at: ["new-delhi", "agra"] });
+  E.playCard(s, { cardId: "2♥" });
+  E.stepTo(s, graph, "agra"); // 1 step of 2: not efficient either
+  E.endMovement(s);
+  assert(s.turn.gained.length === 0, `got ${JSON.stringify(s.turn.gained)}`);
+  const total = E.SUITS.reduce((t, x) => t + s.players[0].memories[x], 0);
+  assert(total === 0, "a memory was recorded");
+});
+
 console.log("Tourist visits");
 test("the client cannot claim the shared price on an ordinary visit", () => {
   const s = game(["pilgrim", "musician"], { hands: [[["2", "hearts"]], [["2", "spades"]]], at: ["new-delhi"] });

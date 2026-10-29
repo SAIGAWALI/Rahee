@@ -18,7 +18,7 @@ Three personalities:
 
 | Level | How it plays | Use it for |
 |---|---|---|
-| **planner** (`greedy`) | Scores every card × every reachable city: stamps, destinations, memory sets, meeting players, efficient travel, money only where it would push it over budget, and distance to its remaining destinations. Joins road trips when worth it. | A realistic opponent |
+| **planner** (`greedy`) | Scores every card × every reachable city: stamps, destinations, memory sets, efficient travel, road-trip chances, money only where it would push it over budget, and distance to its remaining destinations. Joins road trips when worth it. | A realistic opponent |
 | **goal-chaser** (`goals`) | The same planner, but finishing its character's destinations comes first | Testing destinations and the end trigger |
 | **easy** | Random but always legal moves | Shaking out rule edge cases |
 

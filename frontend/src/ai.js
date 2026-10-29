@@ -15,7 +15,7 @@
 //              trips on a coin toss. Good for finding rule edge cases.
 //   "greedy" — a one-turn planner: scores every card × every reachable city by
 //              points it would earn now (stamps, destinations, memory sets,
-//              meeting players, efficient travel) minus money (only what would
+//              efficient travel, road-trip chances) minus money (only what would
 //              push it over budget really hurts) plus how much closer it gets
 //              to its remaining destinations. Plays a sensible game; not a
 //              deep search.
@@ -157,8 +157,7 @@ function placeValue(s, graph, p, to, o) {
   let extra = o.extraMem || 0;
   if (o.allowance && o.stepsTotal === o.allowance) { v += memoryValue(board, p.memories, o.suit, extra); extra++; }
   if (s.players.some((q) => q.id !== p.id && q.city === to)) {
-    v += memoryValue(board, p.memories, o.suit, extra); extra++;
-    // and the chance to take a road trip from there
+    // no memory for meeting someone — only the chance to take a road trip from there
     const cards = E.roadTripCards({ ...s, turn: null }, s.players.filter((q) => q.id !== p.id && q.city === to).map((q) => q.id));
     if (cards.length) v += 2.5;
   }
@@ -197,7 +196,7 @@ function bestDestination(s, graph, p, from, left, used, ctx) {
 //   pull     — points per step of distance to the nearest remaining destination
 //   goalDone — extra worth of ticking a destination off. Play-testing showed
 //              that pure point-chasing bots (goalDone 0) huddle together for
-//              meeting and road-trip memories and rarely finish destinations;
+//              road-trip memories and rarely finish destinations;
 //              the "goals" personality chases its character card instead.
 const LEVELS = {
   greedy: { pull: 0.9, goalDone: 0 },

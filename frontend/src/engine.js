@@ -381,8 +381,8 @@ export function endMovement(s) {
 
   const suit = t.card.suit;
   if (t.stepsUsed === t.allowance) award(s, p, suit, "efficient travel");
-  const others = playersAt(s, p.city, p.id);
-  if (others.length) award(s, p, suit, `meeting ${others.map((o) => o.name).join(" & ")}`);
+  // Ending where another traveller already is gives no memory (confirmed with the
+  // POC) — memories with other players come only from taking a road trip.
   if (t.ace?.mode === "memory") award(s, p, t.ace.suit, `Ace ${t.ace.card.id}`);
 
   t.stage = "resolve";

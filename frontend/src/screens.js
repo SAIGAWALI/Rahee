@@ -40,7 +40,6 @@ export function rulesSheet(board) {
         h("h3", {}, "2 · Memories (free)"),
         h("ul", {},
           h("li", {}, "Moved exactly the card's value → 1 memory of its suit."),
-          h("li", {}, "Ended where another traveller already is → 1 memory."),
           h("li", {}, "Took part in a road trip → 1 memory of the trip card's suit.")),
         h("div", { class: "rules-mem" }, ...SUITS.map((id) => h("figure", {},
           suit(id).card ? h("img", { src: suit(id).card, alt: "", width: "60", height: "77" }) : null,
