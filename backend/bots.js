@@ -24,6 +24,8 @@ const PAUSE = {
   endTurn: 1.6,             // time to read what happened before the next player goes
 };
 const delayFor = (name) => BASE * (PAUSE[name] ?? 1);
+// How long a computer driver waits for human riders to decide on the shared stamp.
+const RIDER_WAIT = Number(process.env.BOT_RIDER_WAIT_MS ?? 30000);
 
 export async function addBot(room, level = "greedy") {
   if (room.state) throw new Error("that game has already started");
@@ -53,9 +55,28 @@ export async function removeBot(room, seatIndex) {
  * `broadcast` sends the new state to every connected seat.
  */
 export function scheduleBots(room, graph, broadcast) {
+  // Something just happened, so stop any "waiting for the riders" countdown and look again.
+  if (room.riderWait) { clearTimeout(room.riderWait); room.riderWait = null; }
   if (!room.state || room.botTimer || room.state.phase === "over") return;
   const next = nextBotMove(room, graph);
-  if (!next) return;
+  if (!next) {
+    // A computer driver waits for people on its road trip to decide on the shared
+    // stamp — but not forever: after RIDER_WAIT it ends its turn anyway.
+    const s = room.state, cur = E.currentPlayer(s);
+    if (room.seats[cur.id]?.isBot && s.turn?.stage === "resolve" && E.ridersStillDeciding(s).length) {
+      const turnKey = `${s.round}:${s.turnIndex}`;
+      room.riderWait = setTimeout(async () => {
+        room.riderWait = null;
+        const now = room.state;
+        if (`${now.round}:${now.turnIndex}` !== turnKey || now.turn?.stage !== "resolve") return;
+        try { applyAction(now, graph, cur.id, "endTurn", {}); } catch { return; }
+        try { await persistRoom(room); } catch (err) { console.error("persist failed:", err.message); }
+        broadcast();
+        scheduleBots(room, graph, broadcast);
+      }, RIDER_WAIT);
+    }
+    return;
+  }
   room.botTimer = setTimeout(async () => {
     room.botTimer = null;
     // The state may have moved on while we waited — decide again, now.

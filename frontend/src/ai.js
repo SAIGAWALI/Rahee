@@ -251,8 +251,11 @@ export function chooseAction(s, graph, seat, { level = "greedy", rand = Math.ran
   // ---- a rider who came along may pay the shared stamp price after the trip
   if (t?.stage === "resolve" && cur.id !== seat) {
     const v = E.visitOptions(s).find((o) => o.playerId === seat);
-    if (v && worthVisiting(s, me, v.price, easy, rand)) return { name: "visitTourist", args: { playerId: seat } };
-    return null;
+    if (!v) return null;
+    // Decide either way, so a driver waiting on the riders can carry on.
+    return worthVisiting(s, me, v.price, easy, rand)
+      ? { name: "visitTourist", args: { playerId: seat } }
+      : { name: "passVisit", args: {} };
   }
 
   if (cur.id !== seat) return null;
@@ -260,6 +263,9 @@ export function chooseAction(s, graph, seat, { level = "greedy", rand = Math.ran
   // ---- my turn
   if (!t) {
     if (!me.hand.length) return null;
+    // Start the turn with a road trip from here, if someone here has a card worth flipping.
+    if (E.canStartRoadTrip(s) && !s.turnFlags?.startTripsCalledOff && planRoadTrip(s, graph, me, easy, rand, false, true))
+      return { name: "offerStartRoadTrip", args: {} };
     if (easy) {
       const c = pick(rand, me.hand);
       return { name: "playCard", args: { cardId: c.id, ace: null } };
@@ -297,11 +303,20 @@ export function chooseAction(s, graph, seat, { level = "greedy", rand = Math.ran
     return { name: "stepTo", args: { cityId: go.route.edges[0].to } };
   }
 
+  if (t.stage === "resolve" && t.preTrip) {
+    const v = E.visitOptions(s).find((o) => o.playerId === seat);
+    if (v && worthVisiting(s, me, v.price, easy, rand)) return { name: "visitTourist", args: { playerId: seat } };
+    if (E.ridersStillDeciding(s).length) return null; // let the companions decide on the stamp first
+    return { name: "finishStartTrip", args: {} };
+  }
+
   if (t.stage === "resolve") {
     const v = E.visitOptions(s).find((o) => o.playerId === seat);
     if (v && worthVisiting(s, me, v.price, easy, rand)) return { name: "visitTourist", args: { playerId: seat } };
+    // After a road trip, give the companions their chance at the shared stamp before ending the turn.
+    if (t.roadTrip && E.ridersStillDeciding(s).length) return null;
     // Don't keep inviting people who have just said no (or a trip already called off) this turn.
-    if (!t.roadTrip && !t.tripsCalledOff) {
+    if (!t.roadTrip && !t.tripsCalledOff && !s.turnFlags?.tripTaken) {
       const plan = planRoadTrip(s, graph, me, easy, rand);
       if (plan) return { name: "offerRoadTrip", args: {} };
     }
@@ -309,7 +324,7 @@ export function chooseAction(s, graph, seat, { level = "greedy", rand = Math.ran
   }
 
   if (t.stage === "roadtrip-invite") {
-    const plan = planRoadTrip(s, graph, me, easy, rand, true);
+    const plan = planRoadTrip(s, graph, me, easy, rand, true, !!t.preTrip);
     if (!plan) return { name: "cancelRoadTripInvite", args: {} };
     return { name: "proposeRoadTrip", args: plan };
   }
@@ -342,7 +357,7 @@ function worthVisiting(s, me, price, easy, rand) {
  * Everyone here who holds an unflipped card is a candidate owner; we invite
  * everyone present (more riders = more ₹100s back and more memories made).
  */
-function planRoadTrip(s, graph, me, easy, rand, committed = false) {
+function planRoadTrip(s, graph, me, easy, rand, committed = false, startOfTurn = false) {
   const others = E.playersAt(s, me.city, me.id);
   if (!others.length) return null;
   const cards = E.roadTripCards(s, others.map((o) => o.id));
@@ -359,8 +374,8 @@ function planRoadTrip(s, graph, me, easy, rand, committed = false) {
     const allowance = E.cardValue(s.board, c.card);
     for (const { to, route } of reachable(graph, me.city, allowance)) {
       let v = placeValue(s, graph, me, to, { suit: c.card.suit, allowance, stepsTotal: route.totalSteps, route, shared: true, handLeft: me.hand.length });
-      // road-trip memory, and the riders' ₹100 a step coming back
-      v += memoryValue(s.board, me.memories, c.card.suit);
+      // road-trip memory (none on a start-of-turn trip), and the riders' ₹100 a step coming back
+      if (!startOfTurn) v += memoryValue(s.board, me.memories, c.card.suit);
       v += route.totalSteps * s.board.economy.roadTripSharePerStep * others.length * moneyWeight(s.board, me, me.hand.length);
       if (!best || v > best.v) best = { v, plan: { companions: others.map((o) => o.id), owner: c.owner, cardId: c.card.id, destination: to } };
     }
@@ -392,7 +407,7 @@ function respondToInvite(s, graph, me, easy, rand) {
   for (const st of stops) {
     const atEnd = st.to === pt.destination;
     let v = placeValue(s, graph, me, st.to, { suit: card.suit, route: null, shared: atEnd, handLeft: me.hand.length });
-    v += memoryValue(s.board, me.memories, card.suit); // the road-trip memory
+    if (!s.turn.preTrip) v += memoryValue(s.board, me.memories, card.suit); // the road-trip memory (riders get none on a start-of-turn trip)
     v -= st.steps * s.board.economy.roadTripSharePerStep * w;
     const surcharges = route.edges.slice(0, st.steps).reduce((t, e) => t + (e.route.surcharge || 0), 0);
     v -= surcharges * w;

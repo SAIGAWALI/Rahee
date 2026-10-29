@@ -13,6 +13,8 @@ export const ACTIONS = {
   undoStep: (s) => E.undoStep(s),
   endMovement: (s) => E.endMovement(s),
   offerRoadTrip: (s) => E.offerRoadTrip(s),
+  offerStartRoadTrip: (s) => E.offerStartRoadTrip(s),
+  finishStartTrip: (s) => E.finishStartTrip(s),
   proposeRoadTrip: (s, g, seatIndex, a) => E.proposeRoadTrip(s, g, { companions: a.companions, owner: a.owner, cardId: a.cardId, destination: a.destination }),
   // The responder is always the sending seat's own id, never a client-supplied
   // one — a player may only accept, counter, or decline for themselves. `a`
@@ -38,6 +40,8 @@ export const ACTIONS = {
   },
   // Ace setup rule — any seat, for itself, while cards are being laid.
   swapAce: (s, g, seatIndex, a) => E.swapAce(s, seatIndex, a.cardId),
+  // A road-trip companion turning down the shared stamp — for themselves only.
+  passVisit: (s, g, seatIndex) => E.passVisit(s, seatIndex),
   requestReshuffle: (s, g, seatIndex) => E.requestReshuffle(s, seatIndex),
 };
 

@@ -400,8 +400,11 @@ function renderDest() {
 }
 
 function currentHint(t, p, isMyTurn, you) {
+  if (t?.preTrip && t.stage === "resolve") return isMyTurn
+    ? "Road trip done — visit if you like, then continue and play a card."
+    : `${p.name} finished a road trip and is about to play a card.`;
   if (!t) return isMyTurn
-    ? "Pick a card from your hand — it is both your movement and the suit of the memories you can make."
+    ? (E.canStartRoadTrip(state) ? "Pick a card — or start with a road trip from here (see below)." : "Pick a card from your hand — it is both your movement and the suit of the memories you can make.")
     : `Waiting for ${p.name} to pick a card.`;
   if (t.stage === "moving") {
     const left = t.allowance - t.stepsUsed;
@@ -505,6 +508,22 @@ function pickForPicking(cityId) {
 // ---------------------------------------------------------------------------
 
 function waitingActionsPanel(p, t) {
+  // A companion on someone else's road trip gets their own shared-stamp choice.
+  const myVisit = E.visitOptions(state).find((o) => o.playerId === you);
+  if (myVisit) {
+    const city = E.cityOf(state, state.players[you].city);
+    const goal = E.isOpenGoal(state, state.players[you], city.id);
+    return h("div", { class: "actions" },
+      h("div", { class: "visitrow" },
+        city.stamp ? h("img", { class: "visitstamp", src: city.stamp, alt: `Stamp ${city.tourist}: ${city.name}`, width: "96", height: "77" }) : null,
+        h("div", {},
+          h("div", { class: "tiny" }, "The road trip ended at ", h("b", {}, city.name), ` — ${city.attraction}`),
+          h("div", { class: "tiny muted" }, `${money(myVisit.price)} (shared road-trip price) · +${board.scoring.touristPlace} points for the stamp`),
+          goal ? h("div", { class: "tiny goalnote" }, `★ completes one of your destinations (+${board.scoring.destination})`) : null)),
+      h("div", { class: "row", style: "margin-top:8px" },
+        h("button", { class: "btn ghost", onClick: () => commit("passVisit") }, "No thanks"),
+        h("button", { class: "btn primary", style: "margin-left:auto", onClick: () => commit("visitTourist", { playerId: you }) }, `Visit · ${money(myVisit.price)}`)));
+  }
   let text = t ? `Waiting for ${p.name} to finish their move…` : `Waiting for ${p.name} to play a card…`;
   if (t?.stage === "roadtrip-pending") {
     const pt = t.pendingTrip;
@@ -535,6 +554,8 @@ function respondActions(t) {
   box.append(h("div", { class: "row" },
     h("span", { class: "tiny" }, h("b", {}, driver.name), " wants to drive to ", h("b", {}, destCity.name),
       card ? ` — flipping ${pt.owner === driver.id ? "their" : `${owner.name}'s`} ${card.id}, ${allowance} step${allowance === 1 ? "" : "s"}` : "")));
+  if (t.preTrip) box.append(h("div", { class: "row", style: "margin-top:4px" },
+    h("span", { class: "tiny muted" }, "This is a start-of-turn road trip: nobody gets a road-trip memory, but you still share the costs and the ₹1,000 stamp.")));
 
   if (!local.respondMode) {
     box.append(h("div", { class: "row", style: "margin-top:10px" },
@@ -616,8 +637,16 @@ function buildActions() {
 
 function chooseCardActions(box, p) {
   const main = p.hand.find((c) => c.id === local.selectedCardId);
+  // Start-of-turn road trip with whoever is in this city (before playing a card).
+  const startTrip = E.canStartRoadTrip(state)
+    ? h("div", { class: "row starttrip" },
+        h("span", { class: "tiny" }, "You're with ", h("b", {}, E.playersAt(state, p.city, p.id).map((o) => o.name).join(", ")),
+          ". You can take them on a road trip first — no road-trip memory, but full value earns you an efficient-travel one."),
+        h("button", { class: "btn small", onClick: () => { local.invite = null; local.picking = null; commit("offerStartRoadTrip"); } }, "Road trip from here"))
+    : null;
   if (!main) {
-    box.append(h("div", { class: "row" },
+    if (startTrip) box.append(startTrip);
+    box.append(h("div", { class: "row", style: startTrip ? "margin-top:9px" : "" },
       h("span", { class: "tiny muted" }, "Select a card above to begin your turn.")));
     return box;
   }
@@ -867,16 +896,31 @@ function resolveActions(box, p, t) {
     box.append(row);
   }
 
+  // After a start-of-turn road trip: the turn carries on with playing a card.
+  if (t.preTrip) {
+    const deciding = E.ridersStillDeciding(state).map((id) => state.players[id].name);
+    if (deciding.length) box.append(h("div", { class: "row", style: "margin-top:8px" },
+      h("span", { class: "tiny muted" }, `${deciding.join(", ")} can still take the stamp — give them a moment.`)));
+    box.append(h("div", { class: "row", style: "margin-top:10px" },
+      h("button", {
+        class: "btn primary", style: "margin-left:auto",
+        onClick: () => { local = blankLocal(); commit("finishStartTrip"); },
+      }, "Continue — play a card")));
+    return box;
+  }
+
   const others = E.playersAt(state, p.city, p.id);
-  const canTrip = !didTrip && others.length > 0 && E.roadTripCards(state, others.map((o) => o.id)).length > 0;
+  const canTrip = !didTrip && !state.turnFlags?.tripTaken && others.length > 0 && E.roadTripCards(state, others.map((o) => o.id)).length > 0;
 
   box.append(h("div", { class: "row", style: "margin-top:10px" },
     canTrip
       ? h("button", { class: "btn", onClick: () => { local.invite = null; local.picking = null; commit("offerRoadTrip"); } },
           `Offer a road trip (${others.map((o) => o.name).join(", ")})`)
-      : !didTrip && others.length
-        ? h("span", { class: "tiny muted" }, "No road trip: nobody here has a face-up card to flip.")
-        : null,
+      : state.turnFlags?.tripTaken
+        ? h("span", { class: "tiny muted" }, "You've had your road trip this turn.")
+        : !didTrip && others.length
+          ? h("span", { class: "tiny muted" }, "No road trip: nobody here has a face-up card to flip.")
+          : null,
     h("button", {
       class: "btn primary", style: "margin-left:auto",
       onClick: () => { commit("endTurn"); local = blankLocal(); },

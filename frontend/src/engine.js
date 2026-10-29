@@ -222,6 +222,11 @@ export const isOpenGoal = (s, p, cityId) =>
  * one extra memory of either card's suit.
  */
 export function playCard(s, { cardId: mainId, ace }) {
+  if (s.turn?.preTrip) {
+    if (s.turn.stage !== "resolve") throw new Error("finish or call off the road trip first");
+    finishStartTrip(s);
+  }
+  if (s.turn) throw new Error("you have already played a card this turn");
   const p = currentPlayer(s);
   const main = p.hand.find((c) => c.id === mainId);
   if (!main) throw new Error("card not in hand");
@@ -363,9 +368,7 @@ export function cancelRoadTrip(s) {
   if (rt.stepsUsed > 0) throw new Error("undo the steps first — the road trip has already moved");
   const entry = s.players[rt.owner].faceUp.find((f) => f.card.id === rt.card.id);
   if (entry) entry.flipped = false;
-  t.roadTrip = null;
-  t.stage = "resolve";
-  t.tripsCalledOff = (t.tripsCalledOff || 0) + 1;
+  tripOff(s);
   log(s, `calls off the road trip — ${rt.card.id} is face-up again`);
   return s;
 }
@@ -414,10 +417,32 @@ export function touristHere(s, player) {
 export function visitOptions(s) {
   const t = s.turn;
   if (!t || t.stage !== "resolve") return [];
-  if (t.roadTrip) return sharedVisitors(s).map((id) => ({ playerId: id, price: s.board.economy.sharedTouristVisit, shared: true }));
+  if (t.roadTrip) {
+    const passed = t.visitPassed ?? [];
+    return sharedVisitors(s).filter((id) => !passed.includes(id))
+      .map((id) => ({ playerId: id, price: s.board.economy.sharedTouristVisit, shared: true }));
+  }
   const p = currentPlayer(s);
   return touristHere(s, p) ? [{ playerId: p.id, price: s.board.economy.touristVisit, shared: false }] : [];
 }
+
+/**
+ * A road-trip companion says "no thanks" to the shared stamp at the end of the
+ * trip — so the driver knows they have decided and need not wait for them.
+ */
+export function passVisit(s, playerId) {
+  const t = s.turn;
+  if (!t?.roadTrip || !visitOptions(s).some((o) => o.playerId === playerId)) throw new Error("there is no visit for you to decide on");
+  (t.visitPassed ??= []).push(playerId);
+  return s;
+}
+
+/** Road-trip companions (not the driver) who can still decide on the shared stamp. */
+export const ridersStillDeciding = (s) => {
+  if (!s.turn?.roadTrip) return [];
+  const driver = currentPlayer(s).id;
+  return visitOptions(s).map((o) => o.playerId).filter((id) => id !== driver);
+};
 
 /** `_discounted` is accepted for backward compatibility and ignored — see visitOptions. */
 export function visitTourist(s, playerId, _discounted) {
@@ -464,6 +489,7 @@ export function roadTripCards(s, participantIds) {
 export function offerRoadTrip(s) {
   const t = s.turn;
   if (!t || t.stage !== "resolve") throw new Error("no move to offer a road trip from");
+  if (t.preTrip || s.turnFlags?.tripTaken) throw new Error("you have already taken your road trip this turn");
   const p = currentPlayer(s);
   const others = playersAt(s, p.city, p.id);
   if (!others.length) throw new Error("nobody here to invite");
@@ -472,14 +498,67 @@ export function offerRoadTrip(s) {
   return s;
 }
 
+/**
+ * A road trip that didn't happen (called off, declined): back to where the
+ * turn was — the post-move "resolve" step, or, for a start-of-turn trip, the
+ * very start of the turn so the player can still play a card.
+ */
+function tripOff(s) {
+  const t = s.turn;
+  if (t.preTrip) {
+    s.turnFlags = { ...(s.turnFlags || {}), startTripsCalledOff: (s.turnFlags?.startTripsCalledOff || 0) + 1 };
+    s.turn = null;
+    return;
+  }
+  t.pendingTrip = null;
+  t.roadTrip = null;
+  t.stage = "resolve";
+  t.tripsCalledOff = (t.tripsCalledOff || 0) + 1;
+}
+
+/** Can the current player start their turn with a road trip from where they stand? */
+export function canStartRoadTrip(s) {
+  if (s.turn || s.phase === "over" || s.phase === "setup-roadtrip-card") return false;
+  if (s.turnFlags?.tripTaken) return false;
+  const p = currentPlayer(s);
+  const others = playersAt(s, p.city, p.id);
+  return others.length > 0 && roadTripCards({ ...s, turn: { } }, others.map((o) => o.id)).some((c) => c.owner !== p.id);
+}
+
+/**
+ * Start-of-turn road trip (confirmed with the POC): before playing a card, the
+ * active player may take anyone in the same city on a road trip — invited,
+ * answered, confirmed and driven exactly like a normal one, with the same
+ * costs and shared stamp price. It gives no road-trip memory to anyone; the
+ * driver alone gets the efficient-travel memory for using the card's full
+ * value. Afterwards the driver plays a card and moves as usual. It is their
+ * one road trip for the turn.
+ */
+export function offerStartRoadTrip(s) {
+  if (!canStartRoadTrip(s)) throw new Error("nobody here can be taken on a road trip right now");
+  const p = currentPlayer(s);
+  s.turn = {
+    card: null, ace: null, allowance: 0, from: p.city, path: [p.city], legs: [], stepsUsed: 0, spent: 0,
+    stage: "roadtrip-invite", gained: [], roadTrip: null, pendingTrip: null, preTrip: true,
+  };
+  return s;
+}
+
+/** After a start-of-turn road trip (and any stamps): on to playing a card. */
+export function finishStartTrip(s) {
+  const t = s.turn;
+  if (!t?.preTrip || t.stage !== "resolve") throw new Error("there is no start-of-turn road trip to finish");
+  s.turnFlags = { ...(s.turnFlags || {}), tripTaken: true, startTripGained: t.gained };
+  s.turn = null;
+  return s;
+}
+
 /** Back out of the invite step, a pending invitation, or the review step — anywhere before a trip actually starts. */
 export function cancelRoadTripInvite(s) {
   const t = s.turn;
   const cancellableStages = ["roadtrip-invite", "roadtrip-pending", "roadtrip-review"];
   if (!t || !cancellableStages.includes(t.stage)) throw new Error("not offering a road trip");
-  t.pendingTrip = null;
-  t.stage = "resolve";
-  t.tripsCalledOff = (t.tripsCalledOff || 0) + 1;
+  tripOff(s);
   return s;
 }
 
@@ -554,17 +633,13 @@ export function respondRoadTrip(s, graph, playerId, response) {
   const accepted = pt.companions.filter((id) => pt.responses[id].type === "accept");
   if (!accepted.length) {
     log(s, "nobody wanted to come along — the road trip is off");
-    t.pendingTrip = null;
-    t.stage = "resolve";
-    t.tripsCalledOff = (t.tripsCalledOff || 0) + 1;
+    tripOff(s);
     return s;
   }
   // The flipped card has to belong to a participant: if its owner isn't coming, it can't be used.
   if (!accepted.includes(pt.owner)) {
     log(s, "isn't coming, so their card can't be flipped — the road trip is off", s.players[pt.owner]);
-    t.pendingTrip = null;
-    t.stage = "resolve";
-    t.tripsCalledOff = (t.tripsCalledOff || 0) + 1;
+    tripOff(s);
     return s;
   }
   t.stage = "roadtrip-review"; // the driver confirms or cancels next — see confirmRoadTrip
@@ -623,8 +698,11 @@ export function endRoadTrip(s) {
   if (rt.stepsUsed < 1) throw new Error("a road trip must cover at least one step");
 
   const suit = rt.card.suit;
-  award(s, p, suit, "road trip");
-  for (const r of rt.riders) award(s, s.players[r.id], suit, "road trip");
+  if (!t.preTrip) {
+    award(s, p, suit, "road trip");
+    for (const r of rt.riders) award(s, s.players[r.id], suit, "road trip");
+  }
+  // On a start-of-turn trip this is the only memory: the driver's, for the full value.
   if (rt.stepsUsed === rt.allowance) award(s, p, suit, "efficient travel");
 
   // A player already standing where the trip ends, who was not on it, does
@@ -672,6 +750,7 @@ export function endTurn(s) {
   }
 
   s.turn = null;
+  s.turnFlags = null;
   s.turnIndex++;
   if (s.turnIndex >= s.players.length) { s.turnIndex = 0; s.round++; }
 

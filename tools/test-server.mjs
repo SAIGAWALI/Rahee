@@ -29,7 +29,7 @@ const check = (c, m) => { checks++; if (!c) { failures++; console.log("  FAIL:",
 
 const port = 20000 + Math.floor(Math.random() * 20000);
 const server = spawn(process.execPath, [path.join(root, "backend/app.js"), String(port)], {
-  env: { ...process.env, DB_DRIVER: "memory", BOT_DELAY_MS: "5", HEARTBEAT_MS: "60000" },
+  env: { ...process.env, DB_DRIVER: "memory", BOT_DELAY_MS: "5", BOT_RIDER_WAIT_MS: "300", HEARTBEAT_MS: "60000" },
   stdio: ["ignore", "pipe", "pipe"],
 });
 let serverLog = "";
