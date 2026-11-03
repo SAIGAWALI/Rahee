@@ -1,0 +1,162 @@
+
+> test
+> node tools/run-tests.mjs
+
+
+=== engine ===
+80 random games, average 6.1 rounds, best score 60
+
+Checks by section:
+  Board data sanity.............................................     15
+  Deals for 2 to 6 players......................................     70
+  B3: one high card per hand, 200 shuffles x 5 player counts....  1,000
+  B2: roads before flights......................................    175
+  B1/B4: no road jumps over a city..............................     22
+  Scoring examples from the manual..............................      2
+  Random complete games.........................................  4,215
+  Total.........................................................  5,499
+
+all 5,499 checks passed
+
+=== rules ===
+Destinations
+  ok   ending a move on a destination does not complete it
+  ok   paying the ₹2,000 visit completes the destination
+  ok   the fifth completed destination triggers the end at once
+  ok   ending where another traveller already is gives no memory
+Tourist visits
+  ok   the client cannot claim the shared price on an ordinary visit
+  ok   no visit while still moving, and not for someone else's city
+  ok   a place scores once per player
+Road trips
+  ok   the driver's own face-up card is never offered
+  ok   the driver cannot flip their own card
+  ok   the card must belong to someone on the trip
+  ok   road trip off when the card's owner declines
+  ok   manual worked example: 4 steps, costs shared, memories
+  ok   a player already at the trip's end gets no road-trip memory
+  ok   shared tourism ₹1,000 for those still aboard; none for a rider dropped off
+  ok   a rider who got off partway forfeits the shared price
+  ok   undo on a road trip refunds everyone exactly and brings riders back
+  ok   a confirmed road trip that hasn't moved can be called off; the card goes face-up again
+  ok   log lines name the player they are about
+  ok   a road-trip companion can take or turn down the shared stamp themselves
+Travelling together
+  ok   offered whenever someone is in your city — no face-up card needed
+  ok   uses the mover's own card: nothing flipped, no road-trip memory, rider gets nothing
+  ok   an Ace works as usual (memory mode gives the mover one more)
+  ok   shared ₹1,000 stamp; then the turn ends — no road trip after
+  ok   nobody comes: back to the start of the turn, card still in hand
+  ok   called off before moving returns to the start too
+Aces
+  ok   two Aces: swap one for a card from the undealt pile
+  ok   one Ace cannot be swapped
+  ok   no cards left: reshuffle deals every hand again
+  ok   Ace as booster: efficient travel needs the +1
+Order of actions in a turn
+  ok   finishing a move twice does not give a second memory
+  ok   a turn cannot end without moving at least one step
+  ok   finishing a road trip twice does not give second road-trip memories
+Budget and scoring
+  ok   starting budget is ₹20,000 (RULES.md)
+  ok   manual turn example: Jaipur, 5♣ to Gwalior costs ₹1,000 + ₹2,000 stay
+
+34 passed, 0 failed
+
+=== playtest ===
+300/300 games completed in 7.0s — avg 5.6 rounds, avg score 61.7
+49,888 moves checked, 1,175 player seats, 0 moves refused
+no rule violations, stalls or refused moves
+report: playtest-report/test-run/report.md
+
+=== server (3 players) ===
+  game over after 5 rounds: Asha 100, Meera (AI) 100, Bilal 70
+781 server checks, all passed
+
+=== server (6 players) ===
+  game over after 5 rounds: Arjun (AI) 130, Asha 115, Bilal 85, Rohan (AI) 80, Meera (AI) 80, Kavya (AI) -40
+3145 server checks, all passed
+
+=== board ===
+Checks by section:
+  RULES.md money table vs board.json..............................      10
+  RULES.md scoring table vs board.json............................       6
+  RULES.md deck table vs the deal.................................     211
+  RULES.md character cards vs board.json..........................      19
+  Board structure.................................................   1,490
+  Every city reachable; only the islands need a flight or ship....       3
+  Route search vs independent BFS (all pairs, card values 1-10)... 101,000
+  Total........................................................... 102,739
+
+all 102,739 checks passed
+
+=== boundaries ===
+pairwise: 21 games cover all 83 pairs of setting values (exhaustive testing would need 180 games)
+
+Checks by section:
+  Boundary: movement for every card value (k-1, k, k+1 steps)...      53
+  Boundary: over-budget penalty around ₹20,000 and each ₹500....      10
+  Boundary: memory sets around 3 of a suit and 1 of each suit...      12
+  Boundary: destination bonus around 5 completed................      10
+  Boundary: player counts 1 to 7................................       7
+  Equivalence classes: route kinds and Ace uses.................      14
+  Pairwise: all-pairs game settings, each played to the end.....  18,153
+  Total.........................................................  18,259
+
+all 18,259 checks passed
+
+=== robustness ===
+60 games played with bad input before every move
+  29,715 "end" actions at every stage, 10,127 replayed moves
+  29,149 out-of-turn actions, 59,384 fuzzed actions refused, 1,738 fuzzed actions that happened to be legal
+
+Checks by section:
+  Bad actions during real games (refused, game unchanged)....... 232,746
+  Determinism (same seed, same deal; same moves, same end)......     231
+  Total......................................................... 232,977
+
+all 232,977 checks passed
+
+=== persistence ===
+40 games, 7,989 moves, 8,029 simulated server restarts
+
+Checks by section:
+  Restart after every move: game identical, seats and tokens kept  16,386
+  Reclaiming a seat after a restart.............................       7
+  Total.........................................................  16,393
+
+all 16,393 checks passed
+
+=== protocol ===
+fuzzing: 4,000 mutated messages (80 raw binary frames) + one 2 MB message, 4,157 replies; server still running: yes
+
+Checks by section:
+  Lobby rules and limits........................................      16
+  Reconnection and seat takeover................................      17
+  Mutation-based fuzzing of the message protocol................       5
+  Static file server............................................      11
+  Total.........................................................      49
+
+all 49 checks passed
+
+=== load (20 games at once) ===
+20 games at once (4 players each: 1 WebSocket client + 3 computer players)
+  finished: 20/20 in 1.9 s
+  client moves: 1,015, state messages received: 3,453 (1,793 per second)
+  response time per move: median 3.8 ms, 95th percentile 27.4 ms, worst 82.9 ms
+  server memory: 65 MB before, 143 MB after
+
+all 10,443 checks passed
+
+=== summary ===
+  PASS  engine  (0.1s)
+  PASS  rules  (0.1s)
+  PASS  playtest  (7.1s)
+  PASS  server (3 players)  (1.9s)
+  PASS  server (6 players)  (2.6s)
+  PASS  board  (3.8s)
+  PASS  boundaries  (0.7s)
+  PASS  robustness  (16.4s)
+  PASS  persistence  (3.4s)
+  PASS  protocol  (7.1s)
+  PASS  load (20 games at once)  (4.2s)

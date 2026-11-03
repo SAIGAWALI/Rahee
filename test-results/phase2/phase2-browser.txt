@@ -1,0 +1,24 @@
+
+> test:browser
+> node tools/test-browser.cjs
+
+  ok   landing page loads with name field and Create button
+  ok   "How to play" opens the one-page rules sheet
+  ok   the rules sheet closes with Escape
+  ok   room created and a 4-letter room code shown — Q2SL
+  ok   host can add two computer players
+  ok   character card can be picked; host can deal
+  ok   cards dealt: setup screen asks to lay a road-trip card
+       [7s] round 1
+  ok   top bar says "Your budget left" on your own turn
+       [15s] round 2
+  ok   "Map & destinations" panel opens and lists the other players
+       [46s] round 3
+  ok   page reload mid-game returns to the same seat
+       [49s] round 4
+  ok   "Auto" let the computer play our seat
+  ok   game played to the Journey's End scoreboard — 61s
+  ok   scoreboard lists all three travellers
+  ok   no browser errors during the whole game
+
+14 passed, 0 failed

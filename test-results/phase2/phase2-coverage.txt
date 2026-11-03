@@ -1,0 +1,190 @@
+
+> coverage
+> npx --yes c8@10.1.3 --include=frontend/src --include=backend --reporter=text --reporter=text-summary npm test
+
+
+> test
+> node tools/run-tests.mjs
+
+
+=== engine ===
+80 random games, average 6.1 rounds, best score 60
+
+Checks by section:
+  Board data sanity.............................................     15
+  Deals for 2 to 6 players......................................     70
+  B3: one high card per hand, 200 shuffles x 5 player counts....  1,000
+  B2: roads before flights......................................    175
+  B1/B4: no road jumps over a city..............................     22
+  Scoring examples from the manual..............................      2
+  Random complete games.........................................  4,215
+  Total.........................................................  5,499
+
+all 5,499 checks passed
+
+=== rules ===
+Destinations
+  ok   ending a move on a destination does not complete it
+  ok   paying the ₹2,000 visit completes the destination
+  ok   the fifth completed destination triggers the end at once
+  ok   ending where another traveller already is gives no memory
+Tourist visits
+  ok   the client cannot claim the shared price on an ordinary visit
+  ok   no visit while still moving, and not for someone else's city
+  ok   a place scores once per player
+Road trips
+  ok   the driver's own face-up card is never offered
+  ok   the driver cannot flip their own card
+  ok   the card must belong to someone on the trip
+  ok   road trip off when the card's owner declines
+  ok   manual worked example: 4 steps, costs shared, memories
+  ok   a player already at the trip's end gets no road-trip memory
+  ok   shared tourism ₹1,000 for those still aboard; none for a rider dropped off
+  ok   a rider who got off partway forfeits the shared price
+  ok   undo on a road trip refunds everyone exactly and brings riders back
+  ok   a confirmed road trip that hasn't moved can be called off; the card goes face-up again
+  ok   log lines name the player they are about
+  ok   a road-trip companion can take or turn down the shared stamp themselves
+Travelling together
+  ok   offered whenever someone is in your city — no face-up card needed
+  ok   uses the mover's own card: nothing flipped, no road-trip memory, rider gets nothing
+  ok   an Ace works as usual (memory mode gives the mover one more)
+  ok   shared ₹1,000 stamp; then the turn ends — no road trip after
+  ok   nobody comes: back to the start of the turn, card still in hand
+  ok   called off before moving returns to the start too
+Aces
+  ok   two Aces: swap one for a card from the undealt pile
+  ok   one Ace cannot be swapped
+  ok   no cards left: reshuffle deals every hand again
+  ok   Ace as booster: efficient travel needs the +1
+Order of actions in a turn
+  ok   finishing a move twice does not give a second memory
+  ok   a turn cannot end without moving at least one step
+  ok   finishing a road trip twice does not give second road-trip memories
+Budget and scoring
+  ok   starting budget is ₹20,000 (RULES.md)
+  ok   manual turn example: Jaipur, 5♣ to Gwalior costs ₹1,000 + ₹2,000 stay
+
+34 passed, 0 failed
+
+=== playtest ===
+300/300 games completed in 8.2s — avg 5.6 rounds, avg score 61.7
+49,888 moves checked, 1,175 player seats, 0 moves refused
+no rule violations, stalls or refused moves
+report: playtest-report/test-run/report.md
+
+=== server (3 players) ===
+  game over after 6 rounds: Asha 120, Bilal 110, Meera (AI) 105
+964 server checks, all passed
+
+=== server (6 players) ===
+  game over after 5 rounds: Bilal 160, Meera (AI) 160, Asha 120, Arjun (AI) 120, Rohan (AI) 55, Kavya (AI) 10
+3379 server checks, all passed
+
+=== board ===
+Checks by section:
+  RULES.md money table vs board.json..............................      10
+  RULES.md scoring table vs board.json............................       6
+  RULES.md deck table vs the deal.................................     211
+  RULES.md character cards vs board.json..........................      19
+  Board structure.................................................   1,490
+  Every city reachable; only the islands need a flight or ship....       3
+  Route search vs independent BFS (all pairs, card values 1-10)... 101,000
+  Total........................................................... 102,739
+
+all 102,739 checks passed
+
+=== boundaries ===
+pairwise: 21 games cover all 83 pairs of setting values (exhaustive testing would need 180 games)
+
+Checks by section:
+  Boundary: movement for every card value (k-1, k, k+1 steps)...      53
+  Boundary: over-budget penalty around ₹20,000 and each ₹500....      10
+  Boundary: memory sets around 3 of a suit and 1 of each suit...      12
+  Boundary: destination bonus around 5 completed................      10
+  Boundary: player counts 1 to 7................................       7
+  Equivalence classes: route kinds and Ace uses.................      14
+  Pairwise: all-pairs game settings, each played to the end.....  18,153
+  Total.........................................................  18,259
+
+all 18,259 checks passed
+
+=== robustness ===
+60 games played with bad input before every move
+  29,715 "end" actions at every stage, 10,127 replayed moves
+  29,149 out-of-turn actions, 59,384 fuzzed actions refused, 1,738 fuzzed actions that happened to be legal
+
+Checks by section:
+  Bad actions during real games (refused, game unchanged)....... 232,746
+  Determinism (same seed, same deal; same moves, same end)......     231
+  Total......................................................... 232,977
+
+all 232,977 checks passed
+
+=== persistence ===
+40 games, 8,128 moves, 8,168 simulated server restarts
+
+Checks by section:
+  Restart after every move: game identical, seats and tokens kept  16,664
+  Reclaiming a seat after a restart.............................       7
+  Total.........................................................  16,671
+
+all 16,671 checks passed
+
+=== protocol ===
+fuzzing: 4,000 mutated messages (80 raw binary frames) + one 2 MB message, 4,170 replies; server still running: yes
+
+Checks by section:
+  Lobby rules and limits........................................      16
+  Reconnection and seat takeover................................      17
+  Mutation-based fuzzing of the message protocol................       5
+  Static file server............................................      11
+  Total.........................................................      49
+
+all 49 checks passed
+
+=== load (20 games at once) ===
+20 games at once (4 players each: 1 WebSocket client + 3 computer players)
+  finished: 20/20 in 2.2 s
+  client moves: 1,212, state messages received: 3,987 (1,773 per second)
+  response time per move: median 4.2 ms, 95th percentile 29.6 ms, worst 140.5 ms
+  server memory: 69 MB before, 156 MB after
+
+all 12,045 checks passed
+
+=== summary ===
+  PASS  engine  (0.1s)
+  PASS  rules  (0.1s)
+  PASS  playtest  (8.3s)
+  PASS  server (3 players)  (2.1s)
+  PASS  server (6 players)  (2.9s)
+  PASS  board  (5.1s)
+  PASS  boundaries  (0.9s)
+  PASS  robustness  (16.9s)
+  PASS  persistence  (3.8s)
+  PASS  protocol  (7.1s)
+  PASS  load (20 games at once)  (4.6s)
+--------------|---------|----------|---------|---------|-----------------------------------------
+File          | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s                       
+--------------|---------|----------|---------|---------|-----------------------------------------
+All files     |    96.4 |    93.13 |   94.81 |    96.4 |                                         
+ backend      |   94.55 |    91.48 |   96.55 |   94.55 |                                         
+  actions.js  |     100 |      100 |     100 |     100 |                                         
+  app.js      |   91.66 |    73.91 |     100 |   91.66 | 62-66,93-95                             
+  bots.js     |    78.4 |    85.71 |   83.33 |    78.4 | 69-75,88-90,109-125                     
+  db.js       |   87.87 |     90.9 |   66.66 |   87.87 | 41-48                                   
+  handlers.js |     100 |    98.64 |     100 |     100 | 63                                      
+  protocol.js |     100 |      100 |     100 |     100 |                                         
+  redact.js   |     100 |     87.5 |     100 |     100 | 20                                      
+  rooms.js    |     100 |    89.47 |     100 |     100 | 58,70,112,115,120,146,156               
+ frontend/src |   97.48 |    93.77 |    93.5 |   97.48 |                                         
+  ai.js       |   98.15 |    92.98 |      95 |   98.15 | 345,425-431                             
+  engine.js   |   97.16 |    94.24 |   92.98 |   97.16 | 641-643,792-795,896-898,900-913,915-916 
+--------------|---------|----------|---------|---------|-----------------------------------------
+
+=============================== Coverage summary ===============================
+Statements   : 96.4% ( 2062/2139 )
+Branches     : 93.13% ( 936/1005 )
+Functions    : 94.81% ( 128/135 )
+Lines        : 96.4% ( 2062/2139 )
+================================================================================
