@@ -67,6 +67,10 @@ const heartbeat = setInterval(() => {
 }, HEARTBEAT_MS);
 wss.on("close", () => clearInterval(heartbeat));
 
+// Exit cleanly when asked to stop (hosts send SIGTERM on redeploy; the tests do the
+// same), so the process ends normally instead of being cut off mid-way.
+for (const sig of ["SIGTERM", "SIGINT"]) process.on(sig, () => { server.close(); process.exit(0); });
+
 async function main() {
   await migrate();
   await loadRooms(board);

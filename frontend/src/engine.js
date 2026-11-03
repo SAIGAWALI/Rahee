@@ -377,6 +377,8 @@ export function cancelRoadTrip(s) {
 /** Ends movement: awards memories, then offers tourism and a road trip. */
 export function endMovement(s) {
   const t = s.turn;
+  if (!t) throw new Error("play a card before finishing a move");
+  if (t.stage !== "moving") throw new Error("you are not moving right now — this move has already been finished");
   const p = currentPlayer(s);
   if (t.stepsUsed < 1) throw new Error("must move at least one step");
 
@@ -581,7 +583,7 @@ export function cancelRoadTripInvite(s) {
 export function proposeRoadTrip(s, graph, { companions, owner, cardId: rtCardId, destination }) {
   const t = s.turn;
   if (!t || t.stage !== "roadtrip-invite") throw new Error("not offering a road trip");
-  if (!companions.length) throw new Error("invite at least one companion");
+  if (!Array.isArray(companions) || !companions.length) throw new Error("invite at least one companion");
   const p0 = currentPlayer(s);
   if (new Set(companions).size !== companions.length) throw new Error("a companion was listed twice");
   for (const id of companions) {
@@ -711,6 +713,7 @@ export function dropOff(s, riderId) {
 
 export function endRoadTrip(s) {
   const t = s.turn;
+  if (t?.stage !== "roadtrip-moving") throw new Error("there is no road trip under way to finish");
   const rt = t.roadTrip;
   const p = currentPlayer(s);
   if (rt.stepsUsed < 1) throw new Error("a road trip must cover at least one step");
@@ -754,6 +757,8 @@ export function sharedVisitors(s) {
 
 export function endTurn(s) {
   const t = s.turn;
+  if (!t) throw new Error("play a card and move before ending your turn");
+  if (t.stage !== "resolve") throw new Error("finish your move before ending your turn");
   const p = currentPlayer(s);
 
   // Played cards go face-up in front of the player and stay available as future

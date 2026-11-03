@@ -311,7 +311,7 @@ function renderPlay() {
       h("div", { class: "sep" }),
       h("div", { class: "stat" }, "Round", h("b", {}, String(state.round))),
       h("div", { class: "sep" }),
-      h("div", { class: "stat" }, "Their budget left", h("b", {}, money(Math.max(0, board.economy.startingBudget - p.spent))))),
+      h("div", { class: "stat" }, isMyTurn ? "Your budget left" : "Their budget left", h("b", {}, money(Math.max(0, board.economy.startingBudget - p.spent))))),
     state.endTriggeredBy !== null
       ? h("div", { class: "turnchip", style: "background:#fff4d6;border-color:#e8cf95" },
           h("div", { class: "stat", style: "padding:0 8px" }, "Final round",

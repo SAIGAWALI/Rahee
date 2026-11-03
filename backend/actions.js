@@ -47,7 +47,7 @@ export const ACTIONS = {
 
 /** Validates who may act, then applies one action to `state` in place. Throws on anything illegal. */
 export function applyAction(state, graph, seatIndex, name, args = {}) {
-  const fn = ACTIONS[name];
+  const fn = Object.hasOwn(ACTIONS, name) ? ACTIONS[name] : null; // not "constructor", "toString", ...
   if (!fn) throw new Error(`unknown action "${name}"`);
   if (T.TURN_GATED_ACTIONS.has(name) && E.currentPlayer(state).id !== seatIndex)
     throw new Error("it isn't your turn");

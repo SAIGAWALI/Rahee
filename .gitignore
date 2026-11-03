@@ -1,3 +1,4 @@
 node_modules/
 .env
 playtest-report/test-run/
+coverage/

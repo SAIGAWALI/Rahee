@@ -358,6 +358,37 @@ test("Ace as booster: efficient travel needs the +1", () => {
   assert(eff === (r.totalSteps === 3 ? 1 : 0), "efficient-travel memory wrong with a booster");
 });
 
+// Added in Test Phase 2 (found by the robustness test): the "end" actions only
+// count once, and only at their own point in the turn.
+console.log("Order of actions in a turn");
+const memCount = (p) => E.SUITS.reduce((n, x) => n + p.memories[x], 0);
+test("finishing a move twice does not give a second memory", () => {
+  const s = game(["pilgrim", "musician"], { hands: [[["2", "hearts"], ["3", "clubs"]], [["2", "spades"]]], at: ["new-delhi"] });
+  moveTo(s, "2♥", "gwalior");
+  const after = memCount(s.players[0]);
+  throws(() => E.endMovement(s), "a finished move could be finished again");
+  assert(memCount(s.players[0]) === after, "a second memory was given");
+});
+test("a turn cannot end without moving at least one step", () => {
+  const s = game(["pilgrim", "musician"], { hands: [[["5", "clubs"], ["3", "hearts"]], [["2", "spades"]]], at: ["new-delhi"] });
+  throws(() => E.endTurn(s), "a turn ended before a card was played");
+  E.playCard(s, { cardId: "5♣" });
+  throws(() => E.endTurn(s), "a turn ended after 0 steps");
+  assert(E.currentPlayer(s).id === 0 && s.players[0].hand.length === 2, "the turn moved on anyway");
+});
+test("finishing a road trip twice does not give second road-trip memories", () => {
+  const s = tripSetup();
+  E.offerRoadTrip(s);
+  E.proposeRoadTrip(s, graph, { companions: [1], owner: 1, cardId: "4♦", destination: "gwalior" });
+  E.respondRoadTrip(s, graph, 1, { type: "accept", stop: "gwalior" });
+  E.confirmRoadTrip(s);
+  E.stepTo(s, graph, "gwalior");
+  E.endRoadTrip(s);
+  const after = s.players.map(memCount);
+  throws(() => E.endRoadTrip(s), "a finished road trip could be finished again");
+  assert(JSON.stringify(s.players.map(memCount)) === JSON.stringify(after), "second road-trip memories were given");
+});
+
 console.log("Budget and scoring");
 test(`starting budget is ₹${econ.startingBudget.toLocaleString("en-IN")} (RULES.md)`, () => {
   assert(econ.startingBudget === 20000, `board.json has ${econ.startingBudget}`);

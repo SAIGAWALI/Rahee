@@ -9,6 +9,20 @@
 //                 play a whole game over WebSockets (privacy, turn order,
 //                 reconnection, bots), for 3 and 6 players
 //
+// Added in Test Phase 2:
+//   5. board       — board.json against the RULES.md tables, and the route
+//                    search against an independent search on every city pair
+//   6. boundaries  — boundary values, equivalence classes and all-pairs games
+//   7. robustness  — fuzzed and out-of-turn actions during real games must be
+//                    refused without changing anything; determinism by seed
+//   8. persistence — a simulated server restart after every move
+//   9. protocol    — lobby limits, reconnection edge cases, mutation fuzzing of
+//                    the WebSocket messages, static-file path tricks
+//  10. load        — 20 games at once on one server, with response times
+//
+// The browser test (tools/test-browser.cjs) needs Playwright and runs separately:
+// npm run test:browser
+//
 // Needs `npm install` in backend/ once (for the server test's WebSocket client).
 import { spawnSync } from "node:child_process";
 import path from "node:path";
@@ -21,6 +35,12 @@ const suites = [
   ["playtest", ["tools/playtest.mjs", "300", "--out=playtest-report/test-run"]],
   ["server (3 players)", ["tools/test-server.mjs", "3"]],
   ["server (6 players)", ["tools/test-server.mjs", "6"]],
+  ["board", ["tools/test-board.mjs"]],
+  ["boundaries", ["tools/test-boundaries.mjs"]],
+  ["robustness", ["tools/test-robustness.mjs", "60"]],
+  ["persistence", ["tools/test-persistence.mjs", "40"]],
+  ["protocol", ["tools/test-protocol.mjs", "4000"]],
+  ["load (20 games at once)", ["tools/test-load.mjs", "20"]],
 ];
 const results = [];
 for (const [name, args] of suites) {

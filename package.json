@@ -10,6 +10,14 @@
     "test:engine": "node tools/test-engine.mjs . 80",
     "test:rules": "node tools/test-rules.mjs .",
     "test:server": "node tools/test-server.mjs 4",
-    "playtest": "node tools/playtest.mjs 500"
+    "playtest": "node tools/playtest.mjs 500",
+    "test:board": "node tools/test-board.mjs",
+    "test:boundaries": "node tools/test-boundaries.mjs",
+    "test:robustness": "node tools/test-robustness.mjs 60",
+    "test:persistence": "node tools/test-persistence.mjs 40",
+    "test:protocol": "node tools/test-protocol.mjs 4000",
+    "test:load": "node tools/test-load.mjs 20",
+    "test:browser": "node tools/test-browser.cjs",
+    "coverage": "npx --yes c8@10.1.3 --include=frontend/src --include=backend --reporter=text --reporter=text-summary npm test"
   }
 }
