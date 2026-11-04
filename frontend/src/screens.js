@@ -235,6 +235,7 @@ export function scoreboardScreen(state, onRestart) {
     h("th", {}, "Destinations"),
     h("th", {}, "Bonus"),
     h("th", {}, "Memories"),
+    h("th", {}, "Spent"),
     h("th", {}, "Budget"),
     h("th", {}, "Total"))));
   const body = h("tbody", {});
@@ -251,6 +252,12 @@ export function scoreboardScreen(state, onRestart) {
       h("td", {}, `${r.bonus}`),
       h("td", {}, `${r.memories}`, h("div", { class: "tiny muted" },
         `${r.sameSuitSets} suit · ${r.fourSuitSets} full`)),
+      // Money: what this traveller spent, and what they had left of the starting budget (or how far over).
+      h("td", {}, money(r.player.spent),
+        h("div", { class: "tiny muted", style: r.player.spent > state.board.economy.startingBudget ? "color:var(--red)" : "" },
+          r.player.spent > state.board.economy.startingBudget
+            ? `${money(r.player.spent - state.board.economy.startingBudget)} over`
+            : `${money(state.board.economy.startingBudget - r.player.spent)} left`)),
       h("td", { class: r.penalty ? "neg" : "" }, `${r.penalty}`,
         h("div", { class: "tiny muted" }, r.over ? `over by ${money(r.over)}` : "in budget")),
       h("td", { class: "total" }, String(r.total))));
