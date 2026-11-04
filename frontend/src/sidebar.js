@@ -169,6 +169,30 @@ export function renderSidebar(state, ui) {
       `<b>${sc.total}</b> points — ${sc.tourist} stamps, ${sc.destinations + sc.bonus} destinations, ` +
       `${sc.memories} memories${sc.penalty ? `, <span style="color:var(--red)">${sc.penalty} budget</span>` : ""}` })));
 
+  // ---- every traveller at a glance (small) ---------------------------------
+  const table = h("div", { class: "allp" });
+  for (const q of state.players) {
+    const qch = characterOf(state, q);
+    const left = budget - q.spent;
+    const mem = h("span", { class: "allp-mem", title: "Memories collected" });
+    for (const suit of SUITS)
+      mem.append(h("span", { class: `${SUIT_IS_RED[suit] ? "red" : ""}${q.memories[suit] ? "" : " zero"}`, title: board.suits.find((x) => x.id === suit)?.memory },
+        SUIT_SYMBOL[suit], h("b", {}, String(q.memories[suit]))));
+    const trips = h("span", { class: "allp-trips", title: "Road-trip cards (faded = already used)" });
+    for (const f of q.faceUp)
+      trips.append(h("span", { class: `rt${SUIT_IS_RED[f.card.suit] ? " red" : ""}${f.flipped ? " spent" : ""}` }, f.card.rank, SUIT_SYMBOL[f.card.suit]));
+    if (!q.faceUp.length) trips.append(h("span", { class: "muted" }, "none"));
+    table.append(h("div", { class: `allp-row${q.id === p.id ? " me" : ""}` },
+      h("div", { class: "allp-top" },
+        h("i", { style: `background:${q.colour}` }),
+        h("b", {}, q.name),
+        h("span", { class: "muted" }, qch.name),
+        h("span", { class: "allp-left", style: left < 0 ? "color:var(--red)" : "" }, `${left < 0 ? "over " : ""}${money(Math.abs(left))} ${left < 0 ? "" : "left"}`)),
+      h("div", { class: "allp-line" }, h("span", { class: "k" }, "Memories"), mem),
+      h("div", { class: "allp-line" }, h("span", { class: "k" }, "Road trip"), trips)));
+  }
+  body.append(h("section", { class: "sect" }, h("h3", {}, "All travellers"), table));
+
   // ---- log ----------------------------------------------------------------
   if (state.log.length) {
     const log = h("div", { class: "log" });

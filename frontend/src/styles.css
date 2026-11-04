@@ -510,3 +510,27 @@ input[type=text]:focus { outline: 2px solid var(--green); outline-offset: -1px; 
 .stamprow img { width: 66px; height: auto; }
 .starttrip { background: #eef6f7; border: 1px dashed var(--teal-ink); border-radius: 10px; padding: 8px 10px; flex-wrap: wrap; }
 .starttrip .btn { margin-left: auto; }
+
+/* all travellers — compact */
+.allp { display: grid; gap: 7px; }
+.allp-row { border: 1px solid var(--line); border-radius: 9px; background: var(--card); padding: 6px 9px; font-size: 11.5px; }
+.allp-row.me { border-color: var(--green-deep); }
+.allp-top { display: flex; align-items: center; gap: 6px; }
+.allp-top i { width: 10px; height: 10px; border-radius: 50%; flex: none; box-shadow: 0 0 0 1px rgba(0,0,0,.2); }
+.allp-top .muted { font-size: 10.5px; }
+.allp-left { margin-left: auto; font-weight: 700; white-space: nowrap; }
+.allp-line { display: flex; align-items: center; gap: 8px; margin-top: 3px; flex-wrap: wrap; }
+.allp-line .k { width: 58px; color: var(--ink-soft); font-size: 10.5px; flex: none; }
+.allp-mem { display: flex; gap: 8px; }
+.allp-mem span { white-space: nowrap; } .allp-mem b { margin-left: 2px; }
+.allp-mem .zero { opacity: .4; } .allp-mem .red, .allp-trips .red { color: var(--red); }
+.allp-trips { display: flex; gap: 4px; flex-wrap: wrap; }
+.allp-trips .rt { border: 1px solid var(--line-strong); border-radius: 4px; padding: 0 4px; font-weight: 700; background: var(--paper-2); }
+.allp-trips .rt.spent { opacity: .35; text-decoration: line-through; }
+
+/* end screen: destination stamps */
+.stamp-goal { position: relative; display: inline-block; line-height: 0; border-radius: 6px; padding: 2px; background: linear-gradient(180deg, #ffe9a8, #f0bd4a); box-shadow: 0 0 0 2px #d99a1c, 0 2px 8px rgba(217,154,28,.55); }
+.stamp-goal img { display: block; }
+.gstar { position: absolute; top: -8px; right: -8px; width: 19px; height: 19px; border-radius: 50%; background: var(--gold, #d99a1c); color: #fff; font-size: 12px; line-height: 19px; text-align: center; border: 1.5px solid #fff; }
+.gstar.inline { position: static; display: inline-block; vertical-align: middle; width: 16px; height: 16px; line-height: 16px; font-size: 10px; border-width: 1px; }
+.stamp-legend { margin: -2px 0 6px; }

@@ -269,11 +269,15 @@ export function scoreboardScreen(state, onRestart) {
 
   const stampRows = h("div", { class: "panel" },
     h("h3", {}, "Stamps collected"),
+    h("div", { class: "tiny muted stamp-legend" }, h("span", { class: "gstar inline" }, "★"), " gold frame = a destination of that traveller's character"),
     ...rows.map((r) => h("div", { class: "stamprow" },
       h("div", { class: "pwho" }, h("span", { class: "swatch", style: `background:${r.player.colour}` }), h("b", {}, r.player.name)),
       h("div", { class: "stamps" }, ...(r.player.visited.length ? r.player.visited.map((id) => {
         const c = cityOf(state, id);
-        return c.stamp ? h("img", { src: c.stamp, alt: c.name, title: `${c.tourist}. ${c.name}`, width: "80", height: "64", loading: "lazy" }) : h("span", { class: "tag" }, c.name);
+        // A stamp that is also one of this traveller's destinations is highlighted with a gold frame and a star.
+        const isGoal = characterOf(state, r.player).goals.some((g) => g.city === id);
+        const img = c.stamp ? h("img", { src: c.stamp, alt: c.name, title: `${c.tourist}. ${c.name}${isGoal ? " — destination ★" : ""}`, width: "80", height: "64", loading: "lazy" }) : h("span", { class: "tag" }, c.name);
+        return isGoal ? h("span", { class: "stamp-goal", title: `${c.name} — destination completed` }, img, h("span", { class: "gstar" }, "★")) : img;
       }) : [h("span", { class: "tiny muted" }, "none")])))));
 
   const memRows = h("div", { class: "panel" },

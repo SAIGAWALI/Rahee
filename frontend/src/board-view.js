@@ -5,6 +5,9 @@
 // traveller is, which places this player has visited, and which cities are their
 // destination goals.
 const NS = "http://www.w3.org/2000/svg";
+// Pawn size multiplier (1 = original). Professor asked us to trial bigger pieces.
+const PAWN_SCALE = 1.35;
+
 const el = (name, attrs = {}) => {
   const n = document.createElementNS(NS, name);
   for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
@@ -336,6 +339,7 @@ export function createBoardView(host, board, handlers = {}) {
 
     // traveller tokens — the pawn from the printed set — fanned out when several share a city
     const pawn = board.pawn;
+    const PAWN_K = 0.76 * PAWN_SCALE, S = PAWN_SCALE;
     const byCity = new Map();
     for (const t of tokens) {
       if (!byCity.has(t.city)) byCity.set(t.city, []);
@@ -345,18 +349,18 @@ export function createBoardView(host, board, handlers = {}) {
       const c = cityById.get(cityId);
       if (!c) continue;
       list.forEach((t, i) => {
-        const spread = list.length > 1 ? 17 : 0;
+        const spread = list.length > 1 ? 17 * S : 0;
         const x = c.x + (i - (list.length - 1) / 2) * spread, y = c.y + 4;
         const g = el("g", { transform: `translate(${x},${y})`, filter: "url(#tokenShadow)" });
         if (pawn) {
           // Foot of the pawn on the city; ~38 board px tall.
-          const k = 0.76;
+          const k = PAWN_K;
           g.append(el("path", {
             d: pawn.d, fill: t.colour, stroke: pawn.outline || "#20444c", "stroke-width": 2.2 / k, "stroke-linejoin": "round",
             transform: `scale(${k}) translate(${-pawn.footX},${-pawn.footY})`,
           }));
           if (t.label) {
-            const tx = el("text", { x: 0, y: -26.5, "text-anchor": "middle", "font-size": 11, "font-weight": 700, fill: "#20444c" });
+            const tx = el("text", { x: 0, y: -26.5 * S, "text-anchor": "middle", "font-size": 11, "font-weight": 700, fill: "#20444c" });
             tx.textContent = t.label;
             g.append(tx);
           }
@@ -364,8 +368,8 @@ export function createBoardView(host, board, handlers = {}) {
           g.append(el("path", { d: "M0,7 C-9,-3 -12,-8 -12,-13 A12,12 0 1 1 12,-13 C12,-8 9,-3 0,7 Z", fill: t.colour, stroke: "#fff", "stroke-width": 2.6 }));
         }
         if (t.active) {
-          const halo = el("circle", { cx: 0, cy: -26, r: 17, fill: "none", stroke: t.colour, "stroke-width": 3, "stroke-opacity": ".85" });
-          halo.append(el("animate", { attributeName: "r", values: "16;22;16", dur: "2s", repeatCount: "indefinite" }));
+          const halo = el("circle", { cx: 0, cy: -26 * S, r: 17 * S, fill: "none", stroke: t.colour, "stroke-width": 3, "stroke-opacity": ".85" });
+          halo.append(el("animate", { attributeName: "r", values: `${16 * S};${22 * S};${16 * S}`, dur: "2s", repeatCount: "indefinite" }));
           halo.append(el("animate", { attributeName: "stroke-opacity", values: ".8;0;.8", dur: "2s", repeatCount: "indefinite" }));
           g.append(halo);
         }
