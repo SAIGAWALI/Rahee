@@ -104,7 +104,7 @@ Two ideas shape the project:
 | **Tourist places** | 51 numbered cities. End there and pay ₹2,000 to collect the stamp. Each place counts once per player. |
 | **Destinations** | Six per character. A destination only counts when you **visit** it, i.e. pay for the stamp. Just ending a move there does not count. |
 | **Road trips** | End a move with other players and invite them. Another participant's face-up card is flipped and everyone moves on it. Companions pay you ₹100 per step, shared stamps cost ₹1,000, and every traveller gets a memory of that card's suit. Companions may get off partway. |
-| **Travelling together** *(agreed with the POC)* | At the start of your turn, if others share your city, you can play your **own** card and ask them along. It is not a road trip: no card is flipped and nobody gets a road-trip memory. Riders pay ₹100 per step and can take the stamp where they get off for ₹1,000. It uses up your whole turn. |
+| **Travelling together** *(agreed with the POC)* | At the start of your turn, if others share your city, you can play your **own** card and ask them along. It is not a road trip: no card is flipped and nobody gets a road-trip memory. Riders pay ₹100 per step and can take the stamp where they get off for ₹1,000. Because it is not a road trip, you can still take your one road trip afterwards. |
 | **Aces** | Play an Ace alone (1 step), as a +1 booster, or for one extra memory. If you are dealt two Aces, you may swap one for a card from the undealt pile (or ask for a reshuffle). |
 | **End** | The game ends when someone plays their last card **or** completes 5 destinations. The current round is then finished. |
 | **Scoring** | 10 per stamp · 5 per destination · +10 for 5 destinations · 15 per three-of-a-suit · 20 per one-of-each-suit set · −5 per ₹500 (or part of it) over ₹20,000 |
@@ -299,7 +299,7 @@ npm run coverage         # npm test under c8, with line/branch coverage
 | # | Suite | What it checks | Result |
 |:-:|---|---|---|
 | 1 | `test-engine.mjs` | Board sanity, deals for every player count (200 shuffles each), route-search regressions B1–B4, the manual's worked examples, 80 random games checked rule by rule | ✅ 5,499 checks |
-| 2 | `test-rules.mjs` | Hand-built scenarios, one per rule clarified in RULES.md (destinations, visits, road trips, travelling together, Aces, turn order, budget) | ✅ 34 / 34 scenarios |
+| 2 | `test-rules.mjs` | Hand-built scenarios, one per rule clarified in RULES.md (destinations, visits, road trips, travelling together, Aces, turn order, budget) | ✅ 35 / 35 scenarios |
 | 3 | `playtest.mjs 300` | 300 complete bot games, every move checked | ✅ 49,888 moves, 0 violations |
 | 4 | `test-server.mjs 3` / `6` | The real backend over WebSockets: 2 clients + bots play whole 3- and 6-player games. Hands stay private, out-of-turn moves are refused, only the host can add bots, reconnection works, scores add up. | ✅ 1,021 + 3,331 checks |
 | 5 | `test-board.mjs` | `board.json` vs the tables in RULES.md. The route search vs an independent search on every city pair. | ✅ 102,739 checks |

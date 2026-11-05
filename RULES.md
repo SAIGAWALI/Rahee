@@ -132,6 +132,12 @@ A player can participate in a road trip as the active player only if another par
 
 If you want to take a road trip with Player 1 and Player 1 has **no face-up road-trip card**, you cannot use Player 1's card for the trip. You may instead take a road trip with Player 2, Player 3, or another participating player who has a face-up road-trip card.
 
+### Travelling together
+
+At the **start** of your turn, if other players are in your city, you may play your **own** card and ask them to travel with you. This is **not** a road trip: no face-up card is flipped and nobody gets a road-trip memory. Companions may get off partway, pay you **₹100 per step** plus their own surcharges, and everyone still aboard at the end may visit the tourist place there for **₹1,000** each. Only you make memories (efficient travel, and an Ace's extra memory).
+
+Because travelling together is not a road trip, you may **still take one road trip** afterwards, from where it ended, under the normal road-trip rules above (for example with a player who was already standing there). **At most one road trip per turn** still applies.
+
 ## 8. Aces
 
 An Ace can be played in exactly one of three ways:

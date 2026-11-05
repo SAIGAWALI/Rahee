@@ -917,15 +917,15 @@ function resolveActions(box, p, t) {
     h("span", { class: "tiny muted" }, `${deciding.join(", ")} can still take the stamp — give them a moment.`)));
 
   const others = E.playersAt(state, p.city, p.id);
-  const canTrip = !didTrip && !t.together && others.length > 0 && E.roadTripCards(state, others.map((o) => o.id)).length > 0;
+  // At most one road trip per turn; travelling together does not count as one.
+  const tripTaken = didTrip && !t.together;
+  const canTrip = !tripTaken && !deciding.length && others.length > 0 && E.roadTripCards(state, others.map((o) => o.id)).length > 0;
 
   box.append(h("div", { class: "row", style: "margin-top:10px" },
     canTrip
       ? h("button", { class: "btn", onClick: () => { local.invite = null; local.picking = null; commit("offerRoadTrip"); } },
           `Offer a road trip (${others.map((o) => o.name).join(", ")})`)
-      : t.together
-        ? h("span", { class: "tiny muted" }, "You travelled together this turn — no road trip after it.")
-        : !didTrip && others.length
+      : !tripTaken && !deciding.length && others.length
           ? h("span", { class: "tiny muted" }, "No road trip: nobody here has a face-up card to flip.")
           : null,
     h("button", {

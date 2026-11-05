@@ -309,7 +309,7 @@ export function chooseAction(s, graph, seat, { level = "greedy", rand = Math.ran
     // After a road trip, give the companions their chance at the shared stamp before ending the turn.
     if (t.roadTrip && E.ridersStillDeciding(s).length) return null;
     // Don't keep inviting people who have just said no (or a trip already called off) this turn.
-    if (!t.roadTrip && !t.tripsCalledOff && !t.together) {
+    if ((!t.roadTrip || t.together) && !t.tripsCalledOff) { // travelling together is not a road trip
       const plan = planRoadTrip(s, graph, me, easy, rand);
       if (plan) return { name: "offerRoadTrip", args: {} };
     }

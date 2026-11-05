@@ -492,11 +492,22 @@ export function roadTripCards(s, participantIds) {
 export function offerRoadTrip(s) {
   const t = s.turn;
   if (!t || t.stage !== "resolve") throw new Error("no move to offer a road trip from");
-  if (t.together) throw new Error("you travelled together this turn — no road trip after it");
+  if (t.roadTrip && !t.together) throw new Error("only one road trip per turn");
   const p = currentPlayer(s);
   const others = playersAt(s, p.city, p.id);
   if (!others.length) throw new Error("nobody here to invite");
   if (!roadTripCards(s, others.map((o) => o.id)).length) throw new Error("nobody here has a face-up road-trip card to flip");
+  if (t.together) {
+    // Travelling together was not a road trip, so the player may still take one
+    // road trip this turn (POC). The finished travelling-together leg is set
+    // aside, once everyone who came along has decided on the shared stamp.
+    const waiting = ridersStillDeciding(s);
+    if (waiting.length) throw new Error(`${waiting.map((id) => s.players[id].name).join(" & ")} can still take the stamp here — wait for them first`);
+    t.togetherTrip = { trip: t.roadTrip, visitPassed: t.visitPassed ?? [] };
+    t.together = false;
+    t.roadTrip = null;
+    t.visitPassed = [];
+  }
   t.stage = "roadtrip-invite";
   return s;
 }
@@ -508,6 +519,18 @@ export function offerRoadTrip(s) {
  */
 function tripOff(s) {
   const t = s.turn;
+  if (t.togetherTrip) {
+    // A road trip after travelling together that didn't happen: back to the end
+    // of the travelling-together move, exactly as it was.
+    t.together = true;
+    t.roadTrip = t.togetherTrip.trip;
+    t.visitPassed = t.togetherTrip.visitPassed;
+    delete t.togetherTrip;
+    t.pendingTrip = null;
+    t.stage = "resolve";
+    t.tripsCalledOff = (t.tripsCalledOff || 0) + 1;
+    return;
+  }
   if (t.together) {
     s.turnFlags = { ...(s.turnFlags || {}), togetherCalledOff: (s.turnFlags?.togetherCalledOff || 0) + 1 };
     s.turn = null;
@@ -535,9 +558,9 @@ export function canTravelTogether(s) {
  * place, or decline, exactly as for a road trip; companions pay the mover
  * ₹100 a step plus their own surcharges, and everyone still aboard at the end
  * may take the stamp for the shared ₹1,000. Only the mover makes memories —
- * the usual efficient-travel and Ace ones for their card. This move is their
- * whole turn: no road trip afterwards. If nobody comes along, the turn goes
- * back to the start and the card is still in hand.
+ * the usual efficient-travel and Ace ones for their card. Afterwards the mover
+ * may still take one road trip, as after any move (POC). If nobody comes along,
+ * the turn goes back to the start and the card is still in hand.
  */
 export function offerTravelTogether(s, { cardId: mainId, ace }) {
   if (!canTravelTogether(s)) throw new Error("there is nobody here to travel with");
