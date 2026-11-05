@@ -6,7 +6,7 @@
 import * as E from "./engine.js";
 import * as net from "./net.js";
 import { createBoardView } from "./board-view.js";
-import { renderSidebar, h, money, cardChip } from "./sidebar.js";
+import { renderSidebar, h, money, esc, cardChip } from "./sidebar.js";
 import { createMapPanel } from "./map-panel.js";
 import { chooseAction } from "./ai.js";
 import { landingScreen, lobbyScreen, waitingScreen, layCardScreen, scoreboardScreen, rulesSheet, showModal } from "./screens.js";
@@ -355,7 +355,7 @@ function renderPlay() {
     tokens: state.players.map((pl) => ({ city: pl.city, colour: pl.colour, active: pl.id === p.id })),
     visitedColour: viewer.colour,
     hover: (cityId) => {
-      const here = state.players.filter((pl) => pl.city === cityId).map((pl) => pl.name);
+      const here = state.players.filter((pl) => pl.city === cityId).map((pl) => esc(pl.name)); // shown as HTML
       const opt = options.find((o) => o.to === cityId);
       const bits = [];
       if (opt) bits.push(`next step: ${opt.route.type} · ${money(E.routeCost(board, opt.route))}`);
@@ -404,7 +404,7 @@ function renderDest() {
 function currentHint(t, p, isMyTurn, you) {
   if (!t) return isMyTurn
     ? (E.canTravelTogether(state) ? "Pick a card — then travel on your own, or ask the people here to travel together with you." : "Pick a card from your hand — it is both your movement and the suit of the memories you can make.")
-    : `Waiting for ${p.name} to pick a card.`;
+    : `Waiting for ${esc(p.name)} to pick a card.`; // the hint is shown as HTML
   if (t.stage === "moving") {
     const left = t.allowance - t.stepsUsed;
     return left > 0

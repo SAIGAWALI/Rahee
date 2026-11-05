@@ -10,7 +10,7 @@
 // transform stored in board.json (maps[].fromPlate), so no city needs separate
 // coordinates on them.
 import { characterOf, cityOf, currentPlayer, SUITS, SUIT_SYMBOL, SUIT_IS_RED } from "./engine.js";
-import { h, money } from "./sidebar.js";
+import { h, money, esc } from "./sidebar.js";
 
 const NS = "http://www.w3.org/2000/svg";
 const svgEl = (name, attrs = {}) => {
@@ -103,7 +103,7 @@ export function createMapPanel(host, board, handlers = {}) {
     const [x, y] = toMap(c.x, c.y);
     const r = overlay.getBoundingClientRect(), m = map();
     const px = (x / m.width) * r.width, py = (y / m.height) * r.height;
-    const here = state ? state.players.filter((p) => p.city === c.id).map((p) => p.name) : [];
+    const here = state ? state.players.filter((p) => p.city === c.id).map((p) => esc(p.name)) : []; // shown as HTML
     mmTip.innerHTML =
       (c.stamp ? `<img src="${c.stamp}" alt="" width="150" height="120">` : "") +
       `<div>${c.tourist ? `<b class="n">${c.tourist}</b> ` : ""}<b>${c.name}</b>${c.attraction ? `<div class="sub">${c.attraction}</div>` : ""}` +

@@ -14,6 +14,8 @@ const h = (tag, props = {}, ...kids) => {
   return n;
 };
 const money = (n) => `₹${Math.round(n).toLocaleString("en-IN")}`;
+/** Text made safe to put inside HTML: player names are typed by players, so they must never be read as markup. */
+const esc = (v) => String(v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 export function cardChip(state, card, opts = {}) {
   const { selected, disabled, faceUp, spent, onClick, title } = opts;
@@ -173,11 +175,11 @@ export function renderSidebar(state, ui) {
   if (state.log.length) {
     const log = h("div", { class: "log" });
     for (const e of state.log.slice(-15).reverse())
-      log.append(h("div", { html: `${e.player ? `<b>${e.player}</b> ` : ""}${e.text}` }));
+      log.append(h("div", { html: `${e.player ? `<b>${esc(e.player)}</b> ` : ""}${esc(e.text)}` }));
     body.append(h("section", { class: "sect" }, h("h3", {}, "Recent"), log));
   }
 
   return h("aside", { class: "sidebar" }, head, body, ui.actions ?? null);
 }
 
-export { h, money };
+export { h, money, esc };

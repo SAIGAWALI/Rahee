@@ -9,6 +9,7 @@
 [![Tests](https://img.shields.io/badge/tests-440%2C221%20checks%20passing-brightgreen.svg)](#-testing)
 [![Coverage](https://img.shields.io/badge/line%20coverage-96.4%25-brightgreen.svg)](#-code-coverage)
 [![Players](https://img.shields.io/badge/players-2%E2%80%936%20%2B%20computer%20players-orange.svg)](#-computer-players-and-play-testing)
+[![License: MIT](https://img.shields.io/badge/license-MIT%20(code)-green.svg)](#-license)
 
 **RAHEE** is a travel board game designed by **Jyothi Krishnan**, with art by **Parvathy Subramanian**. This repository is its **online version**: 2–6 players, each on **their own device**, play the full game together in real time from a browser. Computer players can fill empty seats.
 
@@ -59,6 +60,7 @@ Two ideas shape the project:
 13. [Troubleshooting](#%EF%B8%8F-troubleshooting)
 14. [Documentation](#-documentation)
 15. [Credits](#-credits)
+16. [License](#-license)
 
 ---
 
@@ -209,7 +211,7 @@ node tools/add-artwork.mjs   .                                               # a
 python3 tools/align-maps.py "Raheemap-only nodes.png" frontend/data/board.json   # only if the clean maps change
 ```
 
-- City markers were found automatically. All 101 were then checked by eye on overlay tiles (`frontend/assets/verify/`).
+- City markers were found automatically. All 101 were then checked by eye on overlay tiles. `detect-cities.mjs --tiles` and `trace-routes.mjs --debug` write these check images to `frontend/assets/verify/`. They are not kept in the repo.
 - Some printed roads are hidden under bus or tree artwork. These were found by an "uncovered road" check and added by hand with their polylines (`EXTRA_ROADS` in `build-board.mjs` and `tools/route-fixes.json`).
 - Some "roads" the tracer found don't exist on the printed map. These are removed explicitly (`SPURIOUS` in `build-board.mjs`).
 - `build-board.mjs` checks that no route or goal names an unknown city, that tourist numbers run exactly 1–51, and that every city is reachable. It also checks that every city can be reached without flying, except the Andaman Islands.
@@ -340,6 +342,7 @@ Raw outputs for Test Phase 2 are in [`docs/test-results/phase2/`](docs/test-resu
 Rahee/
 ├── README.md                    # This file
 ├── RULES.md                     # ⭐ The rulebook (read by the board tests, so it stays at the root)
+├── LICENSE                      # MIT, for the source code only (see License)
 ├── package.json                 # npm test / dev / coverage / test:* scripts
 ├── .github/workflows/test.yml   # CI: npm test on every push
 ├── frontend/                    # served as static files (no build)
@@ -356,7 +359,7 @@ Rahee/
 │   │   ├── config.js            # server URL (same origin by default)
 │   │   └── styles.css
 │   ├── data/board.json          # 🗺️ the whole board as data
-│   └── assets/                  # map plate, stamps 1–51, cards, memories, maps, fonts, verify images
+│   └── assets/                  # map plate, stamps 1–51, cards, memories, maps, fonts
 ├── backend/
 │   ├── app.js                   # HTTP (static files) + WebSocket server, heartbeat, startup restore
 │   ├── handlers.js              # message → engine → save → broadcast
@@ -436,4 +439,10 @@ Every requirement agreed with the POCs is complete:
 - **Game:** *RAHEE: A Traveller's Journey Across India*. Design: Jyothi Krishnan. Art and graphic design: Parvathy Subramanian.
 - **Online version:** Group 31, CS 202 (Prof. Abhishek Bichhawat), IIT Gandhinagar.
 
-The board game and its artwork belong to their creators and are used here for educational purposes.
+---
+
+## 📄 License
+
+The **source code** of this project is licensed under the **MIT License**. See [`LICENSE`](LICENSE).
+
+The **RAHEE board game** (its rules, board, characters, stamps, cards and all artwork) belongs to its creators, Jyothi Krishnan (design) and Parvathy Subramanian (art). It is **not** covered by the MIT License and is used here for educational purposes only.

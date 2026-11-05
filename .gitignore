@@ -2,3 +2,5 @@ node_modules/
 .env
 docs/test-results/playtest/test-run/
 coverage/
+frontend/assets/verify/
+frontend/assets/board-plate-grid.png
