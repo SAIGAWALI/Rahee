@@ -6,7 +6,7 @@
 [![WebSocket](https://img.shields.io/badge/multiplayer-WebSocket-blue.svg)](backend/app.js)
 [![Database](https://img.shields.io/badge/database-TiDB%20Cloud%20(MySQL)-4479a1.svg)](backend/db.js)
 [![Hosted on Render](https://img.shields.io/badge/hosted%20on-Render-46e3b7.svg)](https://rahee.onrender.com/)
-[![Tests](https://img.shields.io/badge/tests-%E2%89%88441k%20checks%20passing-brightgreen.svg)](#-testing)
+[![Tests](https://img.shields.io/badge/tests-440%2C221%20checks%20passing-brightgreen.svg)](#-testing)
 [![Coverage](https://img.shields.io/badge/line%20coverage-96.4%25-brightgreen.svg)](#-code-coverage)
 [![Players](https://img.shields.io/badge/players-2%E2%80%936%20%2B%20computer%20players-orange.svg)](#-computer-players-and-play-testing)
 
@@ -73,7 +73,7 @@ Two ideas shape the project:
 - 🤖 **Computer players** at three levels (planner, goal-chaser, easy), plus an **Auto** button that lets the computer play your own seat.
 - 📊 **A clear journal for every player:** your budget, hand, road-trip cards, memories, stamp album, destinations and running score. The left panel shows every **other** player's money left, memories and road-trip cards, with their destinations one click away.
 - 🏁 **A clear final scoreboard:** points per category, **money spent and money left** for each player, stamps (with each player's **destination stamps highlighted in gold**) and memories.
-- ✅ **Heavily tested:** 11 automated suites (about 441,000 checks), a real-browser end-to-end test, 96 % line coverage, and a 1,000-game AI play-test with zero rule violations. GitHub Actions runs the tests on every push.
+- ✅ **Heavily tested:** 11 automated suites (440,221 checks in Test Phase 2), a real-browser end-to-end test, 96 % line coverage, and a 1,000-game AI play-test with zero rule violations. GitHub Actions runs the tests on every push.
 - 🪶 **Small and dependency-light:** the frontend is plain ES modules with **no build step and no dependencies**. The backend has three dependencies (`ws`, `mysql2`, `dotenv`).
 
 ---
@@ -294,23 +294,23 @@ npm run test:browser     # real-browser end-to-end test (needs Playwright + Chro
 npm run coverage         # npm test under c8, with line/branch coverage
 ```
 
-### Suites and results (fresh run on the final code)
+### Suites and results (Test Phase 2 report, commit `e8b89f4`)
 
 | # | Suite | What it checks | Result |
 |:-:|---|---|---|
 | 1 | `test-engine.mjs` | Board sanity, deals for every player count (200 shuffles each), route-search regressions B1–B4, the manual's worked examples, 80 random games checked rule by rule | ✅ 5,499 checks |
-| 2 | `test-rules.mjs` | Hand-built scenarios, one per rule clarified in RULES.md (destinations, visits, road trips, travelling together, Aces, turn order, budget) | ✅ 35 / 35 scenarios |
+| 2 | `test-rules.mjs` | Hand-built scenarios, one per rule clarified in RULES.md (destinations, visits, road trips, travelling together, Aces, turn order, budget) | ✅ 34 / 34 scenarios |
 | 3 | `playtest.mjs 300` | 300 complete bot games, every move checked | ✅ 49,888 moves, 0 violations |
-| 4 | `test-server.mjs 3` / `6` | The real backend over WebSockets: 2 clients + bots play whole 3- and 6-player games. Hands stay private, out-of-turn moves are refused, only the host can add bots, reconnection works, scores add up. | ✅ 1,021 + 3,331 checks |
+| 4 | `test-server.mjs 3` / `6` | The real backend over WebSockets: 2 clients + bots play whole 3- and 6-player games. Hands stay private, out-of-turn moves are refused, only the host can add bots, reconnection works, scores add up. | ✅ 781 + 3,145 checks |
 | 5 | `test-board.mjs` | `board.json` vs the tables in RULES.md. The route search vs an independent search on every city pair. | ✅ 102,739 checks |
 | 6 | `test-boundaries.mjs` | Boundary values, equivalence classes and all-pairs (pairwise) games | ✅ 18,259 checks |
 | 7 | `test-robustness.mjs` | Fuzzed and out-of-turn actions before every move of real games must be refused without changing anything. Same seed gives the same game. | ✅ 232,977 checks |
-| 8 | `test-persistence.mjs` | A simulated server restart after **every** move: the game reloads identically | ✅ 16,327 checks |
+| 8 | `test-persistence.mjs` | A simulated server restart after **every** move: the game reloads identically | ✅ 16,393 checks |
 | 9 | `test-protocol.mjs` | Lobby limits, reconnection edge cases, 4,000 mutated WebSocket messages, static-file path tricks | ✅ 49 checks |
-| 10 | `test-load.mjs 20` | 20 games at once on one server (4 players each) | ✅ 11,103 checks · median 3.8 ms per move |
+| 10 | `test-load.mjs 20` | 20 games at once on one server (4 players each) | ✅ 10,443 checks · median 3.8 ms per move |
 | 11 | `test-browser.cjs` | Headless Chromium plays a whole 3-player game through the real UI: lobby, bots, dealing, Auto, map panel, **page reload mid-game**, scoreboard, no browser errors | ✅ 14 / 14 |
 
-**Total: about 441,000 checks, 0 failures.** The server and load suites depend on timing, so their counts change slightly from run to run. Test Phase 2 recorded 440,221 on commit `e8b89f4`.
+**Total: 440,221 checks, 0 failures**, as in the Test Phase 2 report. The suites that play generated games (playtest, server, boundaries, robustness, persistence, load) count checks per move, so a later run gives slightly different counts; every suite still passes.
 
 ### 🧭 Test categories (Test Phase 2)
 Unit and data · regression · rule scenarios · specification conformance (against RULES.md) · boundary values and equivalence classes · pairwise · simulated play-testing · fuzzing and robustness · persistence · server end-to-end with protocol fuzzing · load · browser end-to-end.
