@@ -37,7 +37,7 @@ Two ideas shape the project:
 |:---:|---|---|
 | **23110175** | Kshitij Kasodkar | `kshitij.kasodkar@iitgn.ac.in` |
 | **23110114** | Sai Gawali | `sai.gawali@iitgn.ac.in` |
-| **23110240** | Siddhesh Patil | `siddhesh.patil@iitgn.ac.in` |
+| **23110240** | Siddhesh Patil | `patil.siddhesh@iitgn.ac.in` |
 | **23110211** | Mukesh Dewangan | `mukesh.dewangan@iitgn.ac.in` |
 | **23110331** | Tanuj Sharma | `tanuj.sharma@iitgn.ac.in` |
 
