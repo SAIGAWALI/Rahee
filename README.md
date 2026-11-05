@@ -445,4 +445,4 @@ Every requirement agreed with the POCs is complete:
 
 The **source code** of this project is licensed under the **MIT License**. See [`LICENSE`](LICENSE).
 
-The **RAHEE board game** (its rules, board, characters, stamps, cards and all artwork) belongs to its creators, Jyothi Krishnan (design) and Parvathy Subramanian (art). It is **not** covered by the MIT License and is used here for educational purposes only.
+The **RAHEE board game** (its rules, board, characters, stamps, cards and all artwork) belongs to its creators, Jyothi Krishnan (design) and Parvathy Subramanian (art).
