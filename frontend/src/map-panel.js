@@ -9,8 +9,8 @@
 // so nothing is asked of the server. The map images are placed with the affine
 // transform stored in board.json (maps[].fromPlate), so no city needs separate
 // coordinates on them.
-import { characterOf, cityOf, currentPlayer } from "./engine.js";
-import { h } from "./sidebar.js";
+import { characterOf, cityOf, currentPlayer, SUITS, SUIT_SYMBOL, SUIT_IS_RED } from "./engine.js";
+import { h, money } from "./sidebar.js";
 
 const NS = "http://www.w3.org/2000/svg";
 const svgEl = (name, attrs = {}) => {
@@ -228,7 +228,8 @@ export function createMapPanel(host, board, handlers = {}) {
             opts.online?.[pl.id] === false && !pl.isBot ? h("span", { class: "tag offline" }, "offline") : null),
           h("div", { class: "sub" }, `${ch.name} · at ${cityOf(state, pl.city).name}`)),
         h("div", { class: "dp-count", title: "destinations completed" }, `${reached.size}/${ch.goals.length}`),
-        h("div", { class: "dp-chev" }, isOpen ? "▾" : "▸")));
+        h("div", { class: "dp-chev" }, isOpen ? "▾" : "▸"),
+        playerStats(pl)));
       if (isOpen) {
         const list = h("div", { class: "places" });
         for (const g of ch.goals) {
@@ -247,6 +248,31 @@ export function createMapPanel(host, board, handlers = {}) {
       }
       players.append(card);
     }
+  }
+
+  /** Money left, memories and road-trip cards of one traveller (all public). */
+  function playerStats(pl) {
+    const budget = state.board.economy.startingBudget;
+    const left = budget - pl.spent;
+    const mem = h("span", { class: "allp-mem" });
+    for (const suit of SUITS)
+      mem.append(h("span", {
+        class: `${SUIT_IS_RED[suit] ? "red" : ""}${pl.memories[suit] ? "" : " zero"}`,
+        title: state.board.suits.find((x) => x.id === suit)?.memory,
+      }, SUIT_SYMBOL[suit], h("b", {}, String(pl.memories[suit]))));
+    const trips = h("span", { class: "allp-trips" });
+    for (const f of pl.faceUp)
+      trips.append(h("span", {
+        class: `rt${SUIT_IS_RED[f.card.suit] ? " red" : ""}${f.flipped ? " spent" : ""}`,
+        title: f.flipped ? "already used for a road trip" : "available as a road-trip card",
+      }, f.card.rank, SUIT_SYMBOL[f.card.suit]));
+    if (!pl.faceUp.length) trips.append(h("span", { class: "muted" }, "none"));
+    return h("div", { class: "dp-stats" },
+      h("div", { class: "allp-line" }, h("span", { class: "k" }, "Money"),
+        h("b", { class: left < 0 ? "neg" : "" }, left < 0 ? `over by ${money(-left)}` : `${money(left)} left`),
+        h("span", { class: "muted" }, `spent ${money(pl.spent)}`)),
+      h("div", { class: "allp-line" }, h("span", { class: "k" }, "Memories"), mem),
+      h("div", { class: "allp-line" }, h("span", { class: "k" }, "Road trip"), trips));
   }
 
   function drawHeader() {

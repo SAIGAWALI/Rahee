@@ -122,7 +122,9 @@ export function createBoardView(host, board, handlers = {}) {
 
   // --- pan and zoom -------------------------------------------------------
   const view = { x: 0, y: 0, w: W, h: H };
-  const MIN_W = 380, MAX_W = W * 1.15;
+  const MIN_W = 380, MAX_W = W * 3; // zoom-out limit; clamp() keeps the board on screen
+  // Pixels on the left of the board covered by the map panel (it floats over the board).
+  const covered = () => Math.max(0, Number(handlers.coveredLeft?.() || 0));
   let viewQueued = false;
   const applyView = () => {
     svg.setAttribute("viewBox", `${view.x} ${view.y} ${view.w} ${view.h}`);
@@ -161,11 +163,25 @@ export function createBoardView(host, board, handlers = {}) {
       y: (cy - b.top - (b.height - view.h * s) / 2) / s + view.y,
     };
   }
+  // Keeps the board reachable. The viewBox letterboxes, so on a wide screen (or a
+  // zoomed-out browser) far more than view.w is actually visible. The limits are
+  // worked out on that visible area, so the board can always be dragged out from
+  // under the map panel, at any zoom.
   function clamp() {
     view.w = Math.max(MIN_W, Math.min(MAX_W, view.w));
     view.h = view.w * (H / W);
-    view.x = Math.max(-W * 0.15, Math.min(W * 1.15 - view.w, view.x));
-    view.y = Math.max(-H * 0.15, Math.min(H * 1.15 - view.h, view.y));
+    const b = box();
+    const s = b.width && b.height ? Math.min(b.width / view.w, b.height / view.h) : 0;
+    const visW = s ? b.width / s : view.w, visH = s ? b.height / s : view.h;
+    // The visible area's left/top edge may go anywhere that still leaves at least
+    // 30 % of the board on screen.
+    const axis = (start, size, vis, total) => {
+      const edge = start + size / 2 - vis / 2;
+      const lo = total * 0.3 - vis, hi = total * 0.7;
+      return Math.max(lo, Math.min(hi, edge)) + vis / 2 - size / 2;
+    };
+    view.x = axis(view.x, view.w, visW, W);
+    view.y = axis(view.y, view.h, visH, H);
   }
   function zoomBy(factor, anchorClient) {
     const b = box();
@@ -239,7 +255,9 @@ export function createBoardView(host, board, handlers = {}) {
     if (!c) return;
     const target = { w: Math.min(view.w, zoom) };
     target.h = target.w * (H / W);
-    target.x = c.x - target.w / 2;
+    // Centre the city in the part of the screen the map panel does not cover.
+    const b0 = box(), st = b0.width ? Math.min(b0.width / target.w, b0.height / target.h) : 0;
+    target.x = c.x - target.w / 2 - (st ? Math.min(covered(), b0.width * 0.6) / 2 / st : 0);
     target.y = c.y - target.h / 2;
     if (!animate) { Object.assign(view, target); clamp(); applyView(); return; }
     const from = { ...view }, t0 = performance.now(), dur = 420;
@@ -260,8 +278,28 @@ export function createBoardView(host, board, handlers = {}) {
   function centreOn({ x, y }) {
     view.x = x - view.w / 2; view.y = y - view.h / 2; clamp(); applyView();
   }
-  function fitAll() { Object.assign(view, { x: 0, y: 0, w: W, h: W * (H / W) }); clamp(); applyView(); }
+  /** The whole board, as large as fits in the part of the screen not covered by the map panel. */
+  function fitAll() {
+    const b = box();
+    if (!b.width || !b.height) { Object.assign(view, { x: 0, y: 0, w: W, h: H }); applyView(); return; }
+    const left = Math.min(covered(), b.width * 0.6);
+    const avail = b.width - left;
+    const s = Math.min(avail / W, b.height / H) * 0.97; // screen pixels per board unit
+    // Size the viewBox so that fit() comes out as s, then place the board's centre
+    // in the middle of the uncovered area.
+    if (b.width / b.height > W / H) { view.h = b.height / s; view.w = view.h * (W / H); }
+    else { view.w = b.width / s; view.h = view.w * (H / W); }
+    view.w = Math.max(MIN_W, Math.min(MAX_W, view.w)); view.h = view.w * (H / W);
+    const sc = Math.min(b.width / view.w, b.height / view.h);
+    const offX = (b.width - view.w * sc) / 2, offY = (b.height - view.h * sc) / 2;
+    view.x = W / 2 - (left + avail / 2 - offX) / sc;
+    view.y = H / 2 - (b.height / 2 - offY) / sc;
+    clamp();
+    applyView();
+  }
   fitAll();
+  // A resized window (or a browser zoom) changes how much is visible: re-apply the limits.
+  window.addEventListener("resize", () => { clamp(); applyView(); });
 
   // --- dynamic layer ------------------------------------------------------
   function render(model) {

@@ -1,18 +1,16 @@
 # RAHEE — Design Plan
 
-**CS 202: Software Development Project**
-**Team 31** — Tanuj Sharma (23110331) · Sai Gawali (23110114) · Siddhesh Patil (23110240) · Mukesh Dewangan (23110211) · Kshitij Kasodkar (23110175)
-**Date:** 13 September 2026
+**Team Members** — Tanuj Sharma (23110331), Sai Gawali (23110114), Siddhesh Patil (23110240), Mukesh Dewangan (23110211), Kshitij Kasodkar (23110175)
 
 ## Abstract
 
-RAHEE is a travel-themed board game designed by CCL, IIT Gandhinagar, in which two to six players journey across a map of India. Each player's starting hand of playing cards is their entire itinerary: a card is played to move a fixed number of steps between cities, spending money from a fixed budget, and points are scored by visiting tourist places, reaching character-specific destination goals, and collecting sets of themed "memory" tokens. The project builds a digital version of this game.
+RAHEE is a travel-themed board game in which two to six players journey across a map of India. Each player's starting hand of playing cards is their entire itinerary: a card is played to move a fixed number of steps between cities, spending money from a fixed budget, and points are scored by visiting tourist places, reaching character-specific destination goals, and collecting sets of themed "memory" tokens. The project builds a digital version of this game.
 
 This document is the design plan for a **real-time, secure, multi-device online game**, in which every player connects from their own phone or laptop and plays together in the same session, as required by the project's signed requirements sheet. It follows the five-part format specified for this submission: architecture and design decisions, the requirements the architecture targets, diagrams of the system's structure, the major code modules and how they communicate, and an explanation of how the design satisfies the stated requirements.
 
 ---
 
-## 0. Game overview
+## Game overview
 
 Before describing the architecture, a brief summary of the game itself, since the design decisions below only make sense in relation to its rules:
 
@@ -21,7 +19,7 @@ Before describing the architecture, a brief summary of the game itself, since th
 - **Road trips.** A player who ends their move in a city occupied by other players may invite them on a shared "road trip," pooling movement and splitting costs and rewards.
 - **Scoring.** The game ends once a player empties their hand or reaches five destination goals, after which the round is completed. Points are awarded for tourist places visited, destinations reached, and sets of memory tokens, with a penalty for overspending.
 
-The rules themselves are not part of this design plan — they are fixed by the physical game and are to be enforced in full by the rules engine described in §1. This document is only about **how the software is to be built**, in line with the project's own emphasis that "the main requirement is not the game but how it is built."
+The rules themselves are not part of this design plan — they are fixed by the physical game and are to be enforced in full by the rules engine described in section 1.
 
 ---
 
@@ -31,7 +29,7 @@ The rules themselves are not part of this design plan — they are fixed by the 
 
 The proposed architecture is built around one governing rule for the module that decides what is legal, what things cost, and how the game is scored: it must know nothing about any specific board, and it must not depend on the browser's display layer (the "DOM") in any way. Every city, route, character, price, and scoring value is instead to be read from one structured data file when the game starts. Under this rule, the entire board — cities, routes, characters, destination goals, and the full pricing and scoring table — becomes editable purely as data, with no change required to the module that enforces the rules.
 
-This principle is adopted for two reasons. First, it satisfies the requirement that the board be entirely data-driven, so that correcting the map or editing a character's goals never requires a code change. Second, and this is what shapes every decision in §1.2, a module with no dependency on a browser is a module that can run unmodified on a server. Designing the rules engine this way from the outset is what allows the same code to serve, unchanged, as the single authoritative source of truth for every game in progress.
+This principle is adopted for two reasons. First, it satisfies the requirement that the board be entirely data-driven, so that correcting the map or editing a character's goals never requires a code change. Second, and this is what shapes every decision in section 1.2, a module with no dependency on a browser is a module that can run unmodified on a server. Designing the rules engine this way from the outset is what allows the same code to serve, unchanged, as the single authoritative source of truth for every game in progress.
 
 ### 1.2 Design decisions for the online architecture
 
@@ -48,7 +46,7 @@ This principle is adopted for two reasons. First, it satisfies the requirement t
 
 | Layer | Choice | Reason |
 |---|---|---|
-| Rules engine | A single, dependency-free rules-engine module | Written with no browser dependency, per §1.1, so it can run unmodified on the server. |
+| Rules engine | A single, dependency-free rules-engine module | Written with no browser dependency, per section 1.1, so it can run unmodified on the server. |
 | Server runtime | Node.js, with a small HTTP framework (Express) and a real-time messaging library (Socket.IO) | Same language as the rules engine, avoiding a rewrite; Socket.IO provides room grouping, automatic reconnection, and a fallback transport for networks that restrict raw WebSocket traffic. |
 | Client | Plain JavaScript modules and an SVG-based map view | No build step and no framework to keep up to date, keeping the client simple to maintain and debug. |
 | Data storage | An embedded, file-based database (SQLite) | Zero server setup, adequate for a turn-based game's write volume, and sufficient for save/resume. |
@@ -56,7 +54,7 @@ This principle is adopted for two reasons. First, it satisfies the requirement t
 | Transport security | TLS (HTTPS/WSS) via a reverse proxy in production | Required for any real deployment, and necessary in practice since mobile browsers refuse insecure connections for this kind of application. |
 | Testing | A unit-test runner for the rules engine, and a browser-automation tool capable of driving several simulated devices in one test | The rules engine can be tested in isolation from the network layer; multiplayer behaviour — in particular, that private information stays private — is tested by opening several independent browser sessions against one server, standing in for several real devices. |
 
-### 1.4 Project structure (production code)
+### 1.4 Project structure
 
 The following is the intended file layout for the production code — the files that ship in the running game. Supporting material used only while producing the board data or documentation is intentionally left out of this listing.
 
@@ -68,7 +66,7 @@ Rahee/
 ├── assets/
 │   └── board-plate.png     the map image drawn beneath the board
 ├── shared/
-│   └── engine.js            rules and game state — no board knowledge, no browser dependency (§1.1)
+│   └── engine.js            rules and game state — no board knowledge, no browser dependency  
 ├── client/                   runs in each player's browser
 │   ├── main.js               screen routing and the turn-action panel
 │   ├── net.js                the connection to the server
@@ -95,15 +93,15 @@ The rules engine lives in a shared location so that it can be imported unmodifie
 
 | Category | Requirement | Design response |
 |---|---|---|
-| **Functionality** | Two to six players, each on their own device, with every rule of the physical game enforced consistently for every player | A single, dependency-free rules engine, run once per game on the server (§1.1, §4) |
-| **Functionality** | A public chat visible to the whole game, and a private chat between two specific players, to support negotiating road trips | Routed over the same real-time connection as game state, with separate message scopes (§4) |
-| **Security** | A player's hand, their exact spending, and an in-progress route plan must never be delivered to a device not entitled to see them — an access-control property, not merely a display one | A dedicated redaction step runs on the server for every outgoing message; nothing is ever sent broadly and hidden afterward (§1.2, §5) |
-| **Security** | No device should be able to grant itself an illegal move, an unpaid journey, or an extra point | Every action received from a client is checked against the rules engine on the server before it is applied or announced to anyone (§4) |
+| **Functionality** | Two to six players, each on their own device, with every rule of the physical game enforced consistently for every player | A single, dependency-free rules engine, run once per game on the server   |
+| **Functionality** | A public chat visible to the whole game, and a private chat between two specific players, to support negotiating road trips | Routed over the same real-time connection as game state, with separate message scopes    |
+| **Security** | A player's hand, their exact spending, and an in-progress route plan must never be delivered to a device not entitled to see them — an access-control property, not merely a display one | A dedicated redaction step runs on the server for every outgoing message; nothing is ever sent broadly and hidden afterward   |
+| **Security** | No device should be able to grant itself an illegal move, an unpaid journey, or an extra point | Every action received from a client is checked against the rules engine on the server before it is applied or announced to anyone   |
 | **Security** | Chat must not allow malicious content or spam | Server-side message sanitisation and a limit on how quickly one device can send messages or route queries |
 | **Reliability** | A dropped connection during a player's turn (a realistic failure mode on mobile networks) should not remove them from the game | A reconnection token tied to the player's seat, combined with automatic reconnection and a replay of the current state on rejoin |
 | **Reliability** | An unfinished game should be resumable later | Game state is written to the file-based store at the end of every turn and whenever the last connected device disconnects |
 | **Performance** | Turn actions and chat should feel immediate over ordinary mobile or campus networks | The game is turn-based with low message volume; a single server process comfortably handles this without additional infrastructure |
-| **Extensibility** | The board, its prices and its scoring must remain editable as pure data | The single board data file is the engine's only source of board knowledge (§1.1, §1.4) |
+| **Extensibility** | The board, its prices and its scoring must remain editable as pure data | The single board data file is the engine's only source of board knowledge  |
 | **Usability** | The game must be usable one-handed on a phone, with no installation step | A responsive layout, touch-first controls on the map, and joining by typing a short room code |
 
 ---
@@ -307,20 +305,20 @@ This mirrors how the physical game already works: everyone watches a token move 
 
 ## 5. How the structure and design decisions satisfy the requirements
 
-| Requirement (§2) | Satisfied by |
+| Requirement   | Satisfied by |
 |---|---|
-| Play online, each from a separate device | A server-authoritative room reached by every device over a persistent real-time connection (§1.2, Fig. 1) |
-| Public and private chat | A shared connection carrying two distinct message scopes (§4) |
-| Every rule of the physical game enforced consistently | A single, server-side rules engine designed with no board or browser dependency (§1.1, §1.2) |
-| The board remains a pure data change | The board data file is the engine's only source of board knowledge (§1.1, §1.4) |
-| Hands and route plans stay private | A redaction step runs before any message leaves the server, rather than being filtered afterward in the browser (§4, Fig. 6) |
-| Other players' progress is visible | The public, redacted state update includes a summary of every player's character and progress (Fig. 5) |
-| Resilient to a dropped connection | A reconnection token tied to a seat, combined with automatic reconnection and a replay of current state (§1.2, §2) |
-| A game can be saved and resumed | State is written to the file-based store at natural checkpoints — the end of a turn, and a room going empty (§1.2) |
-| Usable on a phone | A responsive layout and touch-first controls, joined without installing anything (§1.3) |
-| A single shared device is still supported | The private handover screen is reused as one configuration of the same room, not a separate build (§1.2) |
+| Play online, each from a separate device | A server-authoritative room reached by every device over a persistent real-time connection   |
+| Public and private chat | A shared connection carrying two distinct message scopes   |
+| Every rule of the physical game enforced consistently | A single, server-side rules engine designed with no board or browser dependency   |
+| The board remains a pure data change | The board data file is the engine's only source of board knowledge   |
+| Hands and route plans stay private | A redaction step runs before any message leaves the server, rather than being filtered afterward in the browser  |
+| Other players' progress is visible | The public, redacted state update includes a summary of every player's character and progress   |
+| Resilient to a dropped connection | A reconnection token tied to a seat, combined with automatic reconnection and a replay of current state   |
+| A game can be saved and resumed | State is written to the file-based store at natural checkpoints — the end of a turn, and a room going empty   |
+| Usable on a phone | A responsive layout and touch-first controls, joined without installing anything  |
+| A single shared device is still supported | The private handover screen is reused as one configuration of the same room, not a separate build   |
 
-**Summary.** Every requirement above is satisfied by keeping the rules engine free of any board knowledge or browser dependency from the outset (§1.1), and building the server process, the redaction layer, and the real-time connection as a layer *around* that engine, never inside it. This keeps the system's most critical logic — the rules themselves — isolated and independently testable, and free to run in either a client (for optional prediction) or the authoritative server, with no change to the module itself.
+**Summary.** Every requirement above is satisfied by keeping the rules engine free of any board knowledge or browser dependency from the outset  , and building the server process, the redaction layer, and the real-time connection as a layer *around* that engine, never inside it. This keeps the system's most critical logic — the rules themselves — isolated and independently testable, and free to run in either a client (for optional prediction) or the authoritative server, with no change to the module itself.
 
 ---
 
@@ -360,4 +358,4 @@ None of these affect the architecture described above; each is confined to the r
 
 ---
 
-*This plan describes the proposed architecture for RAHEE's online multiplayer implementation. The rules summarised in §0 and the requirements in §2 are drawn from the project's official rulebook and its signed requirements sheet, both already submitted to the course.*
+ 

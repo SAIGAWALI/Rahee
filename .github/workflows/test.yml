@@ -14,4 +14,4 @@ jobs:
         if: always()
         with:
           name: playtest-report
-          path: playtest-report/
+          path: docs/test-results/playtest/

@@ -4,7 +4,7 @@
 // writes a report of how the games went (balance per character, game length,
 // money, road trips, flights, …) for the design team.
 //
-//   node tools/playtest.mjs [games=300] [--players=2-6] [--levels=greedy,easy] [--seed=1] [--out=playtest-report]
+//   node tools/playtest.mjs [games=300] [--players=2-6] [--levels=greedy,easy] [--seed=1] [--out=docs/test-results/playtest]
 //
 // Exit code 1 if any game breaks a rule, stalls, or a bot move is refused.
 import fs from "node:fs";
@@ -25,7 +25,7 @@ const games = Number(process.argv.slice(2).find((a) => !a.startsWith("--")) || 3
 const [pMin, pMax] = (argv.players || "2-6").split("-").map(Number).concat([]).map((x, i, a) => x || a[0]);
 const levels = (argv.levels || "greedy,goals,easy").split(",");
 const baseSeed = Number(argv.seed || 1);
-const outDir = path.resolve(argv.out || path.join(root, "playtest-report"));
+const outDir = path.resolve(argv.out || path.join(root, "docs", "test-results", "playtest"));
 
 const problems = [];
 const problem = (g, msg) => { if (problems.length < 200) problems.push(`game ${g}: ${msg}`); };

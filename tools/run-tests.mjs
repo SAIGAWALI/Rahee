@@ -4,7 +4,7 @@
 //                 examples, and 80 random complete games checked rule by rule
 //   2. rules    — one hand-built scenario per rule clarified in RULES.md
 //   3. playtest — 300 complete games between the computer players, every move
-//                 checked; its report goes to playtest-report/test-run/
+//                 checked; its report goes to docs/test-results/playtest/test-run/
 //   4. server   — the real backend end to end: two clients + computer players
 //                 play a whole game over WebSockets (privacy, turn order,
 //                 reconnection, bots), for 3 and 6 players
@@ -32,7 +32,7 @@ const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const suites = [
   ["engine", ["tools/test-engine.mjs", ".", "80"]],
   ["rules", ["tools/test-rules.mjs", "."]],
-  ["playtest", ["tools/playtest.mjs", "300", "--out=playtest-report/test-run"]],
+  ["playtest", ["tools/playtest.mjs", "300", "--out=docs/test-results/playtest/test-run"]],
   ["server (3 players)", ["tools/test-server.mjs", "3"]],
   ["server (6 players)", ["tools/test-server.mjs", "6"]],
   ["board", ["tools/test-board.mjs"]],

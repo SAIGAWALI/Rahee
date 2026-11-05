@@ -273,6 +273,8 @@ function renderPlay() {
       onCityClick: onCityClick,
       // The map panel covers the left of the board, so the box it draws is only the uncovered part.
       onViewChange: () => mapPanel?.setViewport(view.visibleRect(mapPanel.coveredWidth())),
+      // ...and Fit / Me centre the board in what is left of the screen.
+      coveredLeft: () => mapPanel?.coveredWidth() ?? 0,
     });
     mapPanel = createMapPanel(destHost, board, {
       onPickCity: (id) => { view.focusOn(id, { zoom: 620 }); view.flashCity(id); },

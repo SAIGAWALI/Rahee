@@ -33,7 +33,7 @@ node tools/playtest.mjs 1000                      # 1000 games, 2–6 players, a
 node tools/playtest.mjs 500 --players=4 --levels=greedy --seed=7
 ```
 
-Plays complete games between bots (about 25 ms a game), checks the rules after **every move**, and writes `playtest-report/report.md` (+ `report.json` with every game). The report covers: game length, flights/ships, road trips offered/taken/declined, Ace swaps and reshuffles, how games end, score/stamps/destinations/memories/money per player, win rate per character against a fair share, per bot level, and per table size.
+Plays complete games between bots (about 25 ms a game), checks the rules after **every move**, and writes `docs/test-results/playtest/report.md` (+ `report.json` with every game). The report covers: game length, flights/ships, road trips offered/taken/declined, Ace swaps and reshuffles, how games end, score/stamps/destinations/memories/money per player, win rate per character against a fair share, per bot level, and per table size.
 
 Latest run (1000 games): **no rule violations, stalls or refused moves.** Points worth discussing with the POC:
 - Planner bots (memory sets) score ~166 vs ~127 for goal-chasers, even though goal-chasers complete twice as many destinations (3.6 vs 1.8). With sets worth 15/20 and a destination worth 5, meeting up and road-tripping pays more than following your character card.
