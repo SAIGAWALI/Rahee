@@ -541,3 +541,11 @@ input[type=text]:focus { outline: 2px solid var(--green); outline-offset: -1px; 
 .dp-stats .allp-line:first-child { margin-top: 0; }
 .dp-stats .neg { color: var(--red); }
 .dp-stats .muted { font-size: 10.5px; }
+
+/* About RAHEE (credits) */
+.about { max-width: 460px; }
+.about h2 { font-size: 32px; margin-bottom: 4px; }
+.about h3 { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft); margin: 18px 0 6px; }
+.about ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.about li { font-size: 15px; }
+.about .tiny { margin: 0 0 8px; }

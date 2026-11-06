@@ -75,6 +75,26 @@ export function rulesSheet(board) {
           h("tr", {}, h("td", {}, `Every ${rs(sc.overBudgetBlock)} (or part) over ${rs(e.startingBudget)}`), h("td", {}, `−${sc.overBudgetPenalty}`))))));
 }
 
+/** About the game: who designed it, who drew it, and who built this online version. */
+export function aboutSheet() {
+  const person = (name, role) => h("li", {}, h("b", {}, name), role ? h("span", { class: "muted" }, ` — ${role}`) : null);
+  return h("div", { class: "about" },
+    h("h2", { class: "display" }, "About RAHEE"),
+    h("p", { class: "lead" }, "A traveller's journey across India: the RAHEE board game, played online with friends on their own devices."),
+    h("h3", {}, "The board game"),
+    h("ul", {},
+      person("Jyothi Krishnan", "game design"),
+      person("Parvathy Subramanian", "art and graphic design")),
+    h("h3", {}, "This online version"),
+    h("p", { class: "tiny muted" }, "IIT Gandhinagar"),
+    h("ul", {},
+      person("Kshitij Kasodkar"),
+      person("Sai Gawali"),
+      person("Siddhesh Patil"),
+      person("Mukesh Dewangan"),
+      person("Tanuj Sharma")));
+}
+
 /** Create a room, or join one by its 4-character code. */
 export function landingScreen(onCreate, onJoin, board) {
   let name = "";
@@ -91,7 +111,9 @@ export function landingScreen(onCreate, onJoin, board) {
     h("div", { class: "masthead" },
       h("h1", { class: "wordmark" }, "RAHEE"),
       h("p", {}, "A traveller's journey across India — play with friends on their own devices"),
-      board ? h("button", { class: "btn small ghost", style: "margin-top:10px", onClick: () => showModal(rulesSheet(board), { wide: true }) }, "How to play") : null),
+      h("div", { style: "display:flex;gap:8px;justify-content:center;margin-top:10px" },
+        board ? h("button", { class: "btn small ghost", onClick: () => showModal(rulesSheet(board), { wide: true }) }, "How to play") : null,
+        h("button", { class: "btn small ghost", onClick: () => showModal(aboutSheet()) }, "About"))),
     h("section", { class: "panel" },
       h("div", { class: "field" }, h("label", {}, "Your name"), nameInput),
       h("div", { style: "display:flex;flex-direction:column;gap:10px;margin-top:16px" },

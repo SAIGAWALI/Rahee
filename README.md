@@ -89,7 +89,7 @@ Two ideas shape the project:
 5. On your turn, pick a card from your hand. Then click cities on the map to walk step by step, or click a city further away and the game finds the route. Then pay to **visit** a tourist place if you want, offer a **road trip**, and end your turn.
 6. When someone plays their last card or completes 5 destinations, the round is finished and **Journey's End** shows the scores.
 
-**How to play** on the landing page and **Rules** on the board open a one-page rules sheet. The full rules are in [RULES.md](RULES.md).
+**How to play** on the landing page and **Rules** on the board open a one-page rules sheet. The full rules are in [RULES.md](RULES.md). **About** (on the landing page and on the board) credits the game's designers and our team.
 
 ---
 
@@ -118,7 +118,7 @@ Two ideas shape the project:
 | Area | What it shows |
 |---|---|
 | **Top bar** | Whose turn it is, the round, and that player's budget left. During the final round it also shows who triggered the end. |
-| **Map controls** | **＋ / −** zoom · **Fit** shows the whole board in the space next to the left panel · **Me** centres on your pawn · drag to pan at any zoom · **Rules** · **Auto** lets the computer play your seat · **New** starts a new game |
+| **Map controls** | **＋ / −** zoom · **Fit** shows the whole board in the space next to the left panel · **Me** centres on your pawn · drag to pan at any zoom · **Rules** · **About** shows who made the game · **Auto** lets the computer play your seat · **New** starts a new game |
 | **Board** | The printed map with route lines, legal next steps, every player's pawn (the current player's pawn pulses) and rings on your destinations. Hover over a tourist place to see its stamp. |
 | **Left panel: Map & destinations** | A clean overview map (with names or nodes only). Click it to jump there. Below it is **Where everyone is heading**: one card per **other** player with their character, city, money left and spent, memories per suit and road-trip cards (used ones faded). Click a card to open its six destinations and which are completed. |
 | **Right panel: travel journal** | Your budget bar · hand · road-trip cards · memory cards · stamp album (destinations marked ★) · your destinations · "If the game ended now" · recent moves. Only your own information is here. |

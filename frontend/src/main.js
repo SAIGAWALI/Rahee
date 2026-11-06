@@ -9,7 +9,7 @@ import { createBoardView } from "./board-view.js";
 import { renderSidebar, h, money, esc, cardChip } from "./sidebar.js";
 import { createMapPanel } from "./map-panel.js";
 import { chooseAction } from "./ai.js";
-import { landingScreen, lobbyScreen, waitingScreen, layCardScreen, scoreboardScreen, rulesSheet, showModal } from "./screens.js";
+import { landingScreen, lobbyScreen, waitingScreen, layCardScreen, scoreboardScreen, rulesSheet, aboutSheet, showModal } from "./screens.js";
 
 const app = document.getElementById("app");
 let board, graph, view = null, mounted = null;
@@ -325,6 +325,7 @@ function renderPlay() {
       h("button", { class: "wide", title: "Fit the whole board", onClick: () => view.fitAll() }, "Fit"),
       h("button", { class: "wide", title: "Centre on your traveller", onClick: () => view.focusOn(viewer.city, { zoom: 800 }) }, "Me"),
       h("button", { class: "wide", title: "The rules on one page", onClick: () => showModal(rulesSheet(board), { wide: true }) }, "Rules"),
+      h("button", { class: "wide", title: "Who made RAHEE", onClick: () => showModal(aboutSheet()) }, "About"),
       h("button", {
         class: `wide${autoplay ? " on" : ""}`, "aria-pressed": autoplay ? "true" : "false",
         title: autoplay ? "The computer is playing for you — click to take over again" : "Let the computer play your turns (for play-testing)",
